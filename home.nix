@@ -38,10 +38,9 @@
       session=workspace
       $cmd has -t $session
       if [ $? != 0 ]; then
-        $cmd new -d -n bash -s $session "hx"
-        $cmd neww -n bash -s $session "bash"
-        $cmd neww -n bash -s $session "bash"
-        $cmd neww -n bash -s $session "bash"
+        $cmd new -d -n editor -s $session "hx"
+        $cmd neww -n nu -t $session "nu"
+        $cmd neww -n zsh -t $session "zsh"
         $cmd selectw -t session:1
       fi
       $cmd att -t $session
@@ -65,6 +64,7 @@
     ".config/helix/config.toml".source = dotfiles/helix/config.toml;
 
     ".gitconfig".source = chezmoi/dot_gitconfig.tmpl;
+
     ".config/starship.toml".source = chezmoi/dot_config/starship.toml;
   };
 
@@ -145,20 +145,24 @@
          )
          '';
          shellAliases = {
-         vi = "hx";
-         vim = "hx";
-         nano = "hx";
+           vi = "hx";
+           vim = "hx";
+           nano = "hx";
          };
      };  
 
-     carapace.enable = true;
-     carapace.enableNushellIntegration = true;
+     carapace = {
+       enable = true;
+       enableNushellIntegration = true;
+       enableZshIntegration = true;
+       enableBashIntegration = true;
+     };
 
      starship = { 
       enable = true;
     };
 
-     gh =  {
+    gh =  {
       enable = true;
       settings = {
         git_protocol = "ssh";
@@ -169,6 +173,40 @@
         };
       };
     };
+
+    zoxide = {
+      enable = true;
+      enableNushellIntegration = true;
+      enableZshIntegration = true;
+      enableBashIntegration = true;
+    };
+
+    bat = {
+      enable = true;
+      config = {
+        theme = "TwoDark";
+      };
+      extraPackages =  with pkgs.bat-extras; [ 
+        batdiff batman batgrep batwatch 
+      ];
+   };
+
+  fzf = {
+    enable = true;
+    defaultCommand = "fd --type f";
+    defaultOptions = [
+      "--height 40%" "--border"
+    ];
+    fileWidgetOptions = [
+       "--preview 'bat --color=always {}'" 
+    ];
+    colors = {
+      bg = "#1e1e1e";
+      "bg+" = "#1e1e1e";
+      fg = "#d4d4d4";
+      "fg+" = "#d4d4d4";
+    };
+   };
 
   };
 
