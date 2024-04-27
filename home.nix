@@ -87,6 +87,16 @@
     EDITOR = "hx";
   };
 
+  home.shellAliases = {
+    g = "git";
+    ".." = "cd ../";
+    "..." = "cd ../..";
+    vi = "hx";
+    vim = "hx";
+    nano = "hx";
+    c = "clear";
+  };
+
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
@@ -147,6 +157,19 @@
      starship = { 
       enable = true;
     };
+
+     gh =  {
+      enable = true;
+      settings = {
+        git_protocol = "ssh";
+        prompt = "enabled";
+        aliases = {
+          co = "pr checkout";
+          pv = "pr view";
+        };
+      };
+    };
+
   };
 
 }
