@@ -1,0 +1,326 @@
+# Linuxing helix config
+theme = "onedark"
+
+[editor]
+# 真彩支持
+true-color = true
+# bufferline = "always"
+cursorline = true
+cursorcolumn = false
+
+# 光标样式
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+# 状态栏定义
+[editor.statusline]
+left = ["mode", "spacer", "spinner", "spacer", "file-name", "file-modification-indicator"]
+center = ["diagnostics","workspace-diagnostics"]
+right = [ "selections", "position", "position-percentage", "file-encoding", "file-line-ending", "file-type", ]
+
+[editor.soft-wrap]
+enable = true
+max-wrap = 25 # increase value to reduce forced mid-word  wrapping
+max-indent-retain = 0
+wrap-indicator = ""  # set wrap-indicator to "" to hide it
+
+[editor.indent-guides]
+render = true
+character = "┊" # Some characters that work well: "▏", "┆", "┊", "⸽"
+skip-levels = 1
+
+[editor.whitespace.render]
+space = "all"
+tab = "all"
+newline = "none"
+
+[editor.whitespace.characters]
+space = " "
+nbsp = "⍽"
+tab = "→"
+newline = "⏎"
+tabpad = "·" # Tabs will look like "→···" (depending on tab width)[]
+
+[editor.lsp]
+display-messages = true
+display-inlay-hints = true
+
+# https://docs.helix-editor.com/keymap.html
+[keys.normal.space]
+# command mode
+space = "command_mode"
+# new scratch buffer
+tab = ":new"
+# lazy config
+l = { r = ":config-reload", o = ":config-open", w = ":config-open-workspace" }
+# file
+f = { f = "file_picker_in_current_directory",  "." = "file_picker", "s" = "symbol_picker"}
+# buffer
+b = { b = "buffer_picker" , n = ":new", v = ":vnew", h = ":hnew", c = ":bc!", o = ":bco!" }
+# lsp functions
+c = { a = "code_action", r = "rename_symbol", f = ":format" }
+# write
+s = { s = ":write-all!", q = ":write-quit-all!" }
+# theme
+t = { a = ":theme ayu_light", b = ":theme ayu_dark", c = ":theme github_light", d = ":theme github_dark", o = ":theme onedark", t = ":theme tokyonight", n = ":theme nord" }
+# quite
+q = ":write-quit-all!"
+
+[keys.normal]
+# just commands
+F5 = ":run-shell-command just build"
+F6 = ":run-shell-command just run"
+
+# debug
+F7 = "dap_launch"
+F8 = "dap_continue"
+F9 = "dap_step_in"
+F10 = "dap_step_out"
+F11 = "goto_definition"
+F12 = "goto_implementation"
+
+# search match
+C-s = ["select_all", "select_regex" ]
+
+# multi selection
+C-n = ["move_prev_word_start", "move_next_word_end", "search_selection", "select_mode"]
+"A-j" = "copy_selection_on_next_line" # C
+"A-k" = "copy_selection_on_prev_line" # Alt-C
+"A-g" = "keep_primary_selection" # ,  Alt-,
+"A-z" = "collapse_selection" # ;
+# line start and end
+"$" = ["split_selection_on_newline", "insert_at_line_end"]
+"0" = ["split_selection_on_newline", "insert_at_line_start"]
+# extend_line_below and up
+"S-A-up" = ["move_visual_line_up", "extend_line_below", "delete_selection", "paste_after", "collapse_selection", "move_visual_line_up"]
+"S-A-down" = ["extend_line_below", "delete_selection", "paste_after", "collapse_selection"]
+# duplicate
+"C-d" = ["extend_line_below", "yank", "paste_after", "collapse_selection"]
+ 
+# config file
+# C-o = ":open ~/.local/share/chezmoi/home/private_dot_config/helix/config.toml" 
+# C-a = ":run-shell-command chezmoi apply ~/.config/helix/config.toml"
+C-e = ":open ~/.config/helix/config.toml" 
+A-r = ":config-reload" 
+
+# delete line
+U = "kill_to_line_start"
+D = "kill_to_line_end"
+
+# file write
+S = ":write!"
+Z = ":quit!"
+
+# comments
+"C-/" = "toggle_comments"
+
+# indent
+"C-]" = "indent"
+"C-[" = "unindent"
+
+# buffer
+"C-c" = ":new"
+"C-q" = ":bc"
+H = ":bp"
+L = ":bn"
+
+# End of file
+G = "goto_last_line"
+
+# select mode
+V = "select_mode"
+
+[keys.normal.m]
+b = "save_selection"
+
+[keys.normal.g]
+c = { c = "toggle_comments" }
+
+[keys.normal."tab"]
+"f" = ":cd ~/.config/home-manager" 
+"c" = ":cd /etc/nixos" 
+"w" = ":cd ~/workspace" 
+
+[keys.normal."+"]
+a = ":run-shell-command home-manager build"
+b = ":run-shell-command home-manager switch"
+c = ":run-shell-command sudo noxos-rebuild switch"
+
+# markdown edit shortcut
+[keys.insert."C-m"]
+"C-1" = [
+  ":insert-output echo # ",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+"C-2" = [
+  ":insert-output echo ## ",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+"C-3" = [
+  ":insert-output echo ### ",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+"]" = [
+  "extend_line_below",
+  ":pipe sd # ##",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+"[" = [
+  "extend_line_below",
+  ":pipe sd ## #",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+c = [
+  ":insert-output echo ```",
+  ":insert-output echo ```",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+i = [
+  "collapse_selection",
+  ":insert-output echo **",
+  "flip_selections",
+  "move_char_right",
+  "insert_mode",
+]
+b = [
+  "collapse_selection",
+  ":insert-output echo ****",
+  "flip_selections",
+  "move_char_right",
+  "move_char_right",
+  "collapse_selection",
+  "insert_mode",
+]
+s = [
+  "collapse_selection",
+  ":insert-output echo ~~~~",
+  "flip_selections",
+  "move_char_right",
+  "move_char_right",
+  "collapse_selection",
+  "insert_mode",
+]
+k = [
+  "collapse_selection",
+  ":insert-output echo '<kbd></kbd>'",
+  "flip_selections",
+  "move_char_right",
+  "move_char_right",
+  "move_char_right",
+  "move_char_right",
+  "move_char_right",
+  "collapse_selection",
+  "insert_mode",
+]
+"`" = [
+  "collapse_selection",
+  ":insert-output echo ``",
+  "flip_selections",
+  "move_char_right",
+  "insert_mode",
+]
+h = [
+  "collapse_selection",
+  ":insert-output echo []()",
+  "flip_selections",
+  "move_char_right",
+  "insert_mode",
+]
+l = [
+  "collapse_selection",
+  ":insert-output echo [[]]",
+  "flip_selections",
+  "move_char_right",
+  "move_char_right",
+  "collapse_selection",
+  "completion",
+  "insert_mode",
+]
+j = [
+  "collapse_selection",
+  ":insert-output echo ![](/images/)",
+  "flip_selections",
+  "collapse_selection",
+  "move_char_right",
+  "move_char_right",
+  "collapse_selection",
+  "insert_mode",
+]
+o = [
+  "goto_first_nonwhitespace",
+  ":insert-output echo 1. ",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+q = [
+  "goto_first_nonwhitespace",
+  ":insert-output echo > ",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+u = [
+  "goto_first_nonwhitespace",
+  ":insert-output echo - ",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+t = [
+  "goto_first_nonwhitespace",
+  ":insert-output echo - [ ] ",
+  "collapse_selection",
+  "insert_at_line_end",
+]
+
+
+
+[keys.insert.j]
+j = ["normal_mode", ":write!"]
+
+[keys.insert]
+
+"C-/" = "toggle_comments"
+
+"C-]" = "indent"
+"C-[" = "unindent"
+
+"C-a" = "insert_at_line_start"
+"C-e" = "insert_at_line_end"
+
+"C-right" = "move_next_word_start"
+"C-left" = "move_prev_word_start"
+"C-down" = "move_visual_line_down"
+"C-up" = "move_visual_line_up"
+
+# multi selection
+C-n = ["move_prev_word_start", "move_next_word_end", "search_selection", "select_mode"]
+"A-j" = "copy_selection_on_next_line" # C
+"A-k" = "copy_selection_on_prev_line" # Alt-C
+"A-g" = "keep_primary_selection" # ,  Alt-,
+"A-z" = "collapse_selection" # ;
+# extend_line_below and up
+"S-A-up" = ["move_visual_line_up", "extend_line_below", "delete_selection", "paste_after", "collapse_selection", "move_visual_line_up"]
+"S-A-down" = ["extend_line_below", "delete_selection", "paste_after", "collapse_selection"]
+# duplicate
+"C-d" = ["extend_line_below", "yank", "paste_after", "collapse_selection"]
+
+# up = "no_op"
+# down = "no_op"
+# left = "no_op"
+# right = "no_op"
+# pageup = "no_op"
+# pagedown = "no_op"
+# home = "no_op"
+# end = "no_op"
+
+[keys.select]
+q = "exit_select_mode"
+"$" = "goto_line_end"
+

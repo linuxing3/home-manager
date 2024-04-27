@@ -1,0 +1,3 @@
+[submodule "chezmoi"]
+	path = chezmoi
+	url = https://github.com/linuxing3/dotfiles
