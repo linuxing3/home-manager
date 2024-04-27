@@ -20,9 +20,8 @@
   home.packages = [
     # # Adds the 'hello' command to your environment. It prints a friendly
     # # "Hello, world!" when run.
-    pkgs.nushell
-    pkgs.starship
     pkgs.broot
+    pkgs.ranger
 
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
@@ -48,6 +47,12 @@
       $cmd att -t $session
       exit 0
     '')
+    (pkgs.writeShellScriptBin "deploy" ''
+      git add .
+      git commit -m "[feat] no description"
+      git push
+      exit 0
+    '')
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -60,7 +65,6 @@
     ".config/helix/config.toml".source = dotfiles/helix/config.toml;
 
     ".gitconfig".source = chezmoi/dot_gitconfig.tmpl;
-    ".config/nushell".source = chezmoi/dot_config/nushell;
     ".config/starship.toml".source = chezmoi/dot_config/starship.toml;
   };
 
@@ -87,13 +91,62 @@
   programs.home-manager.enable = true;
 
   programs = {
-    direnv = {
-      enable = true;
-      enableBashIntegration = true; # see note on other shells below
-      nix-direnv.enable = true;
-    };
+      direnv = {
+        enable = true;
+        enableBashIntegration = true; # see note on other shells below
+        nix-direnv.enable = true;
+      };
 
-    bash.enable = true; # see note on other shells below
+      bash = {
+        enable = true;
+      };
+
+      zsh = {
+        enable = true;
+      };
+
+      nushell = { 
+        enable = true;
+        # for editing directly to config.nu 
+        extraConfig = ''
+         let carapace_completer = {|spans|
+         carapace $spans.0 nushell $spans | from json
+         }
+         $env.config = {
+          show_banner: false,
+          completions: {
+          case_sensitive: false # case-sensitive completions
+          quick: true    # set to false to prevent auto-selecting completions
+          partial: true    # set to false to prevent partial filling of the prompt
+          algorithm: "fuzzy"    # prefix or fuzzy
+          external: {
+          # set to false to prevent nushell looking into $env.PATH to find more suggestions
+              enable: true 
+          # set to lower can improve completion performance at the cost of omitting some options
+              max_results: 100 
+              completer: $carapace_completer # check 'carapace_completer' 
+            }
+          }
+         } 
+         $env.PATH = ($env.PATH | 
+         split row (char esep) |
+         prepend /home/myuser/.apps |
+         append /usr/bin/env
+         )
+         '';
+         shellAliases = {
+         vi = "hx";
+         vim = "hx";
+         nano = "hx";
+         };
+     };  
+
+     carapace.enable = true;
+     carapace.enableNushellIntegration = true;
+
+     starship = { 
+      enable = true;
+    };
   };
 
 }
