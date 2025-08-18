@@ -1,0 +1,144 @@
+set drawbox
+set hidden
+set icons
+set ignorecase
+set preview
+
+cmd bookmark-create ${{
+    read -r ans
+    printf '%s\n' "$PWD" > "$LF_BOOKMARK_PATH/$ans"
+}}
+
+cmd bookmark-jump ${{
+    res="$(cat -- "$LF_BOOKMARK_PATH/$(ls -- "$LF_BOOKMARK_PATH" | fzf)" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    lf -remote "send $id cd \"$res\""
+}};
+
+cmd bulk-rename ${{
+old="$(mktemp)"
+new="$(mktemp)"
+if [ -n "$fs" ]; then
+    fs="$(basename -a -- $fs)"
+else
+    fs="$(ls)"
+fi
+printf '%s\n' "$fs" > "$old"
+printf '%s\n' "$fs" > "$new"
+$EDITOR "$new"
+[ "$(wc -l < "$new")" -ne "$(wc -l < "$old")" ] && exit
+paste "$old" "$new" | while IFS= read -r names; do
+    src="$(printf '%s' "$names" | cut -f1)"
+    dst="$(printf '%s' "$names" | cut -f2)"
+    if [ "$src" = "$dst" ] || [ -e "$dst" ]; then
+        continue
+    fi
+    mv -- "$src" "$dst"
+done
+rm -- "$old" "$new"
+lf -remote "send $id unselect"
+}}
+
+cmd dragon-out ${{
+  xdragon -a -x "$fx"
+}}
+
+cmd follow-link %{{
+      lf -remote "send $id select \"$(readlink -- "$f" | sed 's/\\/\\\\/g;s/"/\\"/g')\""
+  }}
+
+cmd mkdir ${{
+  printf "Directory Name: "
+  read DIR
+  mkdir $DIR
+}}
+
+cmd mkfile ${{
+  printf "File Name: "
+  read FILENAME
+  touch $FILENAME
+}}
+
+cmd on-cd &{{
+    zoxide add "$PWD"
+}}
+
+cmd pager ${{
+    if [ -f "$f" ]; then
+        $PAGER "$f"
+    elif [ -d "$f" ]; then
+        tree "$f" | $PAGER
+    fi
+}}
+
+cmd prev ${{
+  bat --paging=always "$f"
+}}
+
+cmd select-glob &{{
+      select_glob() {
+          files="$(printf '%s\0' "$@" | sed 's/ /\\ /g;s/\x00/ /g')"
+          lf -remote "send $id :unselect; toggle $files"
+      }
+
+      [ "$#" -eq 1 ] || exit
+
+      # enable recursive glob and failglob
+      shopt -s globstar failglob
+
+      select_glob $1
+ }}
+
+cmd toggle-prview %{{
+   if [ "$lf_preview" = true ]; then
+     lf -remote "send $id :set preview false; set ratios 1:5"
+   else
+     lf -remote "send $id :set preview true; set ratios 1:2:3"
+   fi
+ }}
+
+cmd toggle_hex_view &{{
+    # reload is used to clear any previews that have been cached
+    if [ "$lf_user_hex_view" != true ]; then
+        lf -remote "send $id :set user_hex_view true; reload"
+    else
+        lf -remote "send $id :set user_hex_view false; reload"
+    fi
+}}
+
+cmd z %{{
+    result="$(zoxide query --exclude "$PWD" "$@" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    lf -remote "send $id cd \"$result\""
+}}
+
+cmd zi   ${{
+    result="$(zoxide query -i | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    lf -remote "send $id cd \"$result\""
+}}
+
+
+map . set hidden!
+map <enter> open
+map V prev
+map X %rm -rf "$fx"
+map \"
+map \' mark-load
+map ` mark-load
+map a mkfile
+map b bulk-rename
+map c mkdir
+map do dragon-out
+map g/ /
+map gL follow-link
+map gh cd
+map g~ cd
+map x %rm "$fx"
+map zp toggle-preview
+map zx toggle_hex_view
+
+
+
+
+
+set cleaner /home/linuxing3/.local/bin/clean.sh
+set previewer /home/linuxing3/.local/bin/pv.sh
+

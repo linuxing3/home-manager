@@ -1,0 +1,956 @@
+#+TITLE: Doom Emacs Literate Config Private
+#+AUTHOR: linuxing3
+# FIXME doom emacs config
+* Table of Contents :@travel:TOC:QUOTE:
+#+BEGIN_QUOTE
+- [[#my-configdoomprivateel][My ~/.config/doom/private.el]]
+  - [[#eaf][EAF]]
+  - [[#generic-style-keybindings][Generic-style Keybindings]]
+  - [[#helix-style-keybindings][Helix-style Keybindings]]
+  - [[#music-player][Music Player]]
+  - [[#org-customization][Org Customization]]
+  - [[#capture-template][Capture Template]]
+  - [[#prettier-dired][Prettier Dired]]
+  - [[#public-blog][Public Blog]]
+  - [[#capture-html][Capture Html]]
+#+END_QUOTE
+
+* My ~/.config/doom/private.el
+
+** EAF
+
+#+BEGIN_SRC emacs-lisp :tangle ~/.config/doom/private.el
+;; (add-to-list 'load-path "~/.config/doom/package/eaf")
+;; (require 'eaf)
+;; (require 'eaf-browser)
+;; (require 'eaf-pdf-viewer)
+;; (require 'eaf-music-player)
+;; (require 'eaf-video-player)
+;; (require 'eaf-js-video-player)
+;; (require 'eaf-image-viewer)
+;; (require 'eaf-rss-reader)
+;; (require 'eaf-terminal)
+;; (require 'eaf-markdown-previewer)
+;; (require 'eaf-org-previewer)
+;; (require 'eaf-camera)
+;; (require 'eaf-git)
+;; (require 'eaf-file-manager)
+;; (require 'eaf-mindmap)
+;; (require 'eaf-mind-elixir)
+;; (require 'eaf-system-monitor)
+;; (require 'eaf-file-browser)
+;; (require 'eaf-file-sender)
+;; (require 'eaf-airshare)
+;; (require 'eaf-jupyter)
+;; (require 'eaf-2048)
+;; (require 'eaf-markmap)
+;; (require 'eaf-map)
+;; (require 'eaf-demo)
+;; (require 'eaf-vue-demo)
+;; (require 'eaf-vue-tailwindcss)
+;; (require 'eaf-pyqterminal)
+#+END_SRC
+
+** Generic-style Keybindings
+
+This file provides Helix-inspired keybindings that match Spacemacs functionality.
+Key principles:
+- Modal editing with different states (normal/insert/visual)
+- Space as leader key
+- jk for escape
+ Consistent with helix  and spacemacs muscle memory
+
+#+BEGIN_SRC emacs-lisp :tangle ~/.config/doom/private.el
+;; Modal editing setup
+(map! "<escape>" 'keyboard-escape-quit)
+(map! "C-\\" #'doom/escape)
+(map! "C-g" #'keyboard-escape-quit) ; VSCode-style escape
+
+;; ---------------------------------------------------------
+;; 基于VSCODE的键设置
+;; ---------------------------------------------------------
+;; VSCode-style file/buffer commands
+(map! "C-," #'doom/open-private-config)
+
+;; context right menu ...
+(map! "C-." #'embark-act)
+
+;; projects
+(map! "M-p" #'projectile-find-file) ; VSCode quick open
+(map! "s-p" #'projectile-switch-project)
+
+;; workspace/project
+(map! "M-<tab>" #'+workspace/cycle)
+
+;; buffer in workspace
+(map! "C-<tab>" #'consult-buffer) ; VSCode-style buffer
+
+;; VSCode-style editor commands
+(map! "C-s" #'save-buffer)
+(map! "C-f" #'consult-line) ; Quick find in file
+(map! "C-h" #'consult-outline) ; File outline
+
+;; open kitty, C-S-T for new tab, C-S-Q to exit
+(defun x/open-kitty-new-workspace ()
+  (interactive)
+  (start-process-shell-command "kitty" nil "kitty"))
+(defun x/open-kitty-here ()
+  (interactive)
+  (split-window-horizontally)
+  (start-process-shell-command "kitty" nil "kitty"))
+(map! "s-<return>" 'x/open-kitty-new-workspace)
+(map! "M-<return>" 'x/open-kitty-here)
+
+;; Enhanced function keys
+
+(map! "<f2>" #'lsp-rename) ; VSCode rename
+(map! "C-<f2>" #'lsp-find-references) ; VSCode find all references
+(map! "<f3>" #'magit-status)
+(map! "<f4>" #'dired)
+(map! "M-<f4>" #'kill-buffer)
+(map! "<f5>" #'+eval/buffer-or-region)
+(map! "<f6>" #'consult-buffer)
+(map! "<f7>" #'consult-fd)
+(map! "<f8>" #'consult-grep)
+(map! "<f9>" #'org-capture)
+(map! "<f10>" #'+lookup/references)
+(map! "<f11>" #'+lookup/implementations)
+(map! "<f12>" #'+lookup/definition)
+(map! "S-<f12>" #'+lookup/type-definition)
+(map! "C-<f12>" #'lsp-find-implementation) ; VSCode go to implementation
+
+;; Adjust text larger or smaller
+(map! "s-+" #'text-scale-increase)
+(map! "s--" #'text-scale-decrease)
+
+;; workspace
+(map! "s-N" #'+workspace/new)
+(map! "s-Q" #'+workspace/kill)
+
+;; (map! "s-H" #'+workspace/switch-left)
+;; (map! "s-L" #'+workspace/switch-right)
+
+
+;; windows
+(map! "s-v" #'split-window-right)
+(map! "s-d" #'split-window-below)
+(map! "s-q" #'delete-window)
+
+;; save buffer
+(map! "s-s" #'save-buffer)
+
+;; comment the way
+(map! "C-/" #'comment-line)
+
+;; repeat this line as in vscode
+(map! "M-s-<down>" #'duplicate-line)
+
+;; change what emacs looks like
+(map! "C-t" #'consult-theme)
+
+;; Enhanced window navigation (VSCode + Helix style)
+(map! "C-h" #'windmove-left)
+(map! "C-l" #'windmove-right)
+(map! "C-j" #'windmove-down)
+(map! "C-k" #'windmove-up)
+(map! "M-h" #'windmove-left) ; Alternative navigation
+(map! "M-l" #'windmove-right)
+(map! "M-j" #'windmove-down)
+(map! "M-k" #'windmove-up)
+;;
+;; Enhanced multi-cursor support (VSCode + Helix style)
+(map! "C-d" #'mc/mark-next-word-like-this) ; VSCode add next match
+(map! "C-S-d" #'mc/mark-previous-word-like-this) ; VSCode add previous match
+(map! "s-d" #'mc/mark-all-words-like-this) ; VSCode select all matches
+(map! "C-M-d" #'mc/mark-all-in-region) ; VSCode add cursors to selection
+(map! "C-M-<mouse-1>" #'mc/add-cursor-on-click) ; Add cursor on click
+(map! "s-a" #'mc/edit-beginnings-of-lines)
+(map! "s-e" #'mc/edit-ends-of-lines)
+
+;; Selection expansion
+(map! "C-=" #'er/expand-region)
+(map! "C--" #'er/contract-region) ; VSCode shrink selection
+(map! "C-+" #'mc/mark-all-like-this) ; VSCode select all occurrences
+
+;; Line manipulation
+(map! "RET" #'newline-and-indent) ; VSCode rename
+(map! "C-S-k" #'kill-whole-line) ; VSCode delete line
+(map! "C-S-<up>" #'drag-stuff-up) ; VSCode move line up
+(map! "C-S-<down>" #'drag-stuff-down) ; VSCode move line down
+(map! "C-x C-o" #'open-line) ; Insert newline below
+(map! "C-x C-S-o" #'open-line-above) ; Insert newline above
+
+#+end_src
+
+** Helix-style Keybindings
+
+#+begin_src emacs-lisp :tangle ~/.config/doom/private.el
+
+(add-load-path! (expand-file-name "~/.config/doom/package/helix-mode"))
+
+(require 'helix)
+
+(defun enable-helix-quit-evil ()
+   "Disable evil mode and activate helix mode"
+   (interactive)
+    (evil-mode)
+    (helix-normal-mode))
+;; ---------------------------------------------------------
+;; Helix mode
+(map! "C-`" #'enable-helix-quit-evil)
+
+(use-package! helix
+  :config
+  (helix-jj-setup 0.2)
+
+  (helix-define-key 'normal "`" #'eshell)
+
+  ;; normal
+  (helix-define-key 'normal "H" #'previous-buffer)
+  (helix-define-key 'normal "L" #'next-buffer)
+  (helix-define-key 'normal "[" #'+workspace/swap-left)
+  (helix-define-key 'normal "]" #'+workspace/swap-right)
+
+  ;; delimiter operations
+  (helix-define-key 'normal "mm" #'jump-to-matching-delimiter)
+  (helix-define-key 'normal "m(" #'change-braces-to-parens)
+  (helix-define-key 'normal "m[" #'change-brackets-to-parens)
+
+  ;; expand and contract
+  (helix-define-key 'normal "v" #'er/expand-region)
+  (helix-define-key 'normal "V" #'er/contract-region)
+
+  ;; multi cursor mark
+  (helix-define-key 'normal "C" #'mc/mark-next-like-this)
+  (helix-define-key 'normal "*" #'mc/mark-all-like-this)
+
+  ;; space mode
+  (helix-define-key 'space " " #'execute-extended-command)
+
+  ;; project
+  (helix-define-key 'space "f" #'projectile-find-file)
+  (helix-define-key 'space "b" #'projectile-switch-to-buffer)
+  (helix-define-key 'space "j" #'projectile-switch-project)
+  (helix-define-key 'space "\\" #'project-find-regexp)
+
+  ;; default lsp
+  (helix-define-key 'space "a" #'lsp-execute-code-action)
+  (helix-define-key 'space "r" #'lsp-rename)
+
+  ;; git
+  (helix-define-key 'space "g" #'magit-status)
+
+  ;; eval
+  (helix-define-key 'space "e" #'+eval/buffer-or-region)
+
+  ;; lsp coding, a for action
+  (helix-define-key 'space "s" #'consult-lsp-symbols)
+  (helix-define-key 'space "d" #'consult-lsp-diagnostics)
+
+  ;; saving buffers
+  (helix-define-key 'space "x" #'save-buffer)
+  (helix-define-key 'space "X" #'save-some-buffers)
+  (helix-define-key 'space "z" #'+workspace/kill-session-and-quit)
+
+  ;; only kill me
+  (helix-define-key 'space "," #'doom/kill-other-buffers)
+
+  ;; kill and yank / copy and past
+  (helix-define-key 'space "p" #'clipboard-yank)
+  (helix-define-key 'space "y" #'clipboard-kill-ring-save)
+
+  ;; lsp actions
+  (helix-define-key 'goto "d" #'+lookup/definition)
+  (helix-define-key 'goto "i" #'+lookup/implementations)
+  (helix-define-key 'goto "r" #'+lookup/references)
+  (helix-define-key 'goto "y" #'+lookup/type-definition)
+
+  ;; quick finder
+  (helix-define-key 'goto "." #'consult-find)   ;;
+  (helix-define-key 'goto "b" #'consult-buffer) ;;
+  (helix-define-key 'goto "f" #'consult-fd)     ;;
+  (helix-define-key 'goto "/" #'consult-grep)   ;;
+
+  ;; quick comment
+  (helix-define-key 'goto "c" #'comment-line)
+
+  ;; clangd switch header/source file
+  (helix-define-key 'goto "H" #'lsp-clangd-find-other-file)
+
+  ;; switch buffers
+  (helix-define-key 'goto "n" #'next-buffer)
+  (helix-define-key 'goto "p" #'previous-buffer)
+
+  ;; switch workspace
+  (helix-define-key 'goto "]" #'+workspace/swap-right)
+  (helix-define-key 'goto "[" #'+workspace/swap-left)
+
+  ;; terminal to run command
+  (helix-define-key 'space "t" #'+vterm/toggle)
+
+  ;; windows manipulation
+  (helix-define-key 'space "v" #'split-window-right)
+  (helix-define-key 'space "h" #'split-window-below)
+  (helix-define-key 'space "q" #'delete-window)
+  (helix-define-key 'space "o" #'delete-other-windows)
+
+  (helix-define-key 'space "m" #'maximize-window)
+  (helix-define-key 'window "m" #'maximize-window)
+
+  ;; typable command
+  (helix-define-typable-command "fmt" #'+format/region-or-buffer)
+  (helix-define-typable-command "save" #'save-some-buffers)
+  (helix-define-typable-command "reset" #'+workspace/kill-session-and-quit)
+
+  ;; Set up default helix keybindings
+  ;; (helix-mode)
+  ;; (helix-mode-all)
+  )
+
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Music Player
+
+#+begin_src emacs-lisp :tangle ~/.config/doom/private.el
+(add-to-list 'load-path "~/.config/doom/package/emms")
+(require 'emms-setup)
+(emms-all)
+(setq-default
+   emms-source-file-default-directory "/persistent/home/shared/Music/"
+
+   emms-source-playlist-default-format 'mp3
+   emms-playlist-mode-center-when-go t
+   emms-playlist-default-major-mode 'emms-playlist-mode
+   emms-show-format "NP: %s"
+
+   emms-player-list '(emms-player-mpv)
+   emms-player-mpv-environment '("PULSE_PROP_media.role=music")
+   emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no" "--vo=null")
+
+   emms-volume-change-function 'emms-volume-mpv-change
+   emms-volume-mpv-method 'smart)
+#+end_src
+** Org Customization
+
+#+begin_src emacs-lisp :tangle ~/.config/doom/private.el
+  (setq org-fast-tag-selection-single-key (quote expert))
+  (setq org-tag-alist (quote ((:startgroup)
+                              ("@office" . ?o)
+                              ("@home" . ?h)
+                              ("@travel" . ?t)
+                              ("@errand" . ?e)
+                              (:endgroup)
+                              ("PERSONAL" . ?p)
+                              ("KIDS" . ?k)
+                              ("DANIEL" . ?d)
+                              ("LULU" . ?l)
+                              ("WORK" . ?W)
+                              ("PROJECT" . ?P)
+                              ("COMPUTER" . ?C)
+                              ("PHONE" . ?E)
+                              ("HABIT" . ?H)
+                              )))
+
+#+end_src
+
+** Capture Template
+
+#+begin_src emacs-lisp :tangle ~/.config/doom/private.el
+
+(require 'org-web-tools)
+
+(after! org
+
+  (defun get-year-and-month ()
+    (list (format-time-string "%Y年") (format-time-string "%m月")))
+
+  (defun find-month-tree ()
+    (let* ((path (get-year-and-month))
+           (level 1)
+           end)
+      (unless (derived-mode-p 'org-mode)
+        (error "Target buffer \"%s\" should be in Org mode" (current-buffer)))
+      (goto-char (point-min))           ;移动到 buffer 的开始位置
+      ;; 先定位表示年份的 headline，再定位表示月份的 headline
+      (dolist (heading path)
+        (let ((re (format org-complex-heading-regexp-format
+                          (regexp-quote heading)))
+              (cnt 0))
+          (if (re-search-forward re end t)
+              (goto-char (point-at-bol)) ;如果找到了 headline 就移动到对应的位置
+            (progn                       ;否则就新建一个 headline
+              (or (bolp) (insert "\n"))
+              (if (/= (point) (point-min)) (org-end-of-subtree t t))
+              (insert (make-string level ?*) " " heading "\n"))))
+        (setq level (1+ level))
+        (setq end (save-excursion (org-end-of-subtree t t))))
+      (org-end-of-subtree)))
+
+  (setq org-capture-templates nil)
+
+  (add-to-list 'org-capture-templates '("x" "Extra"))
+  (add-to-list 'org-capture-templates
+               '("xs"
+                 "Snippets"
+                 entry
+                 (file "~/Org/snippets.org")
+                 (file "~/Templates/org-capture/snippet.template")
+                 :kill-buffer nil))
+  (add-to-list 'org-capture-templates
+               '("xh"
+                 "Habit"
+                 entry
+                 (file "~/Org/habit.org")
+                 (file "~/Templates/org-capture/habit.template")
+                 :kill-buffer nil))
+  (add-to-list 'org-capture-templates
+               '("xb"
+                 "Billing"
+                 plain
+                 (file+function "~/Org/billing.org" find-month-tree)
+                 (file "~/Templates/org-capture/billing.template")
+                 :kill-buffer nil))
+  (add-to-list 'org-capture-templates
+               '("xc"
+                 "Contacts"
+                 entry
+                 (file "~/Org/contact.org")
+                 (file "~/Templates/org-capture/contact.template")
+                 :kill-buffer nil))
+
+  (add-to-list 'org-capture-templates
+               '("c"
+                 "Calendar"
+                entry 
+                (file+olp "~/Org/inbox.org" "Calendar")  
+                (file "~/Templates/org-capture/inbox.template")
+                :kill-buffer nil))
+  (add-to-list 'org-capture-templates
+               '("P"
+                 "Phone calls"
+                 entry
+                 (file+olp "~/Org/inbox.org" "Calls")
+                 (file "~/Templates/org-capture/phone.template")
+                 :kill-buffer nil))
+  (add-to-list 'org-capture-templates
+               '("i"
+                 "My GTD Inbox"
+                 entry
+                 (file+olp "~/Org/inbox.org" "Tasks")
+                 (file "~/Templates/org-capture/inbox.template")
+                 :kill-buffer nil))
+  )
+#+end_src
+
+** Prettier Dired
+
+Fix the error of some icons issues
+
+#+begin_src emacs-lisp :tangle ~/.config/doom/private.el
+
+(use-package dirvish
+  :after dired
+  :custom
+  (map! :map dired-mode-map
+        :n "TAB" #'dirvish-toggle-subtree
+        :n "s" #'dirvish-quicksort
+        :n "/" #'dirvish-filter)
+
+  (setq dirvish-bookmark-entries
+        '(("Downloads" "~/Downloads/")
+          ("Dotfiles" "~/.config/")
+          ("Persist" "/persistent/home/")
+          ("Projects" "~/sources/")))
+
+  (dirvish-header-line-format '(:left (path)))
+  (dirvish-mode-line-format '(:left (info)))
+  (dirvish-preview-dispatchers (list 'image 'pdf))
+  :config
+  (setq dirvish-mode-line-format
+        '(:left (index) :right (details)))
+  (setq inhibit-compacting-font-caches t)
+  (setq dirvish-attributes '(file-time file-size git))
+  (setq dirvish-hide-details t)
+  (setq delete-by-moving-to-trash t))
+
+#+end_src
+** Public Blog
+*** Setting Org-publish-project-alist
+
+Following the [[https://orgmode.org/worg/org-tutorials/org-jekyll.html][worg guide ]]and [[https://gitlab.com/librephoenix/librephoenix.com.git][Blog with Org Mode]], we need to start by setting the [[file+emacs:org-publish-project-alist][org-publish-project-alist ]]variable so that we are able to publish org files from the org directory to html files in the jekyll directory. This is necessary because Jekyll can only natively handle html and markdown, not org. I like to do this by creating a .dir-locals.el file in the project root and setting it to the appropriate values. This is what mine looks like:
+
+Following the [[https://orgmode.org/worg/org-tutorials/org-jekyll.html][public-with-org]]
+
+#+begin_src emacs-lisp :tangle ~/.config/doom/private.el
+(setq org-publish-project-alist
+   '(
+    ("efwmc-blog.xyz"
+          ;; Path to your org files.
+          :base-directory "~/sources/efwmc-blog/org/"
+          :base-extension "org"
+
+          ;; Path to your Jekyll project.
+          :publishing-directory "~/sources/efwmc-blog/jekyll/"
+          :recursive t
+          :publishing-function org-html-publish-to-html
+          :headline-levels 4
+          :html-extension "html"
+          :body-only t ;; Only export section between <body> </body>
+    )
+
+    ("assets-efwmc-blog.xyz"
+          :base-directory "~/sources/efwmc-blog/org/"
+          :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf\\|php"
+          :publishing-directory "~/sources/efwmc-blog/jekyll/"
+          :recursive t
+          :publishing-function org-publish-attachment
+    )
+
+    ("efwmc-blog.com" :components ("efwmc-blog.xyz" "assets-efwmc-blog.xyz"))
+))
+#+end_src
+
+#+RESULTS:
+| efwmc-blog.xyz        | :base-directory | ~/sources/efwmc-blog/org/              | :base-extension | org  | :publishing-directory | ~/sources/efwmc-blog/jekyll/ | :recursive | t    | :publishing-function | org-html-publish-to-html | :headline-levels |    4 | :html-extension | html                  | :body-only               | t          |   |                      |                        |
+| assets-efwmc-blog.xyz | :base-directory | ~/sources/efwmc-blog/org/              | :base-extension | css\ | js\                   | png\                         | jpg\       | gif\ | pdf\                 | mp3\                     | ogg\             | swf\ | php             | :publishing-directory | ~/Org/efwmc-blog/jekyll/ | :recursive | t | :publishing-function | org-publish-attachment |
+| efwmc-blog.com        | :components     | (efwmc-blog.xyz assets-efwmc-blog.xyz) |                 |      |                       |                              |            |      |                      |                          |                  |      |                 |                       |                          |            |   |                      |                        |
+
+*** Build and Test the Website Locally
+At this point, you can cd into the jekyll subdirectory and run bundle install. This will install Jekyll along with all the necessary Ruby dependencies for the theme to work
+
+To test the site locally, run bundle exec jekyll serve and navigate to http://localhost:4000. If everything worked properly, you should be able to see the Jekyll project running in test mode!
+
+#+begin_src shell
+cd ~/sources/efwmc-blog
+direnv allow
+cd jekyll
+bundle exec jekyll serve
+#+end_src
+
+#+RESULTS:
+
+[[http://localhost:4000][Blog Local Dev Server]]
+
+** Capture Html
+*** Enable Org-protocol-capture-html
+
+**** Use =org-protocol-capture-html= to capture the web pages
+
+We have some different protocol, such as =capture=, and this package add another called =capture-html=
+
+But some how will failed to render =html=
+
+#+begin_src shell :tangle ~/.local/bin/org-protocol-capture-html.sh
+
+#!/usr/bin/env bash
+
+# * Defaults
+
+heading=" "
+protocol="capture-html"
+template="w"
+
+# * Functions
+
+function debug {
+    if [[ -n $debug ]]
+    then
+        function debug {
+            echo "DEBUG: $@" >&2
+        }
+        debug "$@"
+    else
+        function debug {
+            true
+        }
+    fi
+}
+function die {
+    echo "$@" >&2
+    exit 1
+}
+function usage {
+    cat <<EOF
+$0 [OPTIONS] [HTML]
+html | $0 [OPTIONS]
+
+Send HTML to Emacs through org-protocol, passing it through Pandoc to
+convert HTML to Org-mode.  HTML may be passed as an argument or
+through STDIN.  If only URL is given, it will be downloaded and its
+contents used.
+
+Options:
+    -h, --heading HEADING     Heading
+    -r, --readability         Capture web page article with python-readability
+    -t, --template TEMPLATE   org-capture template key (default: w)
+    -u, --url URL             URL
+
+    --debug  Print debug info
+    --help   I need somebody!
+EOF
+}
+
+function urlencode {
+    python -c "
+from __future__ import print_function
+try:
+    from urllib import quote  # Python 2
+except ImportError:
+    from urllib.parse import quote  # Python 3
+import sys
+
+print(quote(sys.stdin.read()[:-1], safe=''))"
+}
+
+# * Args
+
+args=$(getopt -n "$0" -o dh:rt:u: -l debug,help,heading:,readability,template:,url: -- "$@") \
+    || die "Unable to parse args.  Is getopt installed?"
+eval set -- "$args"
+
+while true
+do
+    case "$1" in
+        -d|--debug)
+            debug=true
+            debug "Debugging on"
+            ;;
+        --help)
+            usage
+            exit
+            ;;
+        -h|--heading)
+            shift
+            heading="$1"
+            ;;
+        -r|--readability)
+            protocol="capture-eww-readable"
+            readability=true
+            ;;
+        -t|--template)
+            shift
+            template="$1"
+            ;;
+        -u|--url)
+            shift
+            url="$1"
+            ;;
+        --)
+            # Remaining args
+            shift
+            rest=("$@")
+            break
+            ;;
+    esac
+
+    shift
+done
+
+debug "ARGS: $args"
+debug "Remaining args: ${rest[@]}"
+
+# * Main
+
+# ** Get HTML
+
+if [[ -n $@ ]]
+then
+    debug "HTML from args"
+
+    html="$@"
+
+elif ! [[ -t 0 ]]
+then
+    debug "HTML from STDIN"
+
+    html=$(cat)
+
+elif [[ -n $url && ! -n $readability ]]
+then
+    debug "Only URL given; downloading..."
+
+    # Download URL
+    html=$(curl "$url") || die "Unable to download $url"
+
+    # Get HTML title for heading
+    heading=$(sed -nr '/<title>/{s|.*<title>([^<]+)</title>.*|\1|i;p;q};' <<<"$html") || heading="A web page with no name"
+
+    debug "Using heading: $heading"
+
+elif [[ -n $readability ]]
+then
+    debug "Using readability"
+
+else
+    usage
+    echo
+    die "I need somethin' ta go on, Cap'n!"
+fi
+
+# ** Check URL
+# The URL shouldn't be empty
+
+[[ -n $url ]] || url="http://example.com"
+
+# ** URL-encode html
+
+heading=$(urlencode <<<"$heading") || die "Unable to urlencode heading."
+url=$(urlencode <<<"$url") || die "Unable to urlencode URL."
+html=$(urlencode <<<"$html") || die "Unable to urlencode HTML."
+
+# ** Send to Emacs, just use capture is OK
+emacsclient "org-protocol://capture?template=$template&url=$url&title=$heading&body=$html"
+#+end_src
+
+**** Configure =qutebrowser userscript= to run capture script
+
+#+begin_src shell
+
+#!/usr/bin/env bash
+
+readonly CAPTURE_SCRIPT=~/.local/bin/org-protocol-capture-html.sh
+
+# if we start with hints, delete title and selected text and use capture
+if [[ "$QUTE_MODE" = "hints" ]]; then
+    QUTE_TITLE=""
+    QUTE_SELECTED_TEXT=""
+fi
+
+# we try to pass as many information as we have
+if [[ -n "$QUTE_SELECTED_TEXT" ]]; then
+    $CAPTURE_SCRIPT --heading "${QUTE_TITLE}" --url "${QUTE_URL}" "${QUTE_SELECTED_TEXT}"
+
+elif [[ -n "$QUTE_TITLE" ]]; then
+    $CAPTURE_SCRIPT --heading "${QUTE_TITLE}" --readability --url "${QUTE_URL}"
+
+elif [[ -n "$QUTE_URL" ]]; then
+    $CAPTURE_SCRIPT --readability --url "${QUTE_URL}"
+fi
+#+end_src
+
+**** In your =config.el= file, require =org-protocol-capture-html= and configure =org-capture-templates=
+
+#+begin_src emacs-lisp :tangle ~/.config/doom/private.el
+(add-load-path! (expand-file-name "~/.config/doom/package"))
+(after! org
+    (require 'org-protocol)
+    (require 'org-protocol-capture-html)
+
+    (require 'org-web-tools)
+    (setq org-protocol-default-template-key "w")
+
+    (add-to-list 'org-capture-templates
+        '("w" "Web Clip" entry (file+olp "~/Org/bookmark.org" "Web")
+        (function (lambda ()
+                (string-join
+                '("* %:description"
+                    ":PROPERTIES:"
+                    ":CREATED: %U"
+                    ":END:"
+                    "%:annotation"
+                    "%i"
+                    ""
+                    "%?")
+                "\n")))
+        :prepend t))
+)
+
+#+end_src
+
+#+RESULTS:
+| w | Web Clip | entry | (file+olp ~/Org/inbox.org Web) | #'(lambda nil (string-join '(* %(decode-capture-component :description) :PROPERTIES: :CREATED: %U :END: %:annotation %(i)  %?) |
+*** Enable Qute-capture user script
+**** Binding in qute-browser
+#+begin_src python
+config.bind(',bb', 'spawn --userscript qute-capture read -f ~/read-later.org -H Read-Later')
+#+end_src
+**** Scripts to capture
+
+
+#+begin_src shell :tangle ~/.config/qutebrowser/userscripts/qute-capture
+chmod +x ~/.config/qutebrowser/userscripts/qute-capture
+#+end_src
+
+#+RESULTS:
+
+
+#+begin_src shell :tangle ~/.config/qutebrowser/userscripts/qute-capture
+#!/usr/bin/env python3
+"""
+Store the given url in an org-mode file
+Note: This script must be called from qutebrowser
+"""
+
+from PyOrgMode import PyOrgMode as pyorg
+import os.path
+import subprocess
+import shlex
+import sys
+import argparse
+import re
+import time
+import tempfile
+
+ORG_FILE = "~/read-later.org"
+HEADING_PATH = "Read Later"
+EDITOR='alacritty -e hx'
+HEADING_SEPERATOR = '/'
+TIME_FORMAT = "Captured: <%Y-%m-%d %a>"
+DMENU = "dmenu -i -l 15"
+
+argparser = argparse.ArgumentParser(description=__doc__)
+argparser.add_argument("mode", nargs='?', choices=["write", "read", "rm"])
+argparser.add_argument("--re", "-r", nargs='?', default="")
+argparser.add_argument("--file", "-f", nargs='?', default=ORG_FILE)
+argparser.add_argument("--heading", "-H", nargs='?', default=HEADING_PATH)
+argparser.add_argument("--edit", "-e", nargs='?', const=EDITOR, default="")
+
+def qute_command(command):
+    """send commands to qutebrowser"""
+    with open(os.environ['QUTE_FIFO'], 'w') as fifo:
+        fifo.write(command + '\n')
+        fifo.flush
+
+def dmenu(items, invocation):
+    """run dmenu"""
+    command = shlex.split(invocation)
+    process = subprocess.run(command,
+                             input='\n'.join(items).encode("UTF-8"),
+                             stdout=subprocess.PIPE)
+    return process.stdout.decode("UTF-8").strip()
+
+def new_node(heading, level):
+    """Return a new orgnode"""
+    node = pyorg.OrgNode.Element()
+    node.heading = heading
+    node.level = level
+    return node
+
+def resolve_heading(org, headings):
+    """
+    return the node for the specified subheading from org
+    nested subheadings can be specified using `/' e.g. heading/subheading
+    create any headings that don't exist
+    """
+    def subheading(org, heading):
+        """return the node for heading immediately below org"""
+        for c in org.content:
+            if c.heading == heading:
+                return c
+        return None
+
+    node = org
+    for h in headings.split(HEADING_SEPERATOR):
+        if subheading(node, h):
+            node = subheading(node, h)
+        else:
+            nnode = new_node(h, node.level + 1)
+            node.append_clean(nnode)
+            node = nnode
+    return node
+
+def node_select_dmenu(org, rexp):
+    """Return a node under org selected with dmenu"""
+    # Nodes -> text -> node
+    # we prepend the dmenu entry with an index back into the array
+    # arbitrarily large limit
+    n = (n for n in range(0, 10**10))
+    if org.content:
+        items = ["{}. {} {}".format(next(n),
+                                    e.content[0].strip(),
+                                    e.heading.strip()) for e in org.content]
+
+        # ideally we should be matching against the header too
+        if rexp:
+            items = [i for i in items if re.search(rexp, i)]
+
+        selection = dmenu(items, DMENU).split(' ')[0]
+        if selection:
+            return org.content[int(selection.split('.')[0])]
+    return None
+
+def edit_node(orgnode, editor):
+    """spawn a text editor on the given node and return edited content"""
+    if not editor:
+        return orgnode
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".org") as f:
+        fname = f.name
+
+    # we need to embed orgnode in a full orgdatastructure before saving it out
+    base = pyorg.OrgDataStructure()
+    base.root.append_clean(orgnode)
+    base.save_to_file(fname)
+
+    if subprocess.call(editor + " " + fname, shell=True) != 0:
+        os.remove(fname)
+        return orgnode
+
+    editnode = pyorg.OrgDataStructure()
+    try:
+        editnode.load_from_file(fname);
+    except FileNotFoundError:
+        return orgnode
+
+    os.remove(fname)
+    # retrieve element from orgdatastructure
+    return editnode.root.content[0]
+
+def main(args):
+    """
+    Store given url in an org-mode file
+    or interactively retrieve using dmenu
+    """
+    if not args.mode or not os.getenv("QUTE_URL"):
+        argparser.print_help()
+        return 1
+
+    org = pyorg.OrgDataStructure()
+    title = os.getenv("QUTE_TITLE")
+    url = os.getenv("QUTE_URL")
+    content = os.getenv("QUTE_SELECTED_TEXT")
+    orgfile = os.path.expanduser(args.file)
+
+    try:
+        org.load_from_file(orgfile);
+    except FileNotFoundError:
+        # If the file doesn't exist we begin with an empty org structure
+        pass
+
+    node = resolve_heading(org.root, args.heading);
+
+    if args.mode == "write":
+        newnode = new_node(title, node.level + 1)
+        newnode.append_clean(url + '\n')
+        newnode.append_clean(time.strftime(TIME_FORMAT) + '\n')
+        if content:
+            newnode.append_clean(content + '\n')
+        # we append a final newline to ensure each element is space separated
+        # this may be personal preference
+        newnode.append_clean('\n')
+        if args.edit:
+            newnode = edit_node(newnode, args.edit)
+        node.append_clean(newnode)
+        org.save_to_file(orgfile)
+        qute_command("message-info \"captured " + title + "\"")
+
+    elif args.mode == "read":
+        selection = node_select_dmenu(node, args.re)
+        if selection:
+            qute_command("open -t " + selection.content[0].strip())
+
+    elif args.mode == "rm":
+        selection = node_select_dmenu(node, args.re)
+        if selection:
+            node.content.remove(selection)
+            org.save_to_file(orgfile)
+            qute_command("message-info \"removed: " + selection.heading + "\"")
+
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main(argparser.parse_args()))
+#+end_src

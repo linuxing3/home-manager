@@ -1,0 +1,254 @@
+ls
+clear
+ls
+just
+just --list
+clear
+nvim Justfile
+use utils.nu *
+nixos-switch --help
+nixos-switch liuxing3-hyprland default
+sudo chown -R linuxing3  ~/.ssh
+nixos-switch liuxing3-hyprland default
+ls ~/.gitconfig
+cat ~/.gitconfig
+ls .ssh
+ls ~/.ssh
+mount /dev/sdb1 /mnt
+sudo mount /dev/sdb1 /mnt
+mkdir -p tmp/mnt/sdb1
+mkdir tmp/mnt/sdb1
+sudo mount /dev/sdb1 /tmp/mnt/sdb1
+mkdir /tmp/mnt/sdb1
+rm -rf tmp
+sudo mount /dev/sdb1 /tmp/mnt/sdb1
+cp /tmp/mnt/sdb1/home/linuxing3/.git-credentials ~/
+clear
+nixos-switch liuxing3-hyprland default
+hx .
+ssh-add ~/.ssh/id_ed25519
+nixos-switch liuxing3-hyprland default
+cd ..
+ls
+cat ~/.git-credentials
+git clone https://github.com/linuxing3/mysecrets
+clear
+cd luks-nix-config/
+hx .
+nixos-switch liuxing3-hyprland default
+hx flake.nix
+clear
+nixos-switch liuxing3-hyprland default
+hx flake.nix
+git log
+clear
+git log
+git checkout 1730 flake.nix
+clear
+hx flake.nix
+clear
+git add .
+git commmit -m mysecrets
+git commit -m mysecrets
+clear
+nixos-switch liuxing3-hyprland default
+nixos-switch linuxing3-hyprland default
+hx .
+nixos-switch linuxing3-hyprland default
+hx .
+clear
+nixos-switch linuxing3-hyprland default
+hx .
+clear
+nixos-switch linuxing3-hyprland default
+hx .
+clear
+nixos-switch linuxing3-hyprland default
+hx .
+nixos-switch linuxing3-hyprland default
+hx .
+yazi
+clear
+nixos-switch linuxing3-hyprland default
+hx .
+clear
+nixos-switch linuxing3-hyprland default
+hx .
+nixos-switch linuxing3-hyprland default
+nixos-switch linuxing3-hyprland default -- --show-trace
+nixos-switch linuxing3-hyprland default --show-trace
+nixos-switch linuxing3-hyprland default
+hx .
+clear
+nixos-switch linuxing3-hyprland default
+hx .
+yazi
+clear
+rg
+nixos-switch linuxing3-hyprland default
+clear
+ls
+nixos-switch linuxing3-hyprland default
+hx .
+clear
+nixos-switch linuxing3-hyprland default
+hx .
+clear
+ls
+hx .
+nixos-switch linuxing3-hyprland default
+hx .
+nixos-switch linuxing3-hyprland default
+hx .
+nixos-switch linuxing3-hyprland default
+hx .
+nixos-switch linuxing3-hyprland default
+hx .
+nixos-switch linuxing3-hyprland default
+hx .
+nixos-switch linuxing3-hyprland default
+hx .
+nix eval .#evalTests --show-trace --print-build-logs --verbose
+hx .
+nix eval .#evalTests --show-trace --print-build-logs --verbose
+hx .
+nix eval .#evalTests --show-trace --print-build-logs --verbose
+hx .
+clear
+hx Justfile
+nixos-switch linuxing3-hyprland debug
+hx .
+hx
+nixos-switch linuxing3-hyprland debug
+clear
+ls
+nixos-switch linuxing3-hyprland debug
+hx .
+nixos-switch linuxing3-hyprland debug
+hx .
+nixos-switch linuxing3-hyprland debug
+hx .
+clear
+nixos-switch linuxing3-hyprland debug
+clear
+hx .
+nixos-switch linuxing3-hyprland default
+nixos-switch linuxing3-hyprland debug
+hx .
+nixos-switch linuxing3-hyprland debug
+hx .
+nixos-switch linuxing3-hyprland debug
+hx .
+nixos-switch linuxing3-hyprland debug
+hx .
+nixos-switch linuxing3-hyprland debug
+hx .
+nixos-switch linuxing3-hyprland debug
+hx .
+clear
+nixos-switch linuxing3-hyprland debug
+hx .
+clear
+yazi
+clear
+nixos-switch linuxing3-hyprland debug
+yazi
+nixos-switch linuxing3-hyprland debug
+hx .
+nixos-switch linuxing3-hyprland debug
+clear
+ls
+yazi
+clear
+nixos-switch linuxing3-hyprland debug
+yazi
+nixos-switch linuxing3-hyprland debug
+hx .
+nixos-switch linuxing3-hyprland debug
+use utils.nu *
+nixos-switch linuxing3-hyprland default
+nixos-switch linuxing3-hyprland debug
+nixos-switch linuxing3-hyprland default
+nixos-switch linuxing3-hyprland debug
+hx .
+clear
+nixos-switch linuxing3-hyprland debug
+clear
+nixos-switch linuxing3-hyprland debug
+ping localhost
+ping ai
+nixos-switch linuxing3-hyprland debug
+clear
+cd nixos-installer/
+ls
+nixos-rebuild
+nixos-rebuild switch --flake .#ai
+sudo nixos-rebuild switch --flake .#ai
+sudo nixos-rebuild build --flake .#ai
+sudo nixos-rebuild switch --flake .#ai --no-bootloader
+clear
+sudo yazi /boot
+clear
+tmux
+use utils.nu *
+just --list
+clear
+just hypr
+just hypr linuxing3 debug
+nixos-switch linuxing3-hyprland debug
+sudo nixos-switch linuxing3-hyprland debug
+sudo -i su
+nixos-switch linuxing3-hyprland debug
+clear
+cd ..
+ls
+clear
+cd luks-nix-config/
+cd nixos-installer/
+clear
+ls
+nixos-rebuild switch --flake .#ai
+sudo nixos-rebuild switch --flake .#ai
+grub-mkconfig 
+sudo grub-mkconfig 
+clear
+use utils.nu *
+just hypr linuxing3 debug
+just hypr ai debug
+clear
+nixos-rebuild switch --flake .#ai
+nixos-rebuild switch --flake .#hyprland-ai
+nixos-rebuild switch --flake .#ai-hyprland
+clear
+nixos-rebuild switch --flake .#ai-hyprland
+nixos-rebuild switch --flake .#ai-hyprland --verbose
+clear
+nixos-rebuild switch --flake .#ai-hyprland
+clear
+cd ../uni-nixos-config/
+clear
+nix run --flake
+nix run --option
+nix run --option flake .#laptop
+nix run --option --flake .#laptop
+nixos-rebuild switch --flake .#laptop
+exit
+starship
+clear
+ls
+exit
+ls
+env
+clear
+z ~/sources/helix/
+cd ~/sources/helix/
+ls
+clear
+ls
+cd ~/sources/helix/
+ls
+z ~/sources/uni-nixos-config/
+clear
+ls
+xh
+clear

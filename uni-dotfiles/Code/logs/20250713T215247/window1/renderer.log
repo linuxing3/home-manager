@@ -1,0 +1,10 @@
+2025-07-13 21:52:49.013 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-vsliveshare.vsliveshare' wants API proposal 'notebookCellExecutionState' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-07-13 21:52:49.028 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-python.gather' wants API proposal 'notebookCellExecutionState' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-07-13 21:52:49.028 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-python.vscode-pylance' wants API proposal 'mcpConfigurationProvider' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-07-13 21:52:49.349 [info] Started local extension host with pid 3946.
+2025-07-13 21:52:49.424 [info] Started initializing default profile extensions in extensions installation folder. file:///home/linuxing3/.vscode/extensions
+2025-07-13 21:52:49.690 [info] ComputeTargetPlatform: linux-x64
+2025-07-13 21:52:49.872 [info] ChatSessionStore: Migrating 0 chat sessions from storage service to file system
+2025-07-13 21:52:49.888 [info] Completed initializing default profile extensions in extensions installation folder. file:///home/linuxing3/.vscode/extensions
+2025-07-13 21:52:50.383 [info] Settings Sync: Account status changed from uninitialized to unavailable
+2025-07-13 21:52:53.929 [info] [perf] Render performance baseline is 50ms

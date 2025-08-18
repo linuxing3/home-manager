@@ -1,0 +1,4 @@
+2025-07-13 21:52:49.898 [info] Started initializing default profile extensions in extensions installation folder. file:///home/linuxing3/.vscode/extensions
+2025-07-13 21:52:50.066 [info] ComputeTargetPlatform: linux-x64
+2025-07-13 21:52:50.121 [warning] Failed to create default profile extensions manifest in extensions installation folder. file:///home/linuxing3/.vscode/extensions Unable to create file 'vscode-userdata:/home/linuxing3/.vscode/extensions/extensions.json' that already exists when overwrite flag is not set
+2025-07-13 21:52:50.121 [info] Completed initializing default profile extensions in extensions installation folder. file:///home/linuxing3/.vscode/extensions

@@ -1,0 +1,53 @@
+layout {
+
+    ide name="ide"
+    duo name="duo"
+    one name="one"
+
+    // PANE TEMPLATES
+    pane_template name="filepicker" {
+        command "nnn"
+        args "-c"
+    }
+
+    pane_template name="editor" {
+        command "helix"
+    }
+
+    pane_template name="compact_bar" {
+        borderless true
+        plugin location="compact-bar"
+    }
+
+    // TAB TEMPLATES
+    tab_template name="ide" focus=true {
+        pane split_direction="vertical" {
+            filepicker size=30 name="nnn"
+            editor
+        }
+        compact_bar size=1
+    }
+
+    tab_template name="duo" {
+        pane split_direction="vertical" {
+            pane
+            pane
+        }
+        compact_bar size=1
+    }
+
+    tab_template name="one" {
+        pane
+        compact_bar size=1
+    }
+
+    new_tab_template {
+        pane
+        compact_bar size=1
+    }
+
+    default_tab_template {
+        children
+        compact_bar size=1
+    }
+}

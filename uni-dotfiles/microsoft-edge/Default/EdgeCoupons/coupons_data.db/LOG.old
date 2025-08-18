@@ -1,0 +1,6 @@
+2025/07/15-00:07:56.925 ad6 Reusing MANIFEST /home/linuxing3/.config/microsoft-edge/Default/EdgeCoupons/coupons_data.db/MANIFEST-000001
+2025/07/15-00:07:56.928 ad6 Recovering log #13
+2025/07/15-00:07:56.928 ad6 Reusing old log /home/linuxing3/.config/microsoft-edge/Default/EdgeCoupons/coupons_data.db/000013.log 
+2025/07/15-00:07:57.679 ad8 Level-0 table #17: started
+2025/07/15-00:07:57.692 ad8 Level-0 table #17: 672012 bytes OK
+2025/07/15-00:07:57.715 ad8 Delete type=0 #13

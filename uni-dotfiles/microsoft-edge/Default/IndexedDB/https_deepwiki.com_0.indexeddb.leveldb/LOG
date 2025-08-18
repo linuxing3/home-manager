@@ -1,0 +1,18 @@
+2025/07/14-23:04:21.684 3125 Creating DB /home/linuxing3/.config/microsoft-edge/Default/IndexedDB/https_deepwiki.com_0.indexeddb.leveldb since it was missing.
+2025/07/14-23:04:21.706 3125 Reusing MANIFEST /home/linuxing3/.config/microsoft-edge/Default/IndexedDB/https_deepwiki.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/14-23:04:21.756 3127 Level-0 table #5: started
+2025/07/14-23:04:21.760 3127 Level-0 table #5: 1664 bytes OK
+2025/07/14-23:04:21.775 3127 Delete type=0 #3
+2025/07/14-23:04:21.775 3125 Manual compaction at level-0 from '\x00\x02\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x03\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/14-23:11:39.920 3126 Level-0 table #7: started
+2025/07/14-23:11:39.929 3126 Level-0 table #7: 256 bytes OK
+2025/07/14-23:11:39.939 3126 Delete type=0 #4
+2025/07/14-23:11:39.940 3126 Manual compaction at level-0 from (begin) .. (end); will stop at (end)
+2025/07/14-23:11:39.940 3126 Manual compaction at level-1 from (begin) .. (end); will stop at '\x00\x00\x00\x002\x02\x02\x01\x00\x00\x00\x00\x00\x00\x00\x00' @ 105 : 0
+2025/07/14-23:11:39.940 3126 Compacting 1@1 + 1@2 files
+2025/07/14-23:11:39.946 3126 Generated table #8@1: 32 keys, 782 bytes
+2025/07/14-23:11:39.946 3126 Compacted 1@1 + 1@2 files => 782 bytes
+2025/07/14-23:11:39.955 3126 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/07/14-23:11:39.956 3126 Delete type=2 #5
+2025/07/14-23:11:39.956 3126 Delete type=2 #7
+2025/07/14-23:11:39.956 3126 Manual compaction at level-1 from '\x00\x00\x00\x002\x02\x02\x01\x00\x00\x00\x00\x00\x00\x00\x00' @ 105 : 0 .. (end); will stop at (end)

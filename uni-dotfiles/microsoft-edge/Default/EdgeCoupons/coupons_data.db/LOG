@@ -1,0 +1,15 @@
+2025/07/15-11:06:50.208 b23 Reusing MANIFEST /home/linuxing3/.config/microsoft-edge/Default/EdgeCoupons/coupons_data.db/MANIFEST-000001
+2025/07/15-11:06:50.209 b23 Recovering log #16
+2025/07/15-11:06:50.209 b23 Reusing old log /home/linuxing3/.config/microsoft-edge/Default/EdgeCoupons/coupons_data.db/000016.log 
+2025/07/15-11:07:01.256 b23 Level-0 table #20: started
+2025/07/15-11:07:01.293 b23 Level-0 table #20: 672012 bytes OK
+2025/07/15-11:07:01.326 b23 Delete type=0 #16
+2025/07/15-11:07:01.327 b23 Compacting 4@0 + 1@1 files
+2025/07/15-11:07:01.491 b23 Generated table #21@0: 4 keys, 672085 bytes
+2025/07/15-11:07:01.491 b23 Compacted 4@0 + 1@1 files => 672085 bytes
+2025/07/15-11:07:01.528 b23 compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/07/15-11:07:01.528 b23 Delete type=2 #8
+2025/07/15-11:07:01.528 b23 Delete type=2 #11
+2025/07/15-11:07:01.528 b23 Delete type=2 #14
+2025/07/15-11:07:01.528 b23 Delete type=2 #17
+2025/07/15-11:07:01.529 b23 Delete type=2 #20

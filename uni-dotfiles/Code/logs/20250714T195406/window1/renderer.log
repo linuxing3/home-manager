@@ -1,0 +1,7 @@
+2025-07-14 19:54:07.159 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-vsliveshare.vsliveshare' wants API proposal 'notebookCellExecutionState' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-07-14 19:54:07.177 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-python.gather' wants API proposal 'notebookCellExecutionState' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-07-14 19:54:07.177 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-python.vscode-pylance' wants API proposal 'mcpConfigurationProvider' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-07-14 19:54:07.764 [info] Started local extension host with pid 9659.
+2025-07-14 19:54:12.781 [info] ComputeTargetPlatform: linux-x64
+2025-07-14 19:54:12.935 [warning] [backup tracker] suspended, ignoring register event vscode-userdata:/home/linuxing3/.config/Code/User/settings.json 
+2025-07-14 19:54:12.936 [warning] Creation of workbench contribution 'mcpDiscovery' took 217ms.

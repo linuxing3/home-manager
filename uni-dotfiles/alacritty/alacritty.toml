@@ -1,0 +1,38 @@
+[general]
+# import = [
+#     "~/config/alacritty/themes/gruvbox_dark.toml"
+# ]
+
+[font]
+size = 16
+
+[font.bold]
+family = "JetBrainsMono Nerd Font"
+style = "Bold"
+
+[font.normal]
+family = "JetBrainsMono Nerd Font"
+style = "Regular"
+
+[font.italic]
+family = "JetBrainsMono Nerd Font"
+style = "Italic"
+
+[keyboard]
+bindings = [
+  { key = "N", mods = "Control|Shift", action = "CreateNewWindow" },
+  { key = "Q", mods = "Control|Shift", action = "Quit" },
+  { key = "_", mods = "Control|Shift", action = "DecreaseFontSize" },
+  { key = "+", mods = "Control|Shift", action = "IncreaseFontSize" },
+  { key = "C", mods = "Control|Shift", action = "CopySelection" },
+  { key = "V", mods = "Control|Shift", action = "PasteSelection" },
+  { key = "K", mods = "Control", chars = "\u000c"},
+  { key = "J", mods = "Control", chars = "\u000d"}
+]
+
+[window.dimensions]
+columns = 200
+lines = 3
+
+[selection]
+save_to_clipboard = true
