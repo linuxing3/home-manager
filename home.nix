@@ -25,6 +25,7 @@
   home.packages = with pkgs; [
     gh
     git
+    lazygit
 
     helix
 
