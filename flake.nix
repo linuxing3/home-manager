@@ -41,6 +41,11 @@
           allowUnfreePredicate = _: true;
         };
       };
+      supportedSystems = [
+        "x86_64-linux"
+      ];
+      forAllSystems = inputs.nixpkgs.lib.genAttrs supportedSystems;
+      nixpkgsFor = forAllSystems (system: import inputs.nixpkgs {inherit system;});
     in
     {
       homeConfigurations."efwmc" = home-manager.lib.homeManagerConfiguration {
@@ -56,6 +61,40 @@
           inherit inputs;
         };
       };
+      nixosConfigurations = {
+        system = nixpkgs.lib.nixosSystem {
+          inherit pkgs;
+          system = systemSettings.system;
+          modules = [
+            ./nixos/configuration.nix
+          ]; # load configuration.nix from selected PROFILE
+          specialArgs = {
+            # pass config variables from above
+            inherit pkgs;
+            inherit systemSettings;
+            inherit userSettings;
+            inherit inputs;
+          };
+        };
+      };
+      devShells.default = forAllSystems (system: {
+        default = let
+          pkgs = nixpkgsFor.${system};
+        in
+          pkgs.mkShell {
+            packages = with pkgs; [
+              nixd
+              nil
+              alejandra
+              helix
+              git
+              gh
+            ];
+            shellHook = ''
+              export DEEPSEEK_API_KEY=$(cat /etc/agenix/deepseek-token)
+            '';
+          };
+      });
     };
 }
 

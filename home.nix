@@ -8,7 +8,7 @@
     ./modules/wm/hyprland/hyprland.nix
     ./modules/gui/waybar.nix
 
-    ./modules/app/ranger.nix
+    ./modules/app/ranger/ranger.nix
     ./modules/tui/zellij.nix
     ./modules/tui/tmux.nix
     ./modules/tui/kitty.nix
