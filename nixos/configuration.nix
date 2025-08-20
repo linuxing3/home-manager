@@ -45,6 +45,8 @@
   console.font = "LatArCyrHeb-16";
   services.getty.autologinUser = "efwmc";
 
+  services.xserver.enable = true;
+
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
