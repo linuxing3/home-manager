@@ -4,6 +4,7 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./stylix.nix
     ];
 
   # Bootloader.
@@ -45,7 +46,24 @@
   console.font = "LatArCyrHeb-16";
   services.getty.autologinUser = "efwmc";
 
-  services.xserver.enable = true;
+  # xserver
+  programs = {
+    hyprland = {
+      enable = true;
+      xwayland = {
+        enable = true;
+      };
+      portalPackage = pkgs.xdg-desktop-portal-hyprland;
+    };
+  };
+
+  services.xserver = {
+    windowManager.xmonad = {
+      enable = true;
+      enableConfiguredRecompile = true;
+      enableContribAndExtras = true;
+    };
+  };
 
   # Enable CUPS to print documents.
   services.printing.enable = true;

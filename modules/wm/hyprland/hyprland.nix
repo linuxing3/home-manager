@@ -185,7 +185,7 @@
 
         bind=SUPER,A,exec,kitty helix
 
-        bind=SUPER,S,exec,/usr/bin/qutebrowser
+        bind=SUPER,S,exec,qutebrowser
 
         bind=SUPERCTRL,S,exec,container-open # qutebrowser only
 

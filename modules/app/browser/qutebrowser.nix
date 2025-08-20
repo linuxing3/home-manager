@@ -90,11 +90,12 @@ in
 {
 
   home.packages = [
+      pkgs.qutebrowser
       (pkgs.callPackage ./qute-containers.nix { dmenuCmd = "fuzzel -d"; })
   ];
 
   home.sessionVariables = {
-    DEFAULT_BROWSER = "/usr/bin/qutebrowser";
+    DEFAULT_BROWSER = "${pkgs.qutebrowser}/qutebrowser";
   };
 
   xdg.mimeApps.defaultApplications = {
