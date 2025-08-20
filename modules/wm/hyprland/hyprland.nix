@@ -10,6 +10,8 @@
 {
 
   imports = [
+    ../../shell/sh.nix
+    ../../shell/cli-collection.nix
     ../input/nihongo.nix
     ../../app/browser/qutebrowser.nix
     (import ../../app/dmenu-scripts/networkmanager-dmenu.nix {
@@ -23,6 +25,11 @@
     })
   ];
 
+  home.packages = with pkgs; [
+    hyprpaper
+    hypridle
+  ];
+
   gtk.cursorTheme = {
     package = pkgs.quintom-cursor-theme;
     name =
@@ -32,7 +39,8 @@
     size = 36;
   };
 
-  home.file.".config/hypr/hyprland.conf".text =  ''
+  wayland.windowManager.hyprland.enable = true;
+  wayland.windowManager.hyprland.extraConfig = ''
         exec-once = dbus-update-activation-environment --systemd DISPLAY XAUTHORITY WAYLAND_DISPLAY XDG_SESSION_DESKTOP=Hyprland XDG_CURRENT_DESKTOP=Hyprland XDG_SESSION_TYPE=wayland
         exec-once = hyprctl setcursor ''
       + config.gtk.cursorTheme.name
@@ -177,7 +185,7 @@
 
         bind=SUPER,A,exec,kitty helix
 
-        bind=SUPER,S,exec,qutebrowser
+        bind=SUPER,S,exec,/usr/bin/qutebrowser
 
         bind=SUPERCTRL,S,exec,container-open # qutebrowser only
 

@@ -2,6 +2,7 @@
 
 {
   home.packages = with pkgs; [
+    zellij
   ];
 
   home.file = {

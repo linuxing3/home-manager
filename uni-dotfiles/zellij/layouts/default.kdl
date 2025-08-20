@@ -11,7 +11,7 @@ layout {
     }
 
     pane_template name="editor" {
-        command "helix"
+        command "hx"
     }
 
     pane_template name="compact_bar" {
