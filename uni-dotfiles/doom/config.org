@@ -407,27 +407,27 @@ Doom Emacs is traditionally installed by cloning the repository ([[https://githu
 
   ;; Horizontal scrolling tables
   ;; (add-load-path! "phscroll")
-  (require 'phscroll)
-  (setq org-startup-truncated nil)
-  (with-eval-after-load "org"
-    (require 'org-phscroll))
-  (setq phscroll-calculate-in-pixels t)
+  ;; (require 'phscroll)
+  ;; (setq org-startup-truncated nil)
+  ;; (with-eval-after-load "org"
+  ;;   (require 'org-phscroll))
+  ;; (setq phscroll-calculate-in-pixels t)
 
   ;; Org side tree outline
   ;; (add-load-path! "org-side-tree")
-  (require 'org-side-tree)
-  (setq org-side-tree-persistent nil)
-  (setq org-side-tree-fontify t)
-  (setq org-side-tree-enable-folding t)
-  (defun org-side-tree-create-or-toggle ()
-    (interactive)
-    (if (or (org-side-tree-has-tree-p) (eq major-mode 'org-side-tree-mode))
-        (org-side-tree-toggle)
-        (org-side-tree)))
-  (map! :leader
-        "O t" #'org-side-tree-create-or-toggle)
-  (map! :map org-side-tree-mode-map
-        "SPC" nil)
+  ;; (require 'org-side-tree)
+  ;; (setq org-side-tree-persistent nil)
+  ;; (setq org-side-tree-fontify t)
+  ;; (setq org-side-tree-enable-folding t)
+  ;; (defun org-side-tree-create-or-toggle ()
+  ;;   (interactive)
+  ;;   (if (or (org-side-tree-has-tree-p) (eq major-mode 'org-side-tree-mode))
+  ;;       (org-side-tree-toggle)
+  ;;       (org-side-tree)))
+  ;; (map! :leader
+  ;;       "O t" #'org-side-tree-create-or-toggle)
+  ;; (map! :map org-side-tree-mode-map
+  ;;       "SPC" nil)
 
 #+END_SRC
 
@@ -545,21 +545,21 @@ same directory as the org-buffer and insert a link to this file."
      (openwith-mode 1)))
 
 ;; (add-load-path! "org-krita")
-(require 'org-krita)
-(add-hook 'org-mode-hook 'org-krita-mode)
-(setq org-krita-extract-filename "preview.png")
-(setq org-krita-scale 1)
+;; (require 'org-krita)
+;; (add-hook 'org-mode-hook 'org-krita-mode)
+;; (setq org-krita-extract-filename "preview.png")
+;; (setq org-krita-scale 1)
 
 ;; (add-load-path! "org-xournalpp")
-(require 'org-xournalpp)
-(add-hook 'org-mode-hook 'org-xournalpp-mode)
-(setq org-xournalpp-template-getter
-  '(closure
-    (t)
-    nil
-    (file-truename "~/Templates/template.xopp") ; use my own template
-  )
-)
+;; (require 'org-xournalpp)
+;; (add-hook 'org-mode-hook 'org-xournalpp-mode)
+;; (setq org-xournalpp-template-getter
+;;   '(closure
+;;     (t)
+;;     nil
+;;     (file-truename "~/Templates/template.xopp") ; use my own template
+;;   )
+;; )
 
 ;; override width to static 250 for now
 ;; so I don't have massive images in org mode (scrolling not fun)
@@ -638,43 +638,43 @@ exit
 #+begin_src emacs-lisp
 ;; this is kinda buggy
 ;; (add-load-path! "org-sliced-images")
-(require 'org-sliced-images)
-(defalias 'org-remove-inline-images #'org-sliced-images-remove-inline-images)
-(defalias 'org-toggle-inline-images #'org-sliced-images-toggle-inline-images)
-(defalias 'org-display-inline-images #'org-sliced-images-display-inline-images)
+;; (require 'org-sliced-images)
+;; (defalias 'org-remove-inline-images #'org-sliced-images-remove-inline-images)
+;; (defalias 'org-toggle-inline-images #'org-sliced-images-toggle-inline-images)
+;; (defalias 'org-display-inline-images #'org-sliced-images-display-inline-images)
 #+end_src
 *** Org Online Images
 #+BEGIN_SRC emacs-lisp :tangle config.el
 ;; Online images inside of org mode is pretty cool
 ;; This snippit is from Tobias on Stack Exchange
 ;; https://emacs.stackexchange.com/questions/42281/org-mode-is-it-possible-to-display-online-images
-(require 'org-yt)
+;; (require 'org-yt)
 
-(defun org-image-link (protocol link _description)
-  "Interpret LINK as base64-encoded image data."
-  (cl-assert (string-match "\\`img" protocol) nil
-             "Expected protocol type starting with img")
-  (let ((buf (url-retrieve-synchronously (concat (substring protocol 3) ":" link))))
-    (cl-assert buf nil
-               "Download of image \"%s\" failed." link)
-    (with-current-buffer buf
-      (goto-char (point-min))
-      (re-search-forward "\r?\n\r?\n")
-      (buffer-substring-no-properties (point) (point-max)))))
-
-(org-link-set-parameters
- "imghttp"
- :image-data-fun #'org-image-link)
-
-(org-link-set-parameters
- "imghttps"
- :image-data-fun #'org-image-link)
-#+END_SRC
-*** Org Mermaid Diagrams
-#+BEGIN_SRC emacs-lisp :tangle config.el
-;; Mermaid diagrams
-(setq ob-mermaid-cli-path "~/.nix-profile/bin/mmdc")
-#+END_SRC
+;; (defun org-image-link (protocol link _description)
+;;   "Interpret LINK as base64-encoded image data."
+;;   (cl-assert (string-match "\\`img" protocol) nil
+;;              "Expected protocol type starting with img")
+;;   (let ((buf (url-retrieve-synchronously (concat (substring protocol 3) ":" link))))
+;;     (cl-assert buf nil
+;;                "Download of image \"%s\" failed." link)
+;;     (with-current-buffer buf
+;;       (goto-char (point-min))
+;;       (re-search-forward "\r?\n\r?\n")
+;;       (buffer-substring-no-properties (point) (point-max)))))
+;; 
+;; (org-link-set-parameters
+;;  "imghttp"
+;;  :image-data-fun #'org-image-link)
+;; 
+;; (org-link-set-parameters
+;;  "imghttps"
+;;  :image-data-fun #'org-image-link)
+;; #+END_SRC
+;; *** Org Mermaid Diagrams
+;; #+BEGIN_SRC emacs-lisp :tangle config.el
+;; ;; Mermaid diagrams
+;; (setq ob-mermaid-cli-path "~/.nix-profile/bin/mmdc")
+;; #+END_SRC
 *** Org Simple Printing
 #+BEGIN_SRC emacs-lisp :tangle config.el
 ;; Print org mode
@@ -1193,8 +1193,8 @@ Please set the variable `org-directory' to the location where you keep your org 
 *** Org Roam Dynamic Blocks
 #+BEGIN_SRC emacs-lisp :tangle config.el
 ;; (add-load-path! "org-nursery/lisp")
-(require 'org-roam-dblocks)
-(add-hook 'org-mode-hook 'org-roam-dblocks-autoupdate-mode)
+;; (require 'org-roam-dblocks)
+;; (add-hook 'org-mode-hook 'org-roam-dblocks-autoupdate-mode)
 #+END_SRC
 *** Org Roam Export Setup
 #+BEGIN_SRC emacs-lisp :tangle config.el
@@ -1470,13 +1470,13 @@ On Wayland, EAF doesn't work.
 *** NO Org Agenda Notifications
 #+BEGIN_SRC emacs-lisp
 ;; (add-load-path! "org-yaap")
-(require 'org-yaap)
-(setq org-yaap-alert-title "Org Agenda")
-(setq org-yaap-overdue-alerts 20)
-(setq org-yaap-alert-before 20)
-(setq org-yaap-daily-alert '(7 30))
-(setq org-yaap-daemon-idle-time 30)
-(org-yaap-mode 1)
+;; (require 'org-yaap)
+;; (setq org-yaap-alert-title "Org Agenda")
+;; (setq org-yaap-overdue-alerts 20)
+;; (setq org-yaap-alert-before 20)
+;; (setq org-yaap-daily-alert '(7 30))
+;; (setq org-yaap-daemon-idle-time 30)
+;; (org-yaap-mode 1)
 #+END_SRC
 *** Calfw
 #+begin_src emacs-lisp :tangle config.el
@@ -1490,23 +1490,23 @@ On Wayland, EAF doesn't work.
 *** NO Org Timeblock
 #+begin_src emacs-lisp
 ;; (add-load-path! "org-timeblock")
-(require 'org-timeblock)
+;; (require 'org-timeblock)
 
-(map! :leader :desc "Open org timeblock"
-      "O c" 'org-timeblock)
+;; (map! :leader :desc "Open org timeblock"
+;;       "O c" 'org-timeblock)
 
-(map! :desc "Next day"
-      :map org-timeblock-mode-map
-      :nvmeg "l" 'org-timeblock-day-later)
-(map! :desc "Previous day"
-      :map org-timeblock-mode-map
-      :nvmeg "h" 'org-timeblock-day-earlier)
-(map! :desc "Schedule event"
-      :map org-timeblock-mode-map
-      :nvmeg "m" 'org-timeblock-schedule)
-(map! :desc "Event duration"
-      :map org-timeblock-mode-map
-      :nvmeg "d" 'org-timeblock-set-duration)
+;; (map! :desc "Next day"
+;;       :map org-timeblock-mode-map
+;;       :nvmeg "l" 'org-timeblock-day-later)
+;; (map! :desc "Previous day"
+;;       :map org-timeblock-mode-map
+;;       :nvmeg "h" 'org-timeblock-day-earlier)
+;; (map! :desc "Schedule event"
+;;       :map org-timeblock-mode-map
+;;       :nvmeg "m" 'org-timeblock-schedule)
+;; (map! :desc "Event duration"
+;;       :map org-timeblock-mode-map
+;;       :nvmeg "d" 'org-timeblock-set-duration)
 
 #+end_src
 ** Magit Configuration
@@ -1518,10 +1518,10 @@ On Wayland, EAF doesn't work.
 (magit-todos-mode 1)
 
 ;; (add-load-path! "magit-file-icons")
-(require 'magit-file-icons)
-(setq magit-file-icons-icon-for-file-func 'all-the-icons-icon-for-file)
-(setq magit-file-icons-icon-for-dir-func 'all-the-icons-icon-for-dir)
-(magit-file-icons-mode 1)
+;; (require 'magit-file-icons)
+;; (setq magit-file-icons-icon-for-file-func 'all-the-icons-icon-for-file)
+;; (setq magit-file-icons-icon-for-dir-func 'all-the-icons-icon-for-dir)
+;; (magit-file-icons-mode 1)
 
 #+END_SRC
 ** Ibuffer Configuration
@@ -1959,35 +1959,35 @@ This can be used to load private config file with non-public information, or can
 *** Alert
 #+begin_src emacs-lisp :tangle config.el
 ;; Configure desktop notifs for incoming emails:
-(use-package mu4e-alert
-  :ensure t
-  :init
-  (defun perso--mu4e-notif ()
-    "Display both mode line and desktop alerts for incoming new emails."
-    (interactive)
-    (mu4e-update-mail-and-index 1)        ; getting new emails is ran in the background
-    (mu4e-alert-enable-mode-line-display) ; display new emails in mode-line
-    (mu4e-alert-enable-notifications))    ; enable desktop notifications for new emails
-  (defun perso--mu4e-refresh ()
-    "Refresh emails every 300 seconds and display desktop alerts."
-    (interactive)
-    (mu4e t)                            ; start silently mu4e (mandatory for mu>=1.3.8)
-    (run-with-timer 0 300 'perso--mu4e-notif))
-  :after mu4e
-  :bind ("<f2>" . perso--mu4e-refresh)  ; F2 turns Emacs into a mail client
-  :config
-  ;; Mode line alerts:
-  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display)
-  ;; Desktop alerts:
-  (mu4e-alert-set-default-style 'libnotify)
-  (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
-  ;; Only notify for "interesting" (non-trashed) new emails:
-  (setq mu4e-alert-interesting-mail-query
-        (concat
-         "flag:unread maildir:/INBOX"
-         " AND NOT flag:trashed")))
-
-#+end_src
+;; (use-package mu4e-alert
+;;   :ensure t
+;;   :init
+;;   (defun perso--mu4e-notif ()
+;;     "Display both mode line and desktop alerts for incoming new emails."
+;;     (interactive)
+;;     (mu4e-update-mail-and-index 1)        ; getting new emails is ran in the background
+;;     (mu4e-alert-enable-mode-line-display) ; display new emails in mode-line
+;;     (mu4e-alert-enable-notifications))    ; enable desktop notifications for new emails
+;;   (defun perso--mu4e-refresh ()
+;;     "Refresh emails every 300 seconds and display desktop alerts."
+;;     (interactive)
+;;     (mu4e t)                            ; start silently mu4e (mandatory for mu>=1.3.8)
+;;     (run-with-timer 0 300 'perso--mu4e-notif))
+;;   :after mu4e
+;;   :bind ("<f2>" . perso--mu4e-refresh)  ; F2 turns Emacs into a mail client
+;;   :config
+;;   ;; Mode line alerts:
+;;   (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display)
+;;   ;; Desktop alerts:
+;;   (mu4e-alert-set-default-style 'libnotify)
+;;   (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
+;;   ;; Only notify for "interesting" (non-trashed) new emails:
+;;   (setq mu4e-alert-interesting-mail-query
+;;         (concat
+;;          "flag:unread maildir:/INBOX"
+;;          " AND NOT flag:trashed")))
+;; 
+;; #+end_src
 
 #+RESULTS:
 : perso--mu4e-refresh

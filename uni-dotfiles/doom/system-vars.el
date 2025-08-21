@@ -15,6 +15,6 @@
 
 (setq system-wm-type "hyprland")
 
-(setq doom-font (font-spec :family "Intel One Mono" :size 20)
+(setq doom-font (font-spec :family "Intel One Mono" :size 20))
 
 (setq dotfiles-dir "~/.dotfiles")

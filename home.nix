@@ -101,6 +101,6 @@
     enable = true;
     emacs = pkgs.emacs-pgtk;
     doomDir = ./uni-dotfiles/doom;
-    tangleArgs = "--all config.org";
+    # tangleArgs = "--all config.org";
   };
 }
