@@ -43,6 +43,12 @@ in {
     NNN_PLUG = "p:preview-tui;l:launch;n:nuke;r:fzcd;s:suedit";
   };
 
+  age.secrets = {
+    api-keys.file = ../../security/api-keys.age;
+    mail-qq-pass.file = ../../security/mail-qq-pass.age;
+    mail-mfa-pass.file = ../../security/mail-mfa-pass.age;
+  };
+
   programs.zsh = {
     enable = true;
     # enableCompletion = true;

@@ -16,7 +16,7 @@
 
     ../../modules/editor/nvim.nix
 
-    # ../../modules/app/doom-emacs/doom-slim.nix
+    ../../modules/app/doom-emacs/doom-slim.nix
   ];
 
   home.username = userSettings.username;

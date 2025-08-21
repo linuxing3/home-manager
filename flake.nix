@@ -117,11 +117,6 @@
           stylix.homeModules.stylix
           nix-doom-emacs-unstraightened.homeModule
           agenix.homeManagerModules.default
-          ({config, ...}: {
-            age.secrets = {
-              api.file = ./security/api-keys.age;
-            };
-          })
           (./. + "/profiles" + ("/" + systemSettings.profile) + "/home.nix")
         ];
         extraSpecialArgs = {
@@ -162,9 +157,6 @@
               gh
               agenix.packages.${system}.default
             ];
-            shellHook = ''
-              # export DEEPSEEK_API_KEY=$(cat /etc/agenix/deepseek-token)
-            '';
           };
       });
     };

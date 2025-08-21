@@ -1,17 +1,8 @@
 {
   config,
-  lib,
   pkgs,
-  inputs,
-  userSettings,
-  systemSettings,
   ...
-}: let
-  themePolarity = lib.removeSuffix "\n" (
-    builtins.readFile (./. + "../../../../themes" + ("/" + userSettings.theme) + "/polarity.txt")
-  );
-  dashboardLogo = ./. + "/nix-" + themePolarity + ".webp";
-in {
+}: {
   home.file.".config/doom/themes/doom-stylix-theme.el".source = config.lib.stylix.colors {
     template = builtins.readFile ./themes/doom-stylix-theme.el.mustache;
     extension = ".el";
@@ -34,6 +25,7 @@ in {
       (pkgs.callPackage ./pkgs/org-analyzer.nix {})
       isync
       msmtp
+      getmail6
 
       libevdev
       libinput
@@ -82,7 +74,7 @@ in {
     ssl_ciphers = AES128-SHA
 
     username = xing_wenju@mfa.gov.cn
-    password_command = ('cat', '/etc/agenix/mail-mfa-pass')
+    password_command = ('cat', '/run/user/1000/agenix/mail-mfa-pass')
 
     [destination]
     type = Maildir
@@ -107,7 +99,7 @@ in {
     from linuxing3@qq.com
     host smtp.qq.com
     auth on
-    passwordeval cat /etc/agenix/mail-qq-pass
+    passwordeval cat /run/usr/1000/agenix/mail-qq-pass
 
     account default: qq
   '';
@@ -117,7 +109,7 @@ in {
     Host imap.qq.com
     Port 993
     User linuxing3
-    PassCmd "cat /etc/agenix/mail-qq-pass"
+    PassCmd "cat /run/usr/1000/agenix/mail-qq-pass"
     TLSType IMAPS
     CertificateFile /etc/ssl/certs/ca-certificates.crt
 
