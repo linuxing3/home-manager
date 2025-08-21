@@ -22,19 +22,6 @@
 
   home.stateVersion = "25.05"; # Please read the comment before changing.
   home.packages = with pkgs; [
-    gh
-    git
-    lazygit
-
-    helix
-
-    zellij
-    tmux
-
-    nnn
-
-    cachix
-
     # Media
     gimp
     vlc
@@ -44,7 +31,6 @@
     wofi
     rofi
     xmobar
-    lxterminal
   ];
 
   xdg.enable = true;

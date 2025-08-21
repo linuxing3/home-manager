@@ -93,6 +93,13 @@
           allowUnfree = true;
           allowUnfreePredicate = _: true;
         };
+        overlays = [
+          (finale: prev: {
+            nnn = prev.nnn.override (oldAttrs: {
+              withNerdIcons = true;
+            });
+          })
+        ];
       };
       supportedSystems = [
         "x86_64-linux"

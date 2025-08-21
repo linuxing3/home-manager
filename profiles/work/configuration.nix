@@ -115,12 +115,20 @@
     neovim
     vim
     helix
+
     wget
     curl
     git
     gh
+    lazygit
+
     zellij
+    tmux
+
     nnn
+    yazi
+
+    cachix
     gnupg
   ];
 
