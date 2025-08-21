@@ -1,17 +1,16 @@
 { pkgs, ... }:
 
 {
-  i18n.inputMethod = {
-    enabled = "fcitx5";
-    fcitx5.addons = with pkgs; [
-      rime-data
-      librime
-      fcitx5-rime
-      fcitx5-chinese-addons
-      fcitx5-nord
-      fcitx5-material-color
-    ];
-  };
+  i18n.inputMethod.enable = true;
+  i18n.inputMethod.type = "fcitx5";
+  i18n.inputMethod.fcitx5.addons = with pkgs; [
+    rime-data
+    librime
+    fcitx5-rime
+    fcitx5-chinese-addons
+    fcitx5-nord
+    fcitx5-material-color
+  ];
   home.file.".config/fcitx5/config".text = ''
     [Hotkey]
     # Enumerate when press trigger key repeatedly

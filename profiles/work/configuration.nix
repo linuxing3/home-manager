@@ -102,8 +102,8 @@
     ];
     packages = [];
     uid = 1000;
-    initialHashedPassword = initialHashedPassword;
-    openssh.authorizedKeys.keys = mainSshAuthorizedKeys;
+    initialHashedPassword = userSettings.initialHashedPassword;
+    openssh.authorizedKeys.keys = userSettings.mainSshAuthorizedKeys;
   };
 
   # Install firefox.
