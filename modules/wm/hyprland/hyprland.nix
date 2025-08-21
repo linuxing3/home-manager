@@ -28,6 +28,7 @@
   home.packages = with pkgs; [
     hyprpaper
     hypridle
+    wl-clipboard
   ];
 
   gtk.cursorTheme = {

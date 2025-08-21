@@ -39,6 +39,12 @@
     gimp
     vlc
     mpv
+
+    # launcher
+    wofi
+    rofi
+    xmobar
+    lxterminal
   ];
 
   xdg.enable = true;
@@ -90,4 +96,9 @@
   services.pasystray.enable = true;
 
   programs.home-manager.enable = true;
+
+  programs.doom-emacs = {
+    enable = true;
+    doomDir = ./uni-dotfiles/doom;
+  };
 }

@@ -9,6 +9,10 @@
       url = "github:nix-community/stylix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-doom-emacs-unstraightened =  {
+      url = "github:marienz/nix-doom-emacs-unstraightened";
+      inputs.nixpkgs.follows = "";
+    };
   };
 
   outputs =
@@ -102,6 +106,7 @@
         inherit pkgs;
         modules = [
           stylix.homeModules.stylix
+          inputs.nix-doom-emacs-unstraightened.homeModule
           ./home.nix
         ];
         extraSpecialArgs = {
