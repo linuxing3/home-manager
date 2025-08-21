@@ -5,7 +5,8 @@
 #+BEGIN_QUOTE
 - [[#what-is-doom-emacs][What is Doom Emacs?]]
 - [[#configuration-for-doom-emacs][Configuration for Doom Emacs]]
-- [[#my-configdoomconfigel][My config.el]]
+- [[#install-extra-packages][Install extra packages]]
+- [[#my-configel][My config.el]]
   - [[#preamble--user-configuration][Preamble + User Configuration]]
   - [[#registers][Registers]]
   - [[#org-mode-configuration][Org Mode Configuration]]
@@ -28,9 +29,6 @@
   - [[#elfeed][Elfeed]]
   - [[#private-config][Private config]]
   - [[#mu4e-configuration][mu4e Configuration]]
-- [[#my-configdoominitel][My init.el]]
-- [[#my-configdoompackagesel][My packages.el]]
-- [[#nix-slim-integration][Nix slim Integration]]
 #+END_QUOTE
 
 * What is Doom Emacs?
@@ -52,6 +50,22 @@ By storing your configuration in these 3 files, it allows for quick reproducible
 
 
 Doom Emacs is traditionally installed by cloning the repository ([[https://github.com/doo.config/doomoomemacs][https://github.com/doo.config/doomoomemacs]]) and running =./bin/doom install=.  I instead install Doom Emacs via Nix Doom Emacs ([[https://github.com/nix-community/nix-doom-emacs][https://github.com/nix-community/nix-doom-emacs]]), which packages Doom Emacs as a Nix derivation.  The advantage to this is that I get more reproducibility and the ability to rollback updates (if anything breaks), but the downside is that any time Emacs packages are changed/updated, the entire derivation must be rebuilt from scratch (this is often time-consuming).  I load this as a Nix derivation in my flake using the [[./doom.nix][doom.nix]] module.
+* Install extra packages 
+#+begin_src shell :tangle install.sh
+    cd ~/.config/doom
+    git clone https://github.com/chrisbarrett/nursery org-nursery 
+    git clone https://gitlab.com/tygrdev/org-yaap org-yaap 
+    git clone https://github.com/localauthor/org-side-tree org-side-tree 
+    git clone https://github.com/ichernyshovvv/org-timeblock org-timeblock 
+    git clone https://github.com/librephoenix/org-krita org-krita 
+    git clone https://gitlab.com/vherrmann/org-xournalpp org-xournalpp 
+    git clone https://github.com/jcfk/org-sliced-images org-sliced-images 
+    git clone https://github.com/librephoenix/magit-file-icons magit-file-icons 
+    git clone https://github.com/misohena/phscroll phscroll 
+    git clone https://github.com/muffinmad/emacs-mini-frame mini-frame 
+#+end_src
+
+#+RESULTS:
 
 * My config.el
 ** Preamble + User Configuration
@@ -276,21 +290,21 @@ Doom Emacs is traditionally installed by cloning the repository ([[https://githu
         grep-use-null-device nil)
 
   ;; Mini-frames ;; cool but kinda suboptimal atm
-  ;(add-load-path! "mini-frame")
-  ;(require 'mini-frame)
-  ;(setq mini-frame-ignore-commands '(evil-ex-search-forward helpful-variable helpful-callable))
-  ;(setq mini-frame-show-parameters
-  ;    '((left . 216)
-  ;     (top . 240)
-  ;     (width . 0.78)
-  ;     (height . 20)
-  ;     (alpha-background . 90))
-  ;)
-  ;(setq mini-frame-detach-on-hide nil)
-  ;(setq mini-frame-resize t)
-  ;(setq resize-mini-frames t)
-  ;(setq mini-frame-standalone nil)
-  ;(mini-frame-mode 1)
+  (add-load-path! "~/.config/doom/mini-frame")
+  (require 'mini-frame)
+  (setq mini-frame-ignore-commands '(evil-ex-search-forward helpful-variable helpful-callable))
+  (setq mini-frame-show-parameters
+      '((left . 216)
+       (top . 240)
+       (width . 0.78)
+       (height . 20)
+       (alpha-background . 90))
+  )
+  (setq mini-frame-detach-on-hide nil)
+  (setq mini-frame-resize t)
+  (setq resize-mini-frames t)
+  (setq mini-frame-standalone nil)
+  ;; (mini-frame-mode 1)
 
 #+END_SRC
 ** Registers
@@ -406,28 +420,28 @@ Doom Emacs is traditionally installed by cloning the repository ([[https://githu
     :size 0.9)
 
   ;; Horizontal scrolling tables
-  ;; (add-load-path! "phscroll")
-  ;; (require 'phscroll)
-  ;; (setq org-startup-truncated nil)
-  ;; (with-eval-after-load "org"
-  ;;   (require 'org-phscroll))
-  ;; (setq phscroll-calculate-in-pixels t)
+  (add-load-path! "~/.config/doom/phscroll")
+  (require 'phscroll)
+  (setq org-startup-truncated nil)
+  (with-eval-after-load "org"
+    (require 'org-phscroll))
+  (setq phscroll-calculate-in-pixels t)
 
   ;; Org side tree outline
-  ;; (add-load-path! "org-side-tree")
-  ;; (require 'org-side-tree)
-  ;; (setq org-side-tree-persistent nil)
-  ;; (setq org-side-tree-fontify t)
-  ;; (setq org-side-tree-enable-folding t)
-  ;; (defun org-side-tree-create-or-toggle ()
-  ;;   (interactive)
-  ;;   (if (or (org-side-tree-has-tree-p) (eq major-mode 'org-side-tree-mode))
-  ;;       (org-side-tree-toggle)
-  ;;       (org-side-tree)))
-  ;; (map! :leader
-  ;;       "O t" #'org-side-tree-create-or-toggle)
-  ;; (map! :map org-side-tree-mode-map
-  ;;       "SPC" nil)
+  (add-load-path! "~/.config/doom/org-side-tree")
+  (require 'org-side-tree)
+  (setq org-side-tree-persistent nil)
+  (setq org-side-tree-fontify t)
+  (setq org-side-tree-enable-folding t)
+  (defun org-side-tree-create-or-toggle ()
+    (interactive)
+    (if (or (org-side-tree-has-tree-p) (eq major-mode 'org-side-tree-mode))
+        (org-side-tree-toggle)
+        (org-side-tree)))
+  (map! :leader
+        "O t" #'org-side-tree-create-or-toggle)
+  (map! :map org-side-tree-mode-map
+        "SPC" nil)
 
 #+END_SRC
 
@@ -544,22 +558,22 @@ same directory as the org-buffer and insert a link to this file."
                ))
      (openwith-mode 1)))
 
-;; (add-load-path! "org-krita")
-;; (require 'org-krita)
-;; (add-hook 'org-mode-hook 'org-krita-mode)
-;; (setq org-krita-extract-filename "preview.png")
-;; (setq org-krita-scale 1)
+(add-load-path! "~/.config/doom/org-krita")
+(require 'org-krita)
+(add-hook 'org-mode-hook 'org-krita-mode)
+(setq org-krita-extract-filename "preview.png")
+(setq org-krita-scale 1)
 
-;; (add-load-path! "org-xournalpp")
-;; (require 'org-xournalpp)
-;; (add-hook 'org-mode-hook 'org-xournalpp-mode)
-;; (setq org-xournalpp-template-getter
-;;   '(closure
-;;     (t)
-;;     nil
-;;     (file-truename "~/Templates/template.xopp") ; use my own template
-;;   )
-;; )
+(add-load-path! "~/.config/doom/org-xournalpp")
+(require 'org-xournalpp)
+(add-hook 'org-mode-hook 'org-xournalpp-mode)
+(setq org-xournalpp-template-getter
+  '(closure
+    (t)
+    nil
+    (file-truename "~/Templates/template.xopp") ; use my own template
+  )
+)
 
 ;; override width to static 250 for now
 ;; so I don't have massive images in org mode (scrolling not fun)
@@ -637,11 +651,11 @@ exit
 *** NO Org Sliced Images
 #+begin_src emacs-lisp
 ;; this is kinda buggy
-;; (add-load-path! "org-sliced-images")
-;; (require 'org-sliced-images)
-;; (defalias 'org-remove-inline-images #'org-sliced-images-remove-inline-images)
-;; (defalias 'org-toggle-inline-images #'org-sliced-images-toggle-inline-images)
-;; (defalias 'org-display-inline-images #'org-sliced-images-display-inline-images)
+(add-load-path! "~/.config/doom/org-sliced-images")
+(require 'org-sliced-images)
+(defalias 'org-remove-inline-images #'org-sliced-images-remove-inline-images)
+(defalias 'org-toggle-inline-images #'org-sliced-images-toggle-inline-images)
+(defalias 'org-display-inline-images #'org-sliced-images-display-inline-images)
 #+end_src
 *** Org Online Images
 #+BEGIN_SRC emacs-lisp :tangle config.el
@@ -1192,9 +1206,9 @@ Please set the variable `org-directory' to the location where you keep your org 
 #+END_SRC
 *** Org Roam Dynamic Blocks
 #+BEGIN_SRC emacs-lisp :tangle config.el
-;; (add-load-path! "org-nursery/lisp")
-;; (require 'org-roam-dblocks)
-;; (add-hook 'org-mode-hook 'org-roam-dblocks-autoupdate-mode)
+(add-load-path! "~/.config/doom/org-nursery/lisp")
+(require 'org-roam-dblocks)
+(add-hook 'org-mode-hook 'org-roam-dblocks-autoupdate-mode)
 #+END_SRC
 *** Org Roam Export Setup
 #+BEGIN_SRC emacs-lisp :tangle config.el
@@ -1469,14 +1483,14 @@ On Wayland, EAF doesn't work.
 
 *** NO Org Agenda Notifications
 #+BEGIN_SRC emacs-lisp
-;; (add-load-path! "org-yaap")
-;; (require 'org-yaap)
-;; (setq org-yaap-alert-title "Org Agenda")
-;; (setq org-yaap-overdue-alerts 20)
-;; (setq org-yaap-alert-before 20)
-;; (setq org-yaap-daily-alert '(7 30))
-;; (setq org-yaap-daemon-idle-time 30)
-;; (org-yaap-mode 1)
+(add-load-path! "~/.config/doom/org-yaap")
+(require 'org-yaap)
+(setq org-yaap-alert-title "Org Agenda")
+(setq org-yaap-overdue-alerts 20)
+(setq org-yaap-alert-before 20)
+(setq org-yaap-daily-alert '(7 30))
+(setq org-yaap-daemon-idle-time 30)
+(org-yaap-mode 1)
 #+END_SRC
 *** Calfw
 #+begin_src emacs-lisp :tangle config.el
@@ -1489,24 +1503,24 @@ On Wayland, EAF doesn't work.
 #+end_src
 *** NO Org Timeblock
 #+begin_src emacs-lisp
-;; (add-load-path! "org-timeblock")
-;; (require 'org-timeblock)
+(add-load-path! "~/.config/doom/org-timeblock")
+(require 'org-timeblock)
 
-;; (map! :leader :desc "Open org timeblock"
-;;       "O c" 'org-timeblock)
+(map! :leader :desc "Open org timeblock"
+      "O c" 'org-timeblock)
 
-;; (map! :desc "Next day"
-;;       :map org-timeblock-mode-map
-;;       :nvmeg "l" 'org-timeblock-day-later)
-;; (map! :desc "Previous day"
-;;       :map org-timeblock-mode-map
-;;       :nvmeg "h" 'org-timeblock-day-earlier)
-;; (map! :desc "Schedule event"
-;;       :map org-timeblock-mode-map
-;;       :nvmeg "m" 'org-timeblock-schedule)
-;; (map! :desc "Event duration"
-;;       :map org-timeblock-mode-map
-;;       :nvmeg "d" 'org-timeblock-set-duration)
+(map! :desc "Next day"
+      :map org-timeblock-mode-map
+      :nvmeg "l" 'org-timeblock-day-later)
+(map! :desc "Previous day"
+      :map org-timeblock-mode-map
+      :nvmeg "h" 'org-timeblock-day-earlier)
+(map! :desc "Schedule event"
+      :map org-timeblock-mode-map
+      :nvmeg "m" 'org-timeblock-schedule)
+(map! :desc "Event duration"
+      :map org-timeblock-mode-map
+      :nvmeg "d" 'org-timeblock-set-duration)
 
 #+end_src
 ** Magit Configuration
@@ -1517,11 +1531,11 @@ On Wayland, EAF doesn't work.
 (setq magit-todos-keywords-list '("TODO" "FIXME" "HACK" "REVIEW" "DEPRECATED" "BUG"))
 (magit-todos-mode 1)
 
-;; (add-load-path! "magit-file-icons")
-;; (require 'magit-file-icons)
-;; (setq magit-file-icons-icon-for-file-func 'all-the-icons-icon-for-file)
-;; (setq magit-file-icons-icon-for-dir-func 'all-the-icons-icon-for-dir)
-;; (magit-file-icons-mode 1)
+(add-load-path! "~/.config/doom/magit-file-icons")
+(require 'magit-file-icons)
+(setq magit-file-icons-icon-for-file-func 'all-the-icons-icon-for-file)
+(setq magit-file-icons-icon-for-dir-func 'all-the-icons-icon-for-dir)
+(magit-file-icons-mode 1)
 
 #+END_SRC
 ** Ibuffer Configuration
@@ -1831,7 +1845,6 @@ This can be used to load private config file with non-public information, or can
 *** Basic configuration
 #+BEGIN_SRC emacs-lisp :tangle config.el
 ;;;------ helpful configuration ------;;;
-;; (add-load-path! "package/mu4e")
 (require 'mu4e)
 
 (setq mu4e-root-maildir "~/.local/mail")

@@ -9,7 +9,7 @@
 
 (setq user-home-directory "/home/efwmc")
 
-(setq user-default-roam-dir "~/Org")
+(setq user-default-roam-dir "Personal.p")
 
 (setq system-nix-profile "work")
 

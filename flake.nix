@@ -83,7 +83,7 @@
                 (
                   if (editor == "neovide")
                   then "neovide -- --listen /tmp/nvimsocket"
-                  else editor
+                  else "hx"
                 )
             );
       };
@@ -107,7 +107,7 @@
         modules = [
           stylix.homeModules.stylix
           inputs.nix-doom-emacs-unstraightened.homeModule
-          ./home.nix
+          (./. + "/profiles" + ("/" + systemSettings.profile) + "/home.nix")
         ];
         extraSpecialArgs = {
           inherit userSettings;
@@ -120,7 +120,7 @@
           inherit pkgs;
           system = systemSettings.system;
           modules = [
-            ./nixos/configuration.nix
+            (./. + "/profiles" + ("/" + systemSettings.profile) + "/configuration.nix")
           ]; # load configuration.nix from selected PROFILE
           specialArgs = {
             # pass config variables from above

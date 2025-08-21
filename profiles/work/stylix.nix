@@ -1,7 +1,7 @@
 { lib, pkgs, inputs, userSettings, ... }:
 
 let
-  themePolarity = lib.removeSuffix "\n" (builtins.readFile (./. + "/../themes"+("/"+userSettings.theme)+"/polarity.txt"));
+  themePolarity = lib.removeSuffix "\n" (builtins.readFile (./. + "/../../themes"+("/"+userSettings.theme)+"/polarity.txt"));
   myLightDMTheme = if themePolarity == "light" then "Adwaita" else "Adwaita-dark";
 in
 {

@@ -37,11 +37,15 @@
 ;; (package! org-krita  :recipe (:host github :repo "brephoenix/org-krita" :pin "9a1d917d2ee0fb7d2403186a0e6a15e23089c9fb"))
 ;; (package! org-xournalpp  :recipe (:host github :repo "errmann/org-xournalpp"))
 ;; (package! org-sliced-images  :recipe (:host github :repo "fk/org-sliced-images"))
-;; (package! magit-file-icons  :recipe (:host github :repo "brephoenix/magit-file-icons/abstract-icon-getters-compat" :pin "6c90eb03eb8a382110d862ec792ae50556bffd6e"))
 ;; (package! phscroll  :recipe (:host github :repo "sohena/phscroll"))
 ;; (package! mini-frame  :recipe (:host github :repo "ffinmad/emacs-mini-frame"))
 
 ;; (package! mu4e-alert :recipe (:host github :repo "iqbalansari/mu4e-alert"))
+
+;; (package! magit-file-icons  :recipe (:host github :repo "brephoenix/magit-file-icons/abstract-icon-getters-compat" :pin "6c90eb03eb8a382110d862ec792ae50556bffd6e"))
+(package! el-patch)
+(package! nerd-icons)
+(package! magit)
 
 (package! toc-org)
 (package! lister)

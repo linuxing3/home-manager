@@ -70,7 +70,6 @@
         exec-once = GOMAXPROCS=1 syncthing --no-browser
         exec-once = protonmail-bridge --noninteractive
         exec-once = waybar
-        exec-once = emacs --daemon
 
         exec-once = fcitx5 -r -d
         exec-once = fcitx5-remote -r
@@ -184,9 +183,13 @@
 
         bind=ALT,RETURN,exec,kitty
 
-        bind=SUPER,A,exec,kitty helix
+        bind=SUPER,A,exec,''
+      + userSettings.spawnEditor
+      + ''
 
-        bind=SUPER,S,exec,qutebrowser
+        bind=SUPER,S,exec,''
+      + userSettings.spawnBrowser
+      + ''
 
         bind=SUPERCTRL,S,exec,container-open # qutebrowser only
 

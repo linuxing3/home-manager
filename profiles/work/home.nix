@@ -3,18 +3,18 @@
 {
 
   imports = [
-    ./modules/gui/stylix.nix
+    ../../modules/gui/stylix.nix
 
-    ./modules/wm/hyprland/hyprland.nix
-    ./modules/gui/waybar.nix
+    ../../modules/wm/hyprland/hyprland.nix
+    ../../modules/gui/waybar.nix
 
-    ./modules/app/ranger/ranger.nix
-    ./modules/tui/zellij.nix
-    ./modules/tui/tmux.nix
-    ./modules/tui/kitty.nix
-    ./modules/tui/alacritty.nix
+    ../../modules/app/ranger/ranger.nix
+    ../../modules/tui/zellij.nix
+    ../../modules/tui/tmux.nix
+    ../../modules/tui/kitty.nix
+    ../../modules/tui/alacritty.nix
 
-    ./modules/editor/nvim.nix
+    ../../modules/editor/nvim.nix
   ];
 
   home.username = userSettings.username;
@@ -71,8 +71,6 @@
   xdg.mime.enable = true;
   xdg.mimeApps.enable = true;
   xdg.mimeApps.associations.added = {
-    # TODO fix mime associations, most of them are totally broken :(
-    "application/octet-stream" = "flstudio.desktop;";
     "x-scheme-handler/org-protocol" = "org-protocol.desktop;";
   };
 
@@ -100,7 +98,7 @@
   programs.doom-emacs = {
     enable = true;
     emacs = pkgs.emacs-pgtk;
-    doomDir = ./uni-dotfiles/doom;
+    doomDir = ../../uni-dotfiles/doom;
     # tangleArgs = "--all config.org";
   };
 }
