@@ -99,7 +99,7 @@
     from linuxing3@qq.com
     host smtp.qq.com
     auth on
-    passwordeval cat /run/usr/1000/agenix/mail-qq-pass
+    passwordeval cat /run/user/1000/agenix/mail-qq-pass
 
     account default: qq
   '';
@@ -109,7 +109,7 @@
     Host imap.qq.com
     Port 993
     User linuxing3
-    PassCmd "cat /run/usr/1000/agenix/mail-qq-pass"
+    PassCmd "cat /run/user/1000/agenix/mail-qq-pass"
     TLSType IMAPS
     CertificateFile /etc/ssl/certs/ca-certificates.crt
 
