@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   lib,
   ...
@@ -50,6 +51,8 @@ in {
     enableCompletion = true;
     shellAliases = myAliases;
     initContent = ''
+
+      eval $(cat ${config.age.secrets.api-keys.path})
 
       # Load my extra file
       source ~/.config/zsh/extra/private.zsh

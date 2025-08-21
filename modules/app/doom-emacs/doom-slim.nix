@@ -32,7 +32,6 @@ in {
       hunspellDicts.en_US-large
       mu
       (pkgs.callPackage ./pkgs/org-analyzer.nix {})
-      emacsPackages.mu4e
       isync
       msmtp
 

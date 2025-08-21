@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    home-manager = {
+      home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -13,6 +13,7 @@
       url = "github:marienz/nix-doom-emacs-unstraightened";
       inputs.nixpkgs.follows = "";
     };
+    agenix.url = "github:ryantm/agenix";
   };
 
   outputs =
@@ -21,6 +22,8 @@
       nixpkgs,
       home-manager,
       stylix,
+      agenix,
+      nix-doom-emacs-unstraightened,
       ...
     }:
     let
@@ -109,11 +112,16 @@
     in
     {
       homeConfigurations."efwmc" = home-manager.lib.homeManagerConfiguration {
-        # pkgs = nixpkgs.legacyPackages.x86_64-linux;
         inherit pkgs;
         modules = [
           stylix.homeModules.stylix
-          inputs.nix-doom-emacs-unstraightened.homeModule
+          nix-doom-emacs-unstraightened.homeModule
+          agenix.homeManagerModules.default
+          ({config, ...}: {
+            age.secrets = {
+              api.file = ./security/api-keys.age;
+            };
+          })
           (./. + "/profiles" + ("/" + systemSettings.profile) + "/home.nix")
         ];
         extraSpecialArgs = {
@@ -128,6 +136,8 @@
           system = systemSettings.system;
           modules = [
             (./. + "/profiles" + ("/" + systemSettings.profile) + "/configuration.nix")
+            # security
+            agenix.nixosModules.default
           ]; # load configuration.nix from selected PROFILE
           specialArgs = {
             # pass config variables from above
@@ -138,7 +148,7 @@
           };
         };
       };
-      devShells.default = forAllSystems (system: {
+      devShells = forAllSystems (system: {
         default = let
           pkgs = nixpkgsFor.${system};
         in
@@ -150,9 +160,10 @@
               helix
               git
               gh
+              agenix.packages.${system}.default
             ];
             shellHook = ''
-              export DEEPSEEK_API_KEY=$(cat /etc/agenix/deepseek-token)
+              # export DEEPSEEK_API_KEY=$(cat /etc/agenix/deepseek-token)
             '';
           };
       });

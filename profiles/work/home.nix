@@ -15,6 +15,8 @@
     ../../modules/tui/alacritty.nix
 
     ../../modules/editor/nvim.nix
+
+    # ../../modules/app/doom-emacs/doom-slim.nix
   ];
 
   home.username = userSettings.username;
@@ -86,5 +88,16 @@
     emacs = pkgs.emacs-pgtk;
     doomDir = ../../uni-dotfiles/doom;
     # tangleArgs = "--all config.org";
+  };
+
+  programs.direnv = {
+    enable = true;
+    nix-direnv = {
+      enable = true;
+    };
+    config.global = {
+      # Make direnv messages less verbose
+      hide_env_diff = true;
+    };
   };
 }
