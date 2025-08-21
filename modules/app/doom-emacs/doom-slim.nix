@@ -12,13 +12,6 @@
   );
   dashboardLogo = ./. + "/nix-" + themePolarity + ".webp";
 in {
-  imports = [
-    inputs.nix-doom-emacs.hmModule
-    ../git/git.nix
-    ../../shell/sh.nix
-    ../../shell/cli-collection.nix
-  ];
-
   home.file.".config/doom/themes/doom-stylix-theme.el".source = config.lib.stylix.colors {
     template = builtins.readFile ./themes/doom-stylix-theme.el.mustache;
     extension = ".el";
@@ -79,55 +72,6 @@ in {
     enable = true;
     package = pkgs.isync;
     frequency = "*:0/5";
-  };
-
-  home.file.".config/doom/org-yaap" = {
-    source = "${inputs.org-yaap}";
-    recursive = true;
-  };
-
-  home.file.".config/doom/org-side-tree" = {
-    source = "${inputs.org-side-tree}";
-    recursive = true;
-  };
-
-  home.file.".config/doom/org-timeblock" = {
-    source = "${inputs.org-timeblock}";
-    recursive = true;
-  };
-
-  home.file.".config/doom/org-nursery" = {
-    source = "${inputs.org-nursery}";
-  };
-
-  home.file.".config/doom/org-krita" = {
-    source = "${inputs.org-krita}";
-  };
-
-  home.file.".config/doom/org-xournalpp" = {
-    source = "${inputs.org-xournalpp}";
-  };
-
-  home.file.".config/doom/org-sliced-images" = {
-    source = "${inputs.org-sliced-images}";
-  };
-
-  home.file.".config/doom/magit-file-icons" = {
-    source = "${inputs.magit-file-icons}";
-  };
-
-  home.file.".config/doom/dashboard-logo.webp".source = dashboardLogo;
-  home.file.".config/doom/scripts/copy-link-or-file/copy-link-or-file-to-clipboard.sh" = {
-    source = ./scripts/copy-link-or-file/copy-link-or-file-to-clipboard.sh;
-    executable = true;
-  };
-
-  home.file.".config/doom/phscroll" = {
-    source = "${inputs.phscroll}";
-  };
-
-  home.file.".config/doom/mini-frame" = {
-    source = "${inputs.mini-frame}";
   };
 
   home.file.".config/getmail/getmailrc".text = ''
@@ -198,47 +142,4 @@ in {
     Sync All
   '';
 
-  home.file.".config/doom/system-vars.el".text =
-    ''
-      ;;; ~/.config/doom/~/.config/doom/config.el -*- lexical-binding: t; -*-
-
-      ;; Import relevant variables from flake into emacs
-
-      (setq user-full-name "''
-    + userSettings.name
-    + ''
-      ") ; name
-        (setq user-username "''
-    + userSettings.username
-    + ''
-      ") ; username
-        (setq user-mail-address "''
-    + userSettings.email
-    + ''
-      ") ; email
-        (setq user-home-directory "/home/''
-    + userSettings.username
-    + ''
-      ") ; absolute path to home directory as string
-        (setq user-default-roam-dir "''
-    + userSettings.defaultRoamDir
-    + ''
-      ") ; absolute path to home directory as string
-        (setq system-nix-profile "''
-    + systemSettings.profile
-    + ''
-      ") ; what profile am I using?
-        (setq system-wm-type "''
-    + userSettings.wmType
-    + ''
-      ") ; wayland or x11?
-        (setq doom-font (font-spec :family "''
-    + userSettings.font
-    + ''
-      " :size 20)) ; import font
-        (setq dotfiles-dir "''
-    + userSettings.dotfilesDir
-    + ''
-      ") ; import location of dotfiles directory
-    '';
 }

@@ -87,7 +87,7 @@ Doom Emacs is traditionally installed by cloning the repository ([[https://githu
         "k" 'evil-previous-visual-line)
 
   ;; Theme
-  (setq custom-theme-directory "themes")
+  (setq custom-theme-directory "~/.config/doom/themes")
   (setq doom-theme 'doom-stylix)
   ;; +unicode-init-fonts-h often errors out
   ;; (remove-hook 'doom-init-ui-hook '+unicode-init-fonts-h)
