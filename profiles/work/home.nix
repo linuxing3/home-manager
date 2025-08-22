@@ -3,6 +3,8 @@
 {
 
   imports = [
+    ../../security/security.nix
+
     ../../modules/gui/stylix.nix
 
     ../../modules/wm/hyprland/hyprland.nix

@@ -87,18 +87,6 @@ in {
     enable = true;
     enableCompletion = true;
     shellAliases = myAliases;
-    initContent = ''
-
-      eval $(cat ${config.age.secrets."api-keys.age".path})
-
-      # Simple configuration
-      PROMPT=" ◉ %U%F{magenta}%n%f%u@%U%F{blue}%m%f%u:%F{yellow}%~%f
-       %F{green}→%f "
-      RPROMPT="%F{red}▂%f%F{yellow}▄%f%F{green}▆%f%F{cyan}█%f%F{blue}▆%f%F{magenta}▄%f%F{white}▂%f"
-      [ $TERM = "dumb" ] && unsetopt zle && PS1='$ '
-      bindkey '^P' history-beginning-search-backward
-      bindkey '^N' history-beginning-search-forward
-    '';
   };
 
   programs.zoxide = {
@@ -158,12 +146,10 @@ in {
     erdtree
     lsd
     procs
-    rip
     bottom
     fd
     bc
     mcfly
-    mkBook
     mdcat
     miniserve
     mise
@@ -175,7 +161,6 @@ in {
     rnr
     ruff
     skim
-    tealdear
     teehee
     watchexec
   ];

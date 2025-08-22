@@ -76,7 +76,7 @@
     ssl_ciphers = AES128-SHA
 
     username = xing_wenju@mfa.gov.cn
-    password_command = ('cat', '${config.age.secretes."mail-mfa-pass.age".path}')
+    password_command = ('cat', '${config.age.secrets."mail-mfa-pass.age".path}')
 
     [destination]
     type = Maildir

@@ -113,14 +113,12 @@
         (./. + "/profiles" + ("/" + systemSettings.profile) + "/home.nix")
         stylix.homeModules.stylix
         nix-doom-emacs-unstraightened.homeModule
-        agenix.homeManagerModules.default
-        ./security/security.nix
       ];
       systemModules = [
          (./. + "/profiles" + ("/" + systemSettings.profile) + "/configuration.nix")
         stylix.nixosModules.stylix
-        agenix.nixosModules.default
-        ./security/security.nix
+        # agenix.nixosModules.default
+        # ./security/security.nix
       ];
       args = {
         inherit userSettings;
