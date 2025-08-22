@@ -3,7 +3,7 @@
   imports = [
     inputs.agenix.homeManagerModules.default
   ];
-  age.secretsDir = "/etc/agenix";
+  # age.secretsDir = "/etc/agenix";
   age.secrets = let
     secrets = import ./secrets.nix;
   in

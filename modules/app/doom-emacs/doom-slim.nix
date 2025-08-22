@@ -101,7 +101,7 @@
     from linuxing3@qq.com
     host smtp.qq.com
     auth on
-    passwordeval cat ${config.age.secrets."mfa-qq-pass.age".path}
+    passwordeval cat ${config.age.secrets."mail-qq-pass.age".path}
 
     account default: qq
   '';
