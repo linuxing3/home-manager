@@ -1,12 +1,10 @@
-{ lib, pkgs, inputs, userSettings, ... }:
+{ lib, userSettings, ... }:
 
 let
   themePolarity = lib.removeSuffix "\n" (builtins.readFile (./. + "/../../themes"+("/"+userSettings.theme)+"/polarity.txt"));
   myLightDMTheme = if themePolarity == "light" then "Adwaita" else "Adwaita-dark";
 in
 {
-  imports = [ inputs.stylix.nixosModules.stylix ];
-
   stylix.targets.console.enable = true;
 
   stylix.targets.lightdm.enable = true;

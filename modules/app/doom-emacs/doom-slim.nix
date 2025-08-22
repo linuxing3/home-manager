@@ -31,6 +31,8 @@
       libinput
       udev
 
+      uv
+      aider-chat
       (python3.withPackages (
         p:
           with p; [
@@ -74,7 +76,7 @@
     ssl_ciphers = AES128-SHA
 
     username = xing_wenju@mfa.gov.cn
-    password_command = ('cat', '/run/user/1000/agenix/mail-mfa-pass')
+    password_command = ('cat', '${config.age.secretes."mail-mfa-pass.age".path}')
 
     [destination]
     type = Maildir
@@ -99,7 +101,7 @@
     from linuxing3@qq.com
     host smtp.qq.com
     auth on
-    passwordeval cat /run/user/1000/agenix/mail-qq-pass
+    passwordeval cat ${config.age.secrets."mfa-qq-pass.age".path}
 
     account default: qq
   '';
@@ -109,7 +111,7 @@
     Host imap.qq.com
     Port 993
     User linuxing3
-    PassCmd "cat /run/user/1000/agenix/mail-qq-pass"
+    PassCmd "cat ${config.age.secrets."mail-qq-pass.age".path}"
     TLSType IMAPS
     CertificateFile /etc/ssl/certs/ca-certificates.crt
 

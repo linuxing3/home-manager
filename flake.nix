@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-      home-manager = {
+    home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -109,37 +109,40 @@
       ];
       forAllSystems = inputs.nixpkgs.lib.genAttrs supportedSystems;
       nixpkgsFor = forAllSystems (system: import inputs.nixpkgs {inherit system;});
+      homeModules = [
+        (./. + "/profiles" + ("/" + systemSettings.profile) + "/home.nix")
+        stylix.homeModules.stylix
+        nix-doom-emacs-unstraightened.homeModule
+        agenix.homeManagerModules.default
+        ./security/security.nix
+      ];
+      systemModules = [
+         (./. + "/profiles" + ("/" + systemSettings.profile) + "/configuration.nix")
+        stylix.nixosModules.stylix
+        agenix.nixosModules.default
+        ./security/security.nix
+      ];
+      args = {
+        inherit userSettings;
+        inherit systemSettings;
+        inherit inputs;
+      };
     in
     {
-      homeConfigurations."efwmc" = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        modules = [
-          stylix.homeModules.stylix
-          nix-doom-emacs-unstraightened.homeModule
-          agenix.homeManagerModules.default
-          (./. + "/profiles" + ("/" + systemSettings.profile) + "/home.nix")
-        ];
-        extraSpecialArgs = {
-          inherit userSettings;
-          inherit systemSettings;
-          inherit inputs;
+      homeConfigurations = {
+        efwmc = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = homeModules;
+          extraSpecialArgs = args;
         };
       };
       nixosConfigurations = {
         system = nixpkgs.lib.nixosSystem {
           inherit pkgs;
           system = systemSettings.system;
-          modules = [
-            (./. + "/profiles" + ("/" + systemSettings.profile) + "/configuration.nix")
-            # security
-            agenix.nixosModules.default
-          ]; # load configuration.nix from selected PROFILE
-          specialArgs = {
-            # pass config variables from above
+          modules = systemModules;
+          specialArgs = args // {
             inherit pkgs;
-            inherit systemSettings;
-            inherit userSettings;
-            inherit inputs;
           };
         };
       };

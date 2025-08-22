@@ -6,8 +6,8 @@
 }: let
   # My shell aliases
   myAliases = {
-    syncuser = "phoenix sync user";
-    syncsys = "phoenix sync system";
+    syncuser = "home-manager switch --flake .#efwmc -b bak";
+    syncsys = "sudo nixos-rebuild switch --flake .#system";
     c = "clear";
     ls = "eza --icons -l -T -L=1";
     tree = "eza --icons --tree --group-directories-first";
@@ -43,10 +43,10 @@ in {
     NNN_PLUG = "p:preview-tui;l:launch;n:nuke;r:fzcd;s:suedit";
   };
 
-  age.secrets = {
-    api-keys.file = ../../security/api-keys.age;
-    mail-qq-pass.file = ../../security/mail-qq-pass.age;
-    mail-mfa-pass.file = ../../security/mail-mfa-pass.age;
+  programs.direnv = {
+    enable = true;
+    enableZshIntegration = true;
+    nix-direnv.enable = true;
   };
 
   programs.zsh = {
@@ -58,7 +58,7 @@ in {
     shellAliases = myAliases;
     initContent = ''
 
-      eval $(cat ${config.age.secrets.api-keys.path})
+      eval $(cat ${config.age.secrets."api-keys.age".path})
 
       # Load my extra file
       source ~/.config/zsh/extra/private.zsh
@@ -76,7 +76,6 @@ in {
     '';
     plugins = [
       {
-        # Must be before plugins that wrap widgets, such as zsh-autosuggestions or fast-syntax-highlighting
         name = "fzf-tab";
         src = "${pkgs.zsh-fzf-tab}/share/fzf-tab";
       }
@@ -88,6 +87,18 @@ in {
     enable = true;
     enableCompletion = true;
     shellAliases = myAliases;
+    initContent = ''
+
+      eval $(cat ${config.age.secrets."api-keys.age".path})
+
+      # Simple configuration
+      PROMPT=" ◉ %U%F{magenta}%n%f%u@%U%F{blue}%m%f%u:%F{yellow}%~%f
+       %F{green}→%f "
+      RPROMPT="%F{red}▂%f%F{yellow}▄%f%F{green}▆%f%F{cyan}█%f%F{blue}▆%f%F{magenta}▄%f%F{white}▂%f"
+      [ $TERM = "dumb" ] && unsetopt zle && PS1='$ '
+      bindkey '^P' history-beginning-search-backward
+      bindkey '^N' history-beginning-search-forward
+    '';
   };
 
   programs.zoxide = {
@@ -121,25 +132,51 @@ in {
       "--info='right'"
     ];
   };
+
   home.packages = with pkgs; [
     disfetch
     lolcat
-    cowsay
-    onefetch
     gnugrep
     gnused
+    cowsay
+
+    # console
+    nushell
+    rio
+
+    # rust cli
+    onefetch
+    himalaya
     bat
     eza
+    sd
+    xcp
+    dysk
+    delta
+    dua
+    dust
+    erdtree
+    lsd
+    procs
+    rip
     bottom
     fd
     bc
-    direnv
-    nix-direnv
+    mcfly
+    mkBook
+    mdcat
+    miniserve
+    mise
+    monolith
+    mprocs
+    ouch
+    pastel
+    qsv
+    rnr
+    ruff
+    skim
+    tealdear
+    teehee
+    watchexec
   ];
-
-  programs.direnv = {
-    enable = true;
-    enableZshIntegration = true;
-    nix-direnv.enable = true;
-  };
 }
