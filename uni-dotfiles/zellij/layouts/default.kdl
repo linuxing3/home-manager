@@ -6,12 +6,13 @@ layout {
 
     // PANE TEMPLATES
     pane_template name="filepicker" {
-        command "nnn"
-        args "-c"
+        command "zsh"
+        args "-c" "-l" "nnn"
     }
 
     pane_template name="editor" {
-        command "hx"
+        command "zsh"
+        args "-c" "-l" "hx"
     }
 
     pane_template name="compact_bar" {

@@ -40,7 +40,9 @@ in {
   home.sessionVariables = {
     NNN_OPENER = "nuke";
     NNN_FIFO = "/tmp/nnn.fifo";
-    NNN_PLUG = "p:preview-tui;l:launch;n:nuke;r:fzcd;s:suedit";
+    NNN_TMPFILE = "~/.config/nnn/.lastd";
+    NNN_PLUG = "p:preview-tui;l:launch;n:nuke;r:fzcd;s:suedit;h:!bash -i*";
+
   };
 
   programs.direnv = {

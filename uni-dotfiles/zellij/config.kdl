@@ -276,7 +276,7 @@ ui {
     }
 }
 
-theme "dracula"
+theme "tokyo-night-dark"
 
 default_mode "normal"
 
@@ -298,3 +298,8 @@ attach_to_session true
 
 show_startup_tips false
 
+scrollback_editor "hx"
+
+env {
+    EDITOR "hx"
+}
