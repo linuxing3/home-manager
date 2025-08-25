@@ -10,4 +10,6 @@ in {
   "api-keys.age" =  attrs;
   "mail-qq-pass.age" = attrs;
   "mail-mfa-pass.age" = attrs;
+  "boc-uk.age" = attrs;
+  "boc-us.age" = attrs;
 }

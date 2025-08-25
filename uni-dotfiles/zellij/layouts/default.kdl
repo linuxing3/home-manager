@@ -1,8 +1,28 @@
 layout {
 
-    ide name="ide"
-    duo name="duo"
-    one name="one"
+    tab name="ide" {
+        pane split_direction="vertical" {
+            filepicker size="15%" name="nnn"
+            editor
+            editor
+        }
+    }
+
+    tab name="miniterm" {
+        pane split_direction="vertical" {
+            pane size="70%" name="tasks"
+            pane size="30%" name="logs"
+        }
+    }
+
+    tab name="tasks" {
+        floating_panes {
+            lazygit
+        }
+        tasks name="one" {
+            pane
+        }
+    }
 
     // PANE TEMPLATES
     pane_template name="filepicker" {
@@ -15,33 +35,50 @@ layout {
         args "-c" "-l" "hx"
     }
 
+    pane_template name="lazygit" start_suspended=true {
+        command "lazygit"
+        x "10%"
+        y "5%"
+        width "80%"
+        height "80%"
+    }
+
+    pane_template name="tasks" {
+        pane split_direction="vertical" {
+            children
+            pane split_direction="horizontal" {
+                just_action_run
+                just_action_build
+                just_action_test
+            }
+        }
+    }
+
+    pane_template name="just_action_test" {
+        pane command="just" size="25%" start_suspended=true {
+            args "test"
+        }
+    }
+
+    pane_template name="just_action_build" {
+        pane command="just" size="25%" start_suspended=true {
+            args "build"
+        }
+    }
+
+    pane_template name="just_action_run" {
+        pane command="just" size="75%" start_suspended=true {
+            args "run"
+        }
+    }
+
     pane_template name="compact_bar" {
         borderless true
         plugin location="compact-bar"
     }
 
+
     // TAB TEMPLATES
-    tab_template name="ide" focus=true {
-        pane split_direction="vertical" {
-            filepicker size=30 name="nnn"
-            editor
-        }
-        compact_bar size=1
-    }
-
-    tab_template name="duo" {
-        pane split_direction="vertical" {
-            pane
-            pane
-        }
-        compact_bar size=1
-    }
-
-    tab_template name="one" {
-        pane
-        compact_bar size=1
-    }
-
     new_tab_template {
         pane
         compact_bar size=1

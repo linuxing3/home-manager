@@ -1,12 +1,21 @@
 {
   config,
+  lib,
   pkgs,
+  userSettings,
   ...
-}: {
+}:
+let
+  themePolarity = lib.removeSuffix "\n" (builtins.readFile (./. + "../../../../themes"+("/"+userSettings.theme)+"/polarity.txt"));
+  dashboardLogo = ./. + "/nix-" + themePolarity + ".webp";
+in
+   {
   home.file.".config/doom/themes/doom-stylix-theme.el".source = config.lib.stylix.colors {
     template = builtins.readFile ./themes/doom-stylix-theme.el.mustache;
     extension = ".el";
   };
+
+  home.file.".config/doom/dashboard-logo.webp".source = dashboardLogo;
 
   home.packages =
     (with pkgs; [

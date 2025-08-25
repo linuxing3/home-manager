@@ -74,6 +74,8 @@
         exec-once = fcitx5 -r -d
         exec-once = fcitx5-remote -r
 
+        exec-once = emacs --daemon
+
         exec-once = hypridle
         exec-once = sleep 5 && libinput-gestures
         exec-once = obs-notification-mute-daemon
