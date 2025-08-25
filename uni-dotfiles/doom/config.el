@@ -93,7 +93,7 @@
 
   ;;.config/doomashboard variables
   (setq dashboard-banner-logo-title "Welcome to Nix Doom Emacs")
-  (setq dashboard-startup-banner "dashboard-logo.webp")
+  (setq dashboard-startup-banner "~/.config/doom/dashboard-logo.webp")
   (setq dashboard-icon-type 'all-the-icons) ;; use `all-the-icons' package
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
@@ -1376,7 +1376,7 @@ Please set the variable `org-directory' to the location where you keep your org 
 
 (add-hook 'nix-mode-hook 'lsp-deferred)
 
-(setq lsp-tr.config/doomeps-position-params
+(setq lsp-treemacs-deps-position-params
   '((side . right)
    (slot . 1)
    (window-width . 35)))

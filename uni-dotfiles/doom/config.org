@@ -165,7 +165,7 @@ Doom Emacs is traditionally installed by cloning the repository ([[https://githu
 
   ;;.config/doomashboard variables
   (setq dashboard-banner-logo-title "Welcome to Nix Doom Emacs")
-  (setq dashboard-startup-banner "dashboard-logo.webp")
+  (setq dashboard-startup-banner "~/.config/doom/dashboard-logo.webp")
   (setq dashboard-icon-type 'all-the-icons) ;; use `all-the-icons' package
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
@@ -1723,7 +1723,7 @@ I don't have this active right now since it's kinda weird with pgtk...
 
 (add-hook 'nix-mode-hook 'lsp-deferred)
 
-(setq lsp-tr.config/doomeps-position-params
+(setq lsp-treemacs-deps-position-params
   '((side . right)
    (slot . 1)
    (window-width . 35)))
