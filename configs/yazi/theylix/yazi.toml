@@ -1,0 +1,21 @@
+[opener]
+text = [
+  { run = 'hx "$@"', block = true },
+]
+preview = [
+  { run = 'open "$@"'}
+]
+helix = [
+  { run = 'theylix -a "$@"', block = true, desc = "Use yazi as file picker within helix" },
+]
+
+[mgr]
+sort_dir_first = true
+ratio = [2, 2, 5]
+sort_by = "natural"
+show_hidden = true
+
+[open]
+rules = [
+  { name = "**/*", use = "helix" },
+]

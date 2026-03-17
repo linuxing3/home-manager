@@ -1,0 +1,51 @@
+#!/usr/bin/env sh
+
+FPATH="$*"
+ABS_TARGET=
+abspath() {
+    case "$1" in
+        /*) ABS_TARGET="$1";;
+        *)  ABS_TARGET="$PWD/$1";;
+    esac
+}
+
+abspath "${FPATH}"
+# echo $ABS_TARGET
+
+DPATH=$(dirname "$ABS_TARGET")
+# echo $DPATH
+
+edit_with_hx_in_zellij () {
+    # Open the file
+    zellij action write-chars ":open ${ABS_TARGET}"
+    zellij action write 13
+    sleep 0.2
+    # Change to the directory
+    zellij action write-chars ":cd ${DPATH}"
+    zellij action write 13
+}
+
+handle_edit() {
+    if [ -n "$ZELLIJ" ]; then
+        # Check if a pane named 'hx' exists by querying pane names
+        if ! zellij action query-tab-names | grep -q '^ide$'; then
+            zellij action new-tab -l ~/.config/zellij/layouts/ide.kdl -n ide
+            handle_edit
+        else
+            zellij action go-to-tab-name ide
+            # if zellij action dump-layout | grep 'name="nnn"' | grep 'focus=true'| head -1 ; then
+            zellij action focus-next-pane
+            # sleep 0.2
+            # fi
+            edit_with_hx_in_zellij 
+        fi
+    elif [ -n "$TMUX" ] ; then
+        tmux split-window -h "hx ${ABS_TARGET}"
+    elif [ -n "$KITTY_PID"]; then
+        kitty --execute "hx ${ABS_TARGET}"
+    else
+        emacsclient -c "${ABS_TARGET}"
+    fi
+}
+
+handle_edit "$*"

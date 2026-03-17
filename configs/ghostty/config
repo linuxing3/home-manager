@@ -1,0 +1,10 @@
+#   /persistent/home/linuxing3/.config/ghostty/config
+# font-family = Iosevka
+# window-padding-x = 2
+
+font-size = 14
+
+command = "zsh"
+theme = "gruvbox"
+window-decoration = "none"
+window-padding-y = 10,0

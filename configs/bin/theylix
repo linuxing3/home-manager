@@ -1,0 +1,86 @@
+#!/bin/bash
+
+if [[ $1 == "--help" ]]; then
+  echo "Usage: theylix [OPTION] [ARGS]
+
+Args: Arguments should be a list of filepaths.
+      Existing files will be opened; otherwise, empty Helix buffers will be opened
+      If any options are provided, you must include at least one file argument.
+      If no options are provided:
+        - a new Theylix session will be created
+        - if no arguments are provided, Helix will open to the current directory
+        - you can provide a single directory argument instead of a list of filepaths,
+          in which case Helix will open to that directory
+
+Options: Only 1 option allowed; subsequent options will be interpreted as filenames.
+      --help    Display this helper text
+  -a, --attach  Open files in the current Theylix session
+  -h, --hsplit  Open files with a horizontal split in the current Theylix session
+  -v, --vsplit  Open files with a vertical split in the current Theylix session
+"
+
+exit 0
+fi
+
+arr=( "$@" )
+
+if [[ $1 == "--" || $1 == "-v" || $1 == "-h" || $1 == "-a" || $1 == "--attach" || $1 == "--hsplit" || $1 == "--vsplit" ]]; then
+  arr=( "${@:2}" )
+
+  if [ ! ${arr%% *} ]; then
+    printf "At least one filepath argument must be provided with the $1 option.\n"
+    exit 0
+  fi
+else
+  optionless=true
+fi
+
+args=$(printf '"%s" ' "${arr[@]}")
+dir=
+
+# prevent collisions with dead zellij session names
+zellij delete-all-sessions -y
+
+# create new theylix session
+if [[ $optionless || $1 == "--" || $(zellij action write 27 2>&1) =~ "There is no active session!"  ]]; then
+    if [ ${arr%% *} ]; then
+        session="-s=$(basename -- ${arr%% *})"
+    elif [ $(git rev-parse --show-toplevel) ]; then
+        session="-s $(basename $(git rev-parse --show-toplevel))"
+    fi
+    printf "layout {\n    pane borderless=true {\n        command \"hx\"\n        args \"--\" $args\n    }\n}" > ~/.config/zellij/layouts/default.kdl
+    zellij --new-session-with-layout ~/.config/zellij/temp-layout.kdl $session
+
+# attach to existing theylix session
+else
+    # open selected file in editor
+    zellij action toggle-floating-panes
+    zellij action write 27 # send escape key
+
+    if [[ $1 == "-h" || $1 == "--hsplit" ]]; then
+        zellij action write-chars ":hsplit"
+        zellij action write 13 # send enter key
+    fi
+
+    if [[ $1 == "-v" || $1 == "--vsplit" ]]; then
+        zellij action write-chars ":vsplit"
+        zellij action write 13 # send enter key
+    fi
+
+    # open each file
+    for arg in "$args"; do
+        zellij action write-chars ":open $arg"
+        zellij action write 13 # send enter key
+        dir=$(dirname $arg)
+    done
+    sleep 0.1
+    # Change to the directory
+    zellij action write-chars ":cd $dir\""
+    zellij action write 13
+
+    # go back to floating yazi pane and close it
+    zellij action toggle-floating-panes
+    zellij action close-pane
+fi
+
+exit 0

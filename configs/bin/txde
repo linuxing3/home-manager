@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [[ $1 == "filetree" ]]; then
+  zellij run -c -f --x 10% --y 10% --width 80% --height 80% -- env "YAZI_CONFIG_HOME=~/.config/yazi/theylix" yazi $2
+  zellij action rename-pane "Yazi Manager"
+elif [[ $1 == "nnn" ]]; then
+  zellij run -c -f --x 10% --y 10% --width 80% --height 80% -- nnn $2
+  zellij action rename-pane "NNN Manager"
+elif [[ $1 == "emacsclient" ]]; then
+  zellij run -c -f --x 10% --y 10% --width 80% --height 80% -n emasclient -- emacsclient $2
+elif [[ $1 == "git" ]]; then
+  zellij run -c -f --x 10% --y 10% --width 80% --height 80% -n Git -- lazygit -p $(git -C $(dirname ${2/\~/$HOME}) rev-parse --show-toplevel)
+elif [[ $1 == "sql" ]]; then
+  zellij run -c -f --x 10% --y 10% --width 80% --height 80% -n SQL -- lazysql
+elif [[ $1 == "find-and-replace" ]]; then
+  if [[ $2 && $(git -C $(dirname ${2/\~/$HOME}) rev-parse --is-inside-work-tree 2>/dev/null) ]]; then
+    zellij run -c -f --x 10% --y 10% --width 80% --height 80% -n "Find and Replace" -- serpl -p $(git -C $(dirname ${2/\~/$HOME}) rev-parse --show-toplevel)
+  else
+    zellij run -c -f --x 10% --y 10% --width 80% --height 80% -n "Find and Replace" -- serpl
+  fi
+elif [[ $1 == "REST" ]]; then
+  zellij run -c -f --x 10% --y 10% --width 80% --height 80% -n REST -- slumber -f $HOME/.config/slumber/collections.yml
+elif [[ $1 == "blame" ]]; then
+  zellij run -c -f --x 10% --y 10% --width 80% --height 80% -n Blame -- tig -C $(git -C $(dirname ${2/\~/$HOME}) rev-parse --show-toplevel) blame ${2/\~/$HOME} +$3
+elif [[ $1 == "terminal" ]]; then
+  zellij action new-pane -f -x 10% -y 10% --width 80% --height 80%
+  zellij action rename-pane Terminal
+fi

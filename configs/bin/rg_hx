@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+rg --line-number --color=never --smart-case "" | fzf --delimiter : --preview 'bat --style=numbers --color=always --highlight-line {2} {1}' | awk -F: '{print "+"$2" "$1}' | xargs -r hx

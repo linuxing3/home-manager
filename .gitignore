@@ -1,0 +1,13 @@
+.aider*
+
+# runtime/cache/state under tracked dotfiles tree
+configs/Code/
+configs/google-chrome/
+configs/microsoft-edge/
+configs/warp-terminal/
+configs/hypr/.Trash-*/
+configs/ibus/bus/
+configs/fcitx/dbus/
+configs/nnn/.lastd
+configs/nnn/.selection
+configs/elinks/cookies
