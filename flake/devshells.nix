@@ -3,6 +3,9 @@
   perSystem =
     { system, ... }:
     let
+      projectOverlays = [
+        (import ../overlays)
+      ];
       pkgs = import inputs.nixpkgs {
         inherit system;
         config = {
@@ -10,7 +13,7 @@
           allowUnsupportedSystem = true;
           allowUnfreePredicate = _: true;
         };
-        overlays = [ (import ../overlays) ];
+        overlays = projectOverlays;
       };
     in
     {
@@ -19,10 +22,6 @@
           nixd
           nil
           alejandra
-          helix
-          git
-          gh
-          just
           inputs.agenix.packages.${system}.default
         ];
       };

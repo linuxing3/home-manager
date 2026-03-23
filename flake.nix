@@ -19,6 +19,10 @@
     agenix.url = "github:ryantm/agenix";
     doxx.url = "github:bgreenwell/doxx";
     xleak.url = "github:bgreenwell/xleak";
+    helix-steel-system = {
+      url = "github:mattwparas/helix/steel-event-system";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -30,6 +34,7 @@
       agenix,
       doxx,
       xleak,
+      helix-steel-system,
       nix-index-database,
       flake-parts,
       flake-utils,
@@ -60,6 +65,15 @@
         inherit systemSettings;
         inherit inputs;
       };
+      projectOverlays = [
+        helix-steel-system.overlays.default
+        (final: prev: {
+          helix-steel-system = final.helix.overrideAttrs (old: {
+            cargoBuildFeatures = ((old.cargoBuildFeatures or [ ]) ++ [ "git" "steel" ]);
+          });
+        })
+        (import ./overlays)
+      ];
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
@@ -77,7 +91,7 @@
               allowUnsupportedSystem = true;
               allowUnfreePredicate = _: true;
             };
-            overlays = [ (import ./overlays) ];
+            overlays = projectOverlays;
           };
           hmSwitch = pkgs.writeShellApplication {
             name = "home-manager-switch";
@@ -127,7 +141,7 @@
               allowUnsupportedSystem = true;
               allowUnfreePredicate = _: true;
             };
-            overlays = [ (import ./overlays) ];
+            overlays = projectOverlays;
           };
         in
         {

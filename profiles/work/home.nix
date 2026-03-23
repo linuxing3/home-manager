@@ -16,13 +16,13 @@
     ../../modules/app/ranger/ranger.nix
 
     # ------------- tui -------------------
-    ../../modules/tui/kitty.nix
-    ../../modules/tui/zellij.nix
-    ../../modules/tui/tmux.nix
+    # ../../modules/tui/kitty.nix
+    # ../../modules/tui/zellij.nix
+    # ../../modules/tui/tmux.nix
 
     # ------------- editor -------------------
-    ../../modules/app/nvim/nvim.nix
-    ../../modules/app/doom-emacs/doom-slim.nix
+    # ../../modules/app/nvim/nvim.nix
+    # ../../modules/app/doom-emacs/doom-slim.nix
 
     # ------------- lang -------------------
     # ../../modules/lang/python/python-extra.nix
@@ -34,11 +34,11 @@
     # ------------- app -------------------
     ../../modules/app/mail/default.nix
     # ../../modules/app/browser/qutebrowser.nix
-    ../../modules/app/browser/brave.nix
+    # ../../modules/app/browser/brave.nix
 
     # ------------- wm/gui -------------------
     # ../../modules/gui/waybar.nix
-    # ../../modules/gui/gui-collection.nix
+    ../../modules/gui/gui-collection.nix
     # ../../modules/wm/hyprland/hyprland.nix
     # ../../modules/wm/sway/sway.nix
     ../../modules/wm/xmonad/xmonad.nix
@@ -49,7 +49,7 @@
     # ../../modules/wm/input/nihongo.nix
 
     # ------------- virtualization -------------------
-    ../../modules/app/virtualization/virtualization.nix
+    # ../../modules/app/virtualization/virtualization.nix
   ];
 
   home.username = userSettings.username;
@@ -57,16 +57,17 @@
 
   home.stateVersion = "25.11"; # Please read the comment before changing.
   home.packages = with pkgs; [
-    helix
-    ghostty
-    vulkan-tools
-    vulkan-loader
-    vulkan-validation-layers
+    helix-steel-system
 
     yazi
     nnn
 
+    st
+
     gh
+    lazygit
+    zellij
+    tmux
 
     just
     comma

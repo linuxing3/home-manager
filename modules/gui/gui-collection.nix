@@ -1,9 +1,5 @@
 {pkgs, ...}: {
   # Collection of useful GUI apps
-  imports = [
-    ../../modules/app/browser/qutebrowser.nix
-    ../../modules/app/browser/brave.nix
-  ];
   home.packages = with pkgs; [
     # explorer
     nautilus
@@ -12,9 +8,9 @@
     # blender
     # libreoffice
 
-    xterm
-    xclip
-    groff
+    # xterm
+    # xclip
+    # groff
 
     # images
     imv
@@ -22,8 +18,8 @@
     nsxiv
 
     # pdf
-    zathura
-    xdotool 
+    # zathura
+    # xdotool 
 
     # Media
     # gimp

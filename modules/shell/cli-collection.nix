@@ -7,6 +7,8 @@ in
   home.packages = with pkgs; [
     vim
 
+    steel
+    
     # greeter
     cage
     greetd

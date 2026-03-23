@@ -20,8 +20,6 @@
     neofetch = "disfetch";
     fetch = "disfetch";
     gitfetch = "onefetch";
-    sway = "__EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json LIBGL_DRIVERS_PATH=/usr/lib/aarch64-linux-gnu/dri WLR_RENDERER=pixman WLR_RENDERER_ALLOW_SOFTWARE=1 command sway";
-    ghostty = "GDK_BACKEND=x11 GSK_RENDERER=cairo LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe command ghostty";
     N = "sudo -E nnn -dH";
     ".." = "cd ..";
     "..." = "cd ../..";
@@ -38,21 +36,10 @@ in {
   home.sessionVariables = {
     SHELL = "zsh";
     VISUAL = "hx";
-    NNN_OPENER = "nuke";
+    NNN_OPENER = "xnuke";
     NNN_FIFO = "/tmp/nnn.fifo";
     NNN_TMPFILE = "~/.config/nnn/.lastd";
-    NNN_PLUG = "p:mm_preview;v:imgview;m:mocq;l:launch;n:nuke;z:fzcd;s:suedit;r:gitroot;e:gpge;d:gpgd;s:gpgs;i:gpgv;g:-!git diff;";
-  };
-
-  home.file = {
-    ".config/yazi" = {
-      source = ../../configs/yazi;
-      recursive = true;
-    };
-    ".local/bin" = {
-      source = ../../configs/bin;
-      recursive = true;
-    };
+    NNN_PLUG = "p:preview_tabbed;v:imgview;l:launch;n:xnuke;z:fzcd;s:suedit;r:gitroot;e:gpge;d:gpgd;s:gpgs;i:gpgv;g:-!git diff;";
   };
 
   programs.direnv = {

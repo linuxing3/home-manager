@@ -19,14 +19,11 @@
   programs.git.userEmail = userSettings.email;
   programs.git.extraConfig = {
     init.defaultBranch = "main";
-    safe.directory = [ ("/home/" + userSettings.username + "/.dotfiles")
-                       ("/home/" + userSettings.username + "/.dotfiles/.git") ];
     merge.conflictstyle = "diff3";
     diff.colorMoved = "default";
     core = {
       whitespace = "trailing-space,space-before-tab";
     };
-    url."ssh://git@github.com".insteadOf = "https://github.com";
   };
   programs.git.ignores = [
     "*~"
@@ -41,7 +38,7 @@
 
   programs.git.signing = {
     signer = "gpg";
-    key = "57FB1A38C180FACA";
+    key = "8DB2F92A1DAB1EBB";
     format = "openpgp";
     signByDefault = true;
   };
@@ -74,7 +71,6 @@
         pv = "pr view";
       };
       editor = "hx";
-      git-protocol = "ssh";
     };
     gitCredentialHelper = {
       enable = true;

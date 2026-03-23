@@ -172,7 +172,7 @@
   environment.systemPackages = with pkgs; [
     # neovim
     # vim
-    helix
+    helix-steel-system
 
     wget
     curl
