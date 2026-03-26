@@ -10,6 +10,10 @@
       sha256 = "1cqnl8zlxccqg0901gx21h06j9wk3ja6lr8wp4k85ni4msf4m09g";
     };
     buildInputs = oldAttrs.buildInputs ++ (with super; [ harfbuzz ]);
+    postPatch = ''
+      sed -i 's|"NotoColorEmoji:pixelsize=10:antialias=true:autohint=true" }|"NotoColorEmoji:pixelsize=10:antialias=true:autohint=true", "Source Han Sans SC:pixelsize=16:antialias=true:autohint=true" }|' config.h
+      sed -i '/"fontalt0", STRING, \&font2\[0\]/a\	{ "fontalt1", STRING, \&font2[1] },' config.h
+    '';
   });
   # g-lf = super.callPackage ./g-lf.nix { };
   # g-pistol = super.callPackage ./g-pistol.nix { };

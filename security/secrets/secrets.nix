@@ -14,4 +14,5 @@ in {
   "mail-mfa-pass.age" = attrs;
   "boc-uk.age" = attrs;
   "boc-us.age" = attrs;
+  "google-client-secrets.age" = attrs;
 }

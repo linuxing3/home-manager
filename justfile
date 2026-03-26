@@ -1,5 +1,8 @@
-home-switch:
-    home-manager switch -b b --flake "$HOME/.config/home-manager"
+run: build
+    nix run
+
+build:
+    nix build
 
 nix-repl:
     nix repl

@@ -57,6 +57,14 @@ in {
     # enableCompletion = true;
     shellAliases = myAliases;
     initContent = ''
+      # Ensure Nix is loaded (for non-interactive or edge cases)
+      if [ -z "''${__ETC_PROFILE_NIX_SOURCED:-}" ] && [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+        . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+      fi
+
+      # Skip compinit insecure directories check (for non-NixOS systems)
+      autoload -U compinit
+      compinit -C
 
       # Simple configuration
       PROMPT=" ◉ %U%F{magenta}%n%f%u@%U%F{blue}%m%f%u:%F{yellow}%~%f

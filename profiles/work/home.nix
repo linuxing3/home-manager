@@ -21,6 +21,7 @@
     # ../../modules/tui/tmux.nix
 
     # ------------- editor -------------------
+    ../../modules/app/helix
     # ../../modules/app/nvim/nvim.nix
     # ../../modules/app/doom-emacs/doom-slim.nix
 
@@ -37,7 +38,7 @@
     # ../../modules/app/browser/brave.nix
 
     # ------------- wm/gui -------------------
-    # ../../modules/gui/waybar.nix
+    ../../modules/gui/fuzzel.nix
     ../../modules/gui/gui-collection.nix
     # ../../modules/wm/hyprland/hyprland.nix
     # ../../modules/wm/sway/sway.nix
@@ -57,8 +58,6 @@
 
   home.stateVersion = "25.11"; # Please read the comment before changing.
   home.packages = with pkgs; [
-    helix-steel-system
-
     yazi
     nnn
 

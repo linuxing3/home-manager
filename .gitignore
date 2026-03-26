@@ -11,3 +11,10 @@ configs/fcitx/dbus/
 configs/nnn/.lastd
 configs/nnn/.selection
 configs/elinks/cookies
+.agent-logs
+.helix
+.helix
+.helix
+.helix/recent-files.txt
+security/secrets/.helix
+security/secrets/.helix

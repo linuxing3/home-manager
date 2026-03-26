@@ -1,1 +1,0 @@
-"/home/Designers/.config/home-manager/modules/app/git/git.nix"

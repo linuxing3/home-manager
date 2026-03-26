@@ -1,0 +1,180 @@
+// Multi-Agent Workspace Layout
+// Three roles: Planner (Codebuddy), Worker (Codex), Reviewer (Cursor)
+//
+// Layout:
+// ┌─────────────────────────────────────────────────────────────────┐
+// │ Tab 1: Planner (Codebuddy) -  [规划任务、制定方案]              │
+// ├─────────────────────────────────────────────────────────────────┤
+// │ Tab 2: Worker (Codex)      -  [执行任务、生成代码]              │
+// ├─────────────────────────────────────────────────────────────────┤
+// │ Tab 3: Reviewer (Cursor)   -  [审核代码、提出修改意见]          │
+// ├─────────────────────────────────────────────────────────────────┤
+// │ Tab 4: Tasks               -  [任务状态面板]                    │
+// │   ┌─────────────┬─────────────┬─────────────┐                   │
+// │   │  Planner    │   Worker    │  Reviewer   │                   │
+// │   │  Output     │   Output    │   Output    │                   │
+// │   └─────────────┴─────────────┴─────────────┘                   │
+// └─────────────────────────────────────────────────────────────────┘
+
+layout {
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
+                // -- Gruvbox Dark mode --
+                color_bg0 "#282828"
+                color_bg1 "#3c3836"
+                color_bg2 "#504945"
+                color_bg3 "#665c54"
+                color_bg4 "#7c6f64"
+                color_fg0 "#fbf1c7"
+                color_fg1 "#ebdbb2"
+                color_fg2 "#d5c4a1"
+                color_fg3 "#bdae93"
+                color_fg4 "#a89984"
+                color_red "#fb4934"
+                color_green "#b8bb26"
+                color_yellow "#fabd2f"
+                color_blue "#83a598"
+                color_purple "#d3869b"
+                color_aqua "#8ec07c"
+                color_orange "#fe8019"
+
+                format_left   "#[bg=$bg2,fg=$fg3] {session} {mode}#[bg=$bg1]{tabs}"
+                format_center "{notifications}"
+                format_right  "#[bg=$bg1,fg=$bg2]#[bg=$bg2,fg=$fg4] {command_user}@{command_host} #[bg=$bg2,fg=$fg3]#[bg=$fg3,fg=$bg1] {datetime} "
+                format_space  "#[bg=$bg1,fg=$fg1]"
+                format_hide_on_overlength "true"
+                format_precedence "lrc"
+
+                border_enabled  "true"
+                border_char     "─"
+                border_format   "#[fg=$bg1]{char}"
+                border_position "top"
+
+                hide_frame_for_single_pane "true"
+
+                mode_normal        "#[bg=$bg3,fg=$bg2]#[bg=$bg3,fg=$fg3,bold] NORMAL#[bg=$bg1,fg=$bg3]"
+                mode_locked        "#[bg=$red,fg=$bg2]#[bg=$red,fg=$bg0,bold] LOCKED#[bg=$bg1,fg=$red]"
+                mode_pane          "#[bg=$aqua,fg=$bg2]#[bg=$aqua,fg=$bg0,bold] PANE#[bg=$bg1,fg=$aqua]"
+                mode_tab           "#[bg=$aqua,fg=$bg2]#[bg=$aqua,fg=$bg0,bold] TAB#[bg=$bg1,fg=$aqua]"
+                mode_scroll        "#[bg=$blue,fg=$bg2]#[bg=$blue,fg=$bg0,bold] SCROLL#[bg=$bg1,fg=$blue]"
+                mode_resize        "#[bg=$yellow,fg=$bg2]#[bg=$yellow,fg=$bg0,bold] RESIZE#[bg=$bg1,fg=$yellow]"
+
+                tab_normal              "#[bg=$bg2,fg=$bg1]#[bg=$bg2,fg=$fg1] {index} {name} #[bg=$bg1,fg=$bg2]"
+                tab_active              "#[bg=$yellow,fg=$bg1]#[bg=$yellow,fg=$bg2] {index} {name} #[bg=$bg1,fg=$yellow]"
+                tab_separator           "#[bg=$bg1,fg=$fg1]"
+
+                notification_format_unread "#[bg=$orange,fg=$bg1]#[bg=$orange,fg=$bg1] {message} #[bg=$bg1,fg=$orange]"
+                notification_format_no_notifications ""
+                notification_show_interval "10"
+
+                command_host_command    "uname -n"
+                command_host_format     "{stdout}"
+                command_host_interval   "0"
+                command_host_rendermode "static"
+
+                command_user_command    "whoami"
+                command_user_format     "{stdout}"
+                command_user_interval   "0"
+                command_user_rendermode "static"
+
+                datetime          "{format}"
+                datetime_format   "%Y-%m-%d %H:%M"
+                datetime_timezone "Asia/Shanghai"
+            }
+        }
+    }
+
+    // ============================================
+    // Tab 1: Planner (Codebuddy)
+    // Role: Plan tasks, design architecture, break down requirements
+    // ============================================
+    tab name="planner" focus=true {
+        pane split_direction="vertical" {
+            // Left: Main planner interface
+            pane size="70%" name="codebuddy" focus=true {
+                command "codebuddy"
+                args "--print-cwd"
+            }
+            // Right: Task context / notes
+            pane size="30%" name="context" stacked=true {
+                pane name="tasks" command="nu" args="-c" "btop"
+                pane name="notes" command="hx" args="~/.config/home-manager/TASKS.md" start_suspended=true
+            }
+        }
+    }
+
+    // ============================================
+    // Tab 2: Worker (Codex)
+    // Role: Execute tasks, generate code, implement features
+    // ============================================
+    tab name="worker" {
+        pane split_direction="vertical" {
+            // Left: Codex execution
+            pane size="60%" name="codex" {
+                command "codex"
+            }
+            // Right: Editor for manual tweaks
+            pane size="40%" name="editor" {
+                command "hx"
+                args "."
+            }
+        }
+    }
+
+    // ============================================
+    // Tab 3: Reviewer (Cursor)
+    // Role: Review code changes, provide feedback
+    // ============================================
+    tab name="reviewer" {
+        pane split_direction="vertical" {
+            // Left: Cursor AI reviewer
+            pane size="60%" name="cursor" {
+                command "/home/Designers/.local/bin/Cursor"
+            }
+            // Right: Diff viewer
+            pane size="40%" name="diff" {
+                command "nu"
+                args "-c" "lazygit"
+            }
+        }
+    }
+
+    // ============================================
+    // Tab 4: Tasks Dashboard
+    // Shows output from all three agents side by side
+    // ============================================
+    tab name="tasks" {
+        pane split_direction="horizontal" {
+            pane size="5%" borderless=true {
+                command "nu"
+                args "-c" "print (ansi green_bold) + '  PLANNER  ' + (ansi reset) + ' | ' + (ansi yellow_bold) + '  WORKER  ' + (ansi reset) + ' | ' + (ansi blue_bold) + '  REVIEWER  ' + (ansi reset)"
+            }
+            pane split_direction="vertical" {
+                // Planner output
+                pane size="33%" name="planner-out" {
+                    command "nu"
+                    args "-c" "bat --paging=never -l md ~/.config/home-manager/.agent-logs/planner.log 2>/dev/null || echo 'No planner output yet'"
+                }
+                // Worker output
+                pane size="34%" name="worker-out" {
+                    command "nu"
+                    args "-c" "bat --paging=never -l md ~/.config/home-manager/.agent-logs/worker.log 2>/dev/null || echo 'No worker output yet'"
+                }
+                // Reviewer output
+                pane size="33%" name="reviewer-out" {
+                    command "nu"
+                    args "-c" "bat --paging=never -l md ~/.config/home-manager/.agent-logs/reviewer.log 2>/dev/null || echo 'No reviewer output yet'"
+                }
+            }
+        }
+    }
+
+    // ============================================
+    // Tab 5: Shell (fallback)
+    // ============================================
+    tab name="shell" {
+        pane command="nu"
+    }
+}
