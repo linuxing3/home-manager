@@ -23,6 +23,11 @@
       url = "github:mattwparas/helix/steel-event-system";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
   };
 
   outputs =
@@ -31,9 +36,7 @@
       nixpkgs,
       home-manager,
       stylix,
-      agenix,
-      doxx,
-      xleak,
+      nixvim,
       helix-steel-system,
       nix-index-database,
       flake-parts,
@@ -52,6 +55,7 @@
       homeModules = [
         (./. + "/profiles" + ("/" + systemSettings.profile) + "/home.nix")
         stylix.homeModules.stylix
+        nixvim.homeModules.nixvim
         nix-index-database.homeModules.default
       ];
       systemModules = [
@@ -69,7 +73,13 @@
         helix-steel-system.overlays.default
         (final: prev: {
           helix-steel-system = final.helix.overrideAttrs (old: {
-            cargoBuildFeatures = ((old.cargoBuildFeatures or [ ]) ++ [ "git" "steel" ]);
+            cargoBuildFeatures = (
+              (old.cargoBuildFeatures or [ ])
+              ++ [
+                "git"
+                "steel"
+              ]
+            );
           });
         })
         (import ./overlays)
@@ -82,7 +92,8 @@
 
       systems = supportedSystems;
 
-      perSystem = { system, ... }:
+      perSystem =
+        { system, ... }:
         let
           pkgs = import nixpkgs {
             inherit system;

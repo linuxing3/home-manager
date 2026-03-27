@@ -22,6 +22,7 @@
 
     # ------------- editor -------------------
     ../../modules/app/helix
+    ../../modules/app/nixvim
     # ../../modules/app/nvim/nvim.nix
     # ../../modules/app/doom-emacs/doom-slim.nix
 
