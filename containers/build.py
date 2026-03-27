@@ -3,60 +3,22 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shlex
 import subprocess
 import sys
 from pathlib import Path
 from typing import Iterable
 
+from incus_docker import ensure_incus_container_ready, incus_exec_cmd, nix_cmd, run
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 DEFAULT_MAP = SCRIPT_DIR / "instance_map.json"
-DEFAULT_INCUS_RUNTIME = os.environ.get("INCUS_RUNTIME", "docker")
-DEFAULT_INCUS_DOCKER_IMAGE = os.environ.get("INCUS_DOCKER_IMAGE", "ghcr.io/cmspam/incus-docker")
-
-
-def run_checked(cmd: list[str], cwd: Path = REPO_ROOT, capture: bool = False) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        cmd,
-        cwd=cwd,
-        text=True,
-        capture_output=capture,
-        check=True,
-    )
 
 
 def print_cmd(cmd: Iterable[str]) -> None:
     print(" ".join(shlex.quote(part) for part in cmd))
-
-
-def incus_cmd(*args: str) -> list[str]:
-    if DEFAULT_INCUS_RUNTIME == "host":
-        return ["incus", *args]
-    return [
-        "docker",
-        "run",
-        "--rm",
-        "--privileged",
-        "--network",
-        "host",
-        # Keep compatibility with Docker 18.09 on this host; it rejects --cgroupns.
-        "-v",
-        "incus-docker-lib:/var/lib/incus",
-        "-v",
-        "incus-docker-log:/var/log/incus",
-        "-v",
-        "incus-docker-cache:/var/cache/incus",
-        "-v",
-        "/sys/fs/cgroup:/sys/fs/cgroup:rw",
-        "-v",
-        "/nix/store:/nix/store:ro",
-        DEFAULT_INCUS_DOCKER_IMAGE,
-        "incus",
-        *args,
-    ]
 
 
 def discover_containers() -> list[str]:
@@ -92,11 +54,12 @@ def load_instance_map(path: Path) -> dict[str, str]:
 
 
 def get_running_instances(dry_run: bool) -> list[str]:
-    cmd = incus_cmd("list", "type=container", "status=running", "-c", "n", "--format", "csv")
+    cmd = incus_exec_cmd("list", "type=container", "status=running", "-c", "n", "--format", "csv")
     if dry_run:
         print_cmd(cmd)
         return []
-    proc = run_checked(cmd, capture=True)
+    ensure_incus_container_ready()
+    proc = run(cmd, capture=True)
     lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
     return lines
 
@@ -128,8 +91,8 @@ def resolve_targets(
 
 
 def build_one(name: str, dry_run: bool) -> tuple[Path, Path]:
-    build_cmd = ["nix", "build", f".#{name}", "--no-link", "--print-out-paths"]
-    metadata_cmd = ["nix", "build", f".#{name}-metadata", "--no-link", "--print-out-paths"]
+    build_cmd = nix_cmd("build", f".#{name}", "--no-link", "--print-out-paths")
+    metadata_cmd = nix_cmd("build", f".#{name}-metadata", "--no-link", "--print-out-paths")
     if dry_run:
         print_cmd(build_cmd)
         print_cmd(metadata_cmd)
@@ -137,8 +100,8 @@ def build_one(name: str, dry_run: bool) -> tuple[Path, Path]:
             Path(f"/nix/store/{name}-metadata-output/tarball/<metadata>.tar.xz"),
             Path(f"/nix/store/{name}-output/tarball/<rootfs>.tar.xz"),
         )
-    metadata_out = run_checked(metadata_cmd, capture=True).stdout.strip()
-    rootfs_out = run_checked(build_cmd, capture=True).stdout.strip()
+    metadata_out = run(metadata_cmd, capture=True, cwd=REPO_ROOT).stdout.strip()
+    rootfs_out = run(build_cmd, capture=True, cwd=REPO_ROOT).stdout.strip()
     if not metadata_out or not rootfs_out:
         raise RuntimeError(f"failed to obtain build outputs for {name}")
     metadata_tarball = find_tarball(Path(metadata_out))
@@ -147,11 +110,12 @@ def build_one(name: str, dry_run: bool) -> tuple[Path, Path]:
 
 
 def import_one(name: str, metadata_path: Path, rootfs_path: Path, dry_run: bool) -> None:
-    cmd = incus_cmd("image", "import", str(metadata_path), str(rootfs_path), "--alias", name)
+    cmd = incus_exec_cmd("image", "import", str(metadata_path), str(rootfs_path), "--alias", name)
     if dry_run:
         print_cmd(cmd)
         return
-    run_checked(cmd)
+    ensure_incus_container_ready()
+    run(cmd)
 
 
 def main() -> int:

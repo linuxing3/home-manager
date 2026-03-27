@@ -3,66 +3,19 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shlex
 import subprocess
 import sys
 from pathlib import Path
 
+from incus_docker import ensure_incus_container_ready, incus_exec_cmd, run
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_MAP = SCRIPT_DIR / "instance_map.json"
-DEFAULT_INCUS_RUNTIME = os.environ.get("INCUS_RUNTIME", "docker")
-DEFAULT_INCUS_DOCKER_IMAGE = os.environ.get("INCUS_DOCKER_IMAGE", "ghcr.io/cmspam/incus-docker")
-
 
 def print_cmd(cmd: list[str]) -> None:
     print(" ".join(shlex.quote(part) for part in cmd))
-
-
-def incus_cmd(*args: str) -> list[str]:
-    if DEFAULT_INCUS_RUNTIME == "host":
-        return ["incus", *args]
-    return [
-        "docker",
-        "run",
-        "--rm",
-        "--privileged",
-        "--network",
-        "host",
-        # Keep compatibility with Docker 18.09 on this host; it rejects --cgroupns.
-        "-v",
-        "incus-docker-lib:/var/lib/incus",
-        "-v",
-        "incus-docker-log:/var/log/incus",
-        "-v",
-        "incus-docker-cache:/var/cache/incus",
-        "-v",
-        "/sys/fs/cgroup:/sys/fs/cgroup:rw",
-        "-v",
-        "/nix/store:/nix/store:ro",
-        DEFAULT_INCUS_DOCKER_IMAGE,
-        "incus",
-        *args,
-    ]
-
-
-def run_checked(cmd: list[str], capture: bool = False) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        cmd,
-        text=True,
-        capture_output=capture,
-        check=True,
-    )
-
-
-def run_optional(cmd: list[str]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        cmd,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
 
 
 def load_instance_map(path: Path) -> dict[str, str]:
@@ -80,30 +33,31 @@ def load_instance_map(path: Path) -> dict[str, str]:
 
 
 def get_running_instances(dry_run: bool) -> list[str]:
-    cmd = incus_cmd("list", "type=container", "status=running", "-c", "n", "--format", "csv")
+    cmd = incus_exec_cmd("list", "type=container", "status=running", "-c", "n", "--format", "csv")
     if dry_run:
         print_cmd(cmd)
         return []
-    proc = run_checked(cmd, capture=True)
+    ensure_incus_container_ready()
+    proc = run(cmd, capture=True)
     return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
 
 
 def get_instance_base_image(instance: str, dry_run: bool) -> str | None:
-    cmd = incus_cmd("config", "get", instance, "volatile.base_image")
+    cmd = incus_exec_cmd("config", "get", instance, "volatile.base_image")
     if dry_run:
         print_cmd(cmd)
         return None
-    proc = run_checked(cmd, capture=True)
+    proc = run(cmd, capture=True)
     value = proc.stdout.strip()
     return value or None
 
 
 def get_image_fingerprint(alias: str, dry_run: bool) -> str | None:
-    cmd = incus_cmd("image", "info", alias)
+    cmd = incus_exec_cmd("image", "info", alias)
     if dry_run:
         print_cmd(cmd)
         return None
-    proc = run_optional(cmd)
+    proc = subprocess.run(cmd, text=True, capture_output=True, check=False)
     if proc.returncode != 0:
         return None
     for line in proc.stdout.splitlines():
@@ -113,18 +67,18 @@ def get_image_fingerprint(alias: str, dry_run: bool) -> str | None:
 
 
 def profile_exists(profile: str, dry_run: bool) -> bool:
-    cmd = incus_cmd("profile", "show", profile)
+    cmd = incus_exec_cmd("profile", "show", profile)
     if dry_run:
         print_cmd(cmd)
         return True
-    return run_optional(cmd).returncode == 0
+    return subprocess.run(cmd, text=True, capture_output=True, check=False).returncode == 0
 
 
 def stop_delete_launch(instance: str, image_alias: str, dry_run: bool) -> None:
-    stop_cmd = incus_cmd("stop", instance, "--timeout", "30")
-    force_stop_cmd = incus_cmd("stop", instance, "--force")
-    delete_cmd = incus_cmd("delete", instance)
-    launch_cmd = incus_cmd("launch", image_alias, instance, "--profile", instance)
+    stop_cmd = incus_exec_cmd("stop", instance, "--timeout", "30")
+    force_stop_cmd = incus_exec_cmd("stop", instance, "--force")
+    delete_cmd = incus_exec_cmd("delete", instance)
+    launch_cmd = incus_exec_cmd("launch", image_alias, instance, "--profile", instance)
     if dry_run:
         print_cmd(stop_cmd)
         print_cmd(force_stop_cmd)
@@ -132,11 +86,12 @@ def stop_delete_launch(instance: str, image_alias: str, dry_run: bool) -> None:
         print_cmd(launch_cmd)
         return
 
-    stopped = run_optional(stop_cmd).returncode == 0
+    ensure_incus_container_ready()
+    stopped = subprocess.run(stop_cmd, text=True, capture_output=True, check=False).returncode == 0
     if not stopped:
-        run_checked(force_stop_cmd)
-    run_checked(delete_cmd)
-    run_checked(launch_cmd)
+        run(force_stop_cmd)
+    run(delete_cmd)
+    run(launch_cmd)
 
 
 def main() -> int:

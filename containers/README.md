@@ -41,6 +41,7 @@ From the repo root:
 ## Launch a built image
 
 `run.py` launches an imported image alias as a new instance through the Docker-backed Incus wrapper.
+It auto-starts the `incus-docker` daemon container, bootstraps a default storage pool if needed, and uses the `default` profile unless you override it.
 
 - Launch with image alias and matching instance name:
   - `python3 containers/run.py base`

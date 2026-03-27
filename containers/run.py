@@ -2,56 +2,30 @@
 from __future__ import annotations
 
 import argparse
-import os
 import shlex
 import subprocess
 import sys
-from pathlib import Path
 from typing import Iterable
 
-
-SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_INCUS_RUNTIME = os.environ.get("INCUS_RUNTIME", "docker")
-DEFAULT_INCUS_DOCKER_IMAGE = os.environ.get("INCUS_DOCKER_IMAGE", "ghcr.io/cmspam/incus-docker")
+from build import build_one, discover_containers as discover_build_containers, import_one
+from incus_docker import ensure_incus_container_ready, incus_exec_cmd
 
 
 def print_cmd(cmd: Iterable[str]) -> None:
     print(" ".join(shlex.quote(part) for part in cmd))
 
 
-def incus_cmd(*args: str) -> list[str]:
-    if DEFAULT_INCUS_RUNTIME == "host":
-        return ["incus", *args]
-    return [
-        "docker",
-        "run",
-        "--rm",
-        "--privileged",
-        "--network",
-        "host",
-        # Keep compatibility with Docker 18.09 on this host; it rejects --cgroupns.
-        "-v",
-        "incus-docker-lib:/var/lib/incus",
-        "-v",
-        "incus-docker-log:/var/log/incus",
-        "-v",
-        "incus-docker-cache:/var/cache/incus",
-        "-v",
-        "/sys/fs/cgroup:/sys/fs/cgroup:rw",
-        "-v",
-        "/nix/store:/nix/store:ro",
-        DEFAULT_INCUS_DOCKER_IMAGE,
-        "incus",
-        *args,
-    ]
-
-
 def discover_containers() -> list[str]:
-    return sorted(path.stem for path in SCRIPT_DIR.glob("*.nix") if path.is_file())
+    return discover_build_containers()
 
 
 def run_checked(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, text=True, capture_output=True, check=True)
+
+
+def image_exists(image: str) -> bool:
+    proc = subprocess.run(incus_exec_cmd("image", "info", image), text=True, capture_output=True, check=False)
+    return proc.returncode == 0
 
 
 def main() -> int:
@@ -73,8 +47,18 @@ def main() -> int:
             parser.error("the following arguments are required: image")
 
         instance = args.instance or args.image
-        profile = args.profile or instance
-        cmd = incus_cmd("launch", args.image, instance, "--profile", profile)
+        profile = args.profile or "default"
+
+        if args.dry_run:
+            metadata_path, rootfs_path = build_one(args.image, dry_run=args.dry_run)
+            import_one(args.image, metadata_path, rootfs_path, dry_run=args.dry_run)
+        else:
+            ensure_incus_container_ready()
+            if not image_exists(args.image):
+                metadata_path, rootfs_path = build_one(args.image, dry_run=args.dry_run)
+                import_one(args.image, metadata_path, rootfs_path, dry_run=args.dry_run)
+
+        cmd = incus_exec_cmd("launch", args.image, instance, "--profile", profile)
         if args.dry_run:
             print_cmd(cmd)
             return 0
