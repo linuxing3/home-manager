@@ -7,6 +7,7 @@ This directory is the source of truth for buildable Incus images.
 - `*.nix`: top-level NixOS container modules discovered by the flake
 - `build.py`: builds Nix image outputs and imports them into Incus
 - `relaunch.py`: relaunches stale running Incus instances
+- `run.py`: launches a built image as a new Incus instance
 - `instance_map.json` (optional): maps `instance-name` to `image-alias`
 
 By default, both scripts run `incus` through the Docker image `ghcr.io/cmspam/incus-docker`.
@@ -36,6 +37,19 @@ From the repo root:
   - `python3 containers/build.py --nightly`
 - Show exact commands without execution:
   - `python3 containers/build.py --dry-run base`
+
+## Launch a built image
+
+`run.py` launches an imported image alias as a new instance through the Docker-backed Incus wrapper.
+
+- Launch with image alias and matching instance name:
+  - `python3 containers/run.py base`
+- Launch with a custom instance name:
+  - `python3 containers/run.py base demo-base`
+- Pick a different profile:
+  - `python3 containers/run.py base demo-base --profile demo-profile`
+- Print the exact docker/incus command:
+  - `python3 containers/run.py base --dry-run`
 
 ## Relaunch stale running instances
 
