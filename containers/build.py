@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
 import subprocess
 import sys
@@ -13,6 +14,8 @@ from typing import Iterable
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 DEFAULT_MAP = SCRIPT_DIR / "instance_map.json"
+DEFAULT_INCUS_RUNTIME = os.environ.get("INCUS_RUNTIME", "docker")
+DEFAULT_INCUS_DOCKER_IMAGE = os.environ.get("INCUS_DOCKER_IMAGE", "ghcr.io/cmspam/incus-docker")
 
 
 def run_checked(cmd: list[str], cwd: Path = REPO_ROOT, capture: bool = False) -> subprocess.CompletedProcess[str]:
@@ -27,6 +30,34 @@ def run_checked(cmd: list[str], cwd: Path = REPO_ROOT, capture: bool = False) ->
 
 def print_cmd(cmd: Iterable[str]) -> None:
     print(" ".join(shlex.quote(part) for part in cmd))
+
+
+def incus_cmd(*args: str) -> list[str]:
+    if DEFAULT_INCUS_RUNTIME == "host":
+        return ["incus", *args]
+    return [
+        "docker",
+        "run",
+        "--rm",
+        "--privileged",
+        "--network",
+        "host",
+        "--cgroupns",
+        "host",
+        "-v",
+        "incus-docker-lib:/var/lib/incus",
+        "-v",
+        "incus-docker-log:/var/log/incus",
+        "-v",
+        "incus-docker-cache:/var/cache/incus",
+        "-v",
+        "/sys/fs/cgroup:/sys/fs/cgroup:rw",
+        "-v",
+        "/nix/store:/nix/store:ro",
+        DEFAULT_INCUS_DOCKER_IMAGE,
+        "incus",
+        *args,
+    ]
 
 
 def discover_containers() -> list[str]:
@@ -62,7 +93,7 @@ def load_instance_map(path: Path) -> dict[str, str]:
 
 
 def get_running_instances(dry_run: bool) -> list[str]:
-    cmd = ["incus", "list", "type=container", "status=running", "-c", "n", "--format", "csv"]
+    cmd = incus_cmd("list", "type=container", "status=running", "-c", "n", "--format", "csv")
     if dry_run:
         print_cmd(cmd)
         return []
@@ -117,7 +148,7 @@ def build_one(name: str, dry_run: bool) -> tuple[Path, Path]:
 
 
 def import_one(name: str, metadata_path: Path, rootfs_path: Path, dry_run: bool) -> None:
-    cmd = ["incus", "image", "import", str(metadata_path), str(rootfs_path), "--alias", name]
+    cmd = incus_cmd("image", "import", str(metadata_path), str(rootfs_path), "--alias", name)
     if dry_run:
         print_cmd(cmd)
         return

@@ -9,6 +9,10 @@ This directory is the source of truth for buildable Incus images.
 - `relaunch.py`: relaunches stale running Incus instances
 - `instance_map.json` (optional): maps `instance-name` to `image-alias`
 
+By default, both scripts run `incus` through the Docker image `ghcr.io/cmspam/incus-docker`.
+Set `INCUS_RUNTIME=host` if you want to call a local `incus` binary directly.
+Set `INCUS_DOCKER_IMAGE` if you need a different image tag.
+
 ## Add a new container image
 
 1. Add a new top-level `containers/<name>.nix`.
