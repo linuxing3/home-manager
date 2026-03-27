@@ -30,8 +30,7 @@ def incus_cmd(*args: str) -> list[str]:
         "--privileged",
         "--network",
         "host",
-        "--cgroupns",
-        "host",
+        # Keep compatibility with Docker 18.09 on this host; it rejects --cgroupns.
         "-v",
         "incus-docker-lib:/var/lib/incus",
         "-v",
