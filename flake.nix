@@ -8,6 +8,10 @@
     };
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-utils.url = "github:numtide/flake-utils";
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nix-index-database = {
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -38,6 +42,7 @@
       stylix,
       nixvim,
       helix-steel-system,
+      nixos-generators,
       nix-index-database,
       flake-parts,
       flake-utils,
@@ -95,6 +100,36 @@
       perSystem =
         { system, ... }:
         let
+          containerDir = ./containers;
+          containerNames = import ./nix/container-discovery.nix (builtins.readDir containerDir);
+          containerPackages =
+            builtins.listToAttrs (
+              builtins.concatMap
+                (
+                  name:
+                  [
+                    {
+                      inherit name;
+                      value = nixos-generators.nixosGenerate {
+                        inherit system;
+                        format = "lxc";
+                        modules = [ (containerDir + "/${name}.nix") ];
+                        specialArgs = args;
+                      };
+                    }
+                    {
+                      name = "${name}-metadata";
+                      value = nixos-generators.nixosGenerate {
+                        inherit system;
+                        format = "lxc-metadata";
+                        modules = [ (containerDir + "/${name}.nix") ];
+                        specialArgs = args;
+                      };
+                    }
+                  ]
+                )
+                containerNames
+            );
           pkgs = import nixpkgs {
             inherit system;
             config = {
@@ -120,11 +155,13 @@
           };
         in
         {
-          packages = {
-            default = hmSwitch;
-            home-manager-switch = hmSwitch;
-            bootstrap = hmSwitch;
-          };
+          packages =
+            {
+              default = hmSwitch;
+              home-manager-switch = hmSwitch;
+              bootstrap = hmSwitch;
+            }
+            // containerPackages;
 
           apps = {
             default = {
