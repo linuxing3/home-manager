@@ -56,6 +56,7 @@
 
   home.username = userSettings.username;
   home.homeDirectory = "/home/" + userSettings.username;
+  home.enableNixpkgsReleaseCheck = false;
 
   home.stateVersion = "25.11"; # Please read the comment before changing.
   home.packages = with pkgs; [
@@ -74,6 +75,8 @@
     # home-manager
 
   ];
+
+  home.nixvim.enable = true;
 
   home.sessionVariables = {
     TERM = "xterm-256color";

@@ -5,7 +5,6 @@ in
 {
   # Collection of useful CLI apps
   home.packages = with pkgs; [
-    vim
 
     steel
     

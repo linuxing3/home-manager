@@ -28,8 +28,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixvim = {
-      url = "github:nix-community/nixvim";
-      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:nix-community/nixvim/nixos-25.11";
     };
 
   };
@@ -77,6 +76,9 @@
       projectOverlays = [
         helix-steel-system.overlays.default
         (final: prev: {
+          libsForQt5 = prev.libsForQt5 // {
+            fcitx5-with-addons = prev.qt6Packages.fcitx5-with-addons;
+          };
           helix-steel-system = final.helix.overrideAttrs (old: {
             cargoBuildFeatures = (
               (old.cargoBuildFeatures or [ ])
