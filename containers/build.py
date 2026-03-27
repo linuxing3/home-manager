@@ -37,6 +37,16 @@ def discover_containers() -> list[str]:
     return names
 
 
+def find_tarball(output_dir: Path) -> Path:
+    tarball_dir = output_dir / "tarball"
+    if not tarball_dir.is_dir():
+        raise RuntimeError(f"missing tarball directory: {tarball_dir}")
+    tarballs = sorted(tarball_dir.glob("*.tar.xz"))
+    if len(tarballs) != 1:
+        raise RuntimeError(f"expected exactly one tarball in {tarball_dir}, found {len(tarballs)}")
+    return tarballs[0]
+
+
 def load_instance_map(path: Path) -> dict[str, str]:
     if not path.exists():
         return {}
@@ -93,12 +103,17 @@ def build_one(name: str, dry_run: bool) -> tuple[Path, Path]:
     if dry_run:
         print_cmd(build_cmd)
         print_cmd(metadata_cmd)
-        return (Path(f"/nix/store/{name}-metadata-placeholder"), Path(f"/nix/store/{name}-placeholder"))
+        return (
+            Path(f"/nix/store/{name}-metadata-output/tarball/<metadata>.tar.xz"),
+            Path(f"/nix/store/{name}-output/tarball/<rootfs>.tar.xz"),
+        )
     metadata_out = run_checked(metadata_cmd, capture=True).stdout.strip()
     rootfs_out = run_checked(build_cmd, capture=True).stdout.strip()
     if not metadata_out or not rootfs_out:
         raise RuntimeError(f"failed to obtain build outputs for {name}")
-    return (Path(metadata_out), Path(rootfs_out))
+    metadata_tarball = find_tarball(Path(metadata_out))
+    rootfs_tarball = find_tarball(Path(rootfs_out))
+    return (metadata_tarball, rootfs_tarball)
 
 
 def import_one(name: str, metadata_path: Path, rootfs_path: Path, dry_run: bool) -> None:
