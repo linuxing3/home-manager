@@ -2,9 +2,11 @@
   lib,
   config,
   pkgs,
+  inputs,
   ...
 }:
 let
+  system = pkgs.stdenv.hostPlatform.system;
   cfg = config.home.nixvim;
   opencodeThemeConfig = {
     ".config/opencode/themes/oxocarbon.json" = {
@@ -959,7 +961,8 @@ let
     yamlfmt
     # tools
     lsof
-    opencode
+    # inputs.opencode.packages.${system}.default
+    # inputs.opencode.packages.${system}.desktop
     # tree-sitter
   ];
 

@@ -4,8 +4,8 @@ run: build
 build:
     nix build
 
-nix-repl:
+repl:
     nix repl
 
-nix-dev:
+dev:
     nix develop
