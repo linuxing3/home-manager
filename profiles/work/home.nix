@@ -1,4 +1,4 @@
-{ pkgs, userSettings, ... }:
+{ pkgs, userSettings, systemSettings, ... }:
 
 {
 
@@ -72,7 +72,7 @@
 
     just
     comma
-    # home-manager
+    cachix
 
   ];
 
@@ -90,4 +90,9 @@
 
   programs.home-manager.enable = true;
 
+  services.cachix-agent = {
+    enable = true;
+    # Match the Cachix Deploy agent name to this host's configured identity.
+    name = systemSettings.hostname;
+  };
 }

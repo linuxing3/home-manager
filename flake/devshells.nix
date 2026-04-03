@@ -1,27 +1,15 @@
 { inputs, ... }:
 {
   perSystem =
-    { system, ... }:
-    let
-      projectOverlays = [
-        (import ../overlays)
-      ];
-      pkgs = import inputs.nixpkgs {
-        inherit system;
-        config = {
-          allowUnfree = true;
-          allowUnsupportedSystem = true;
-          allowUnfreePredicate = _: true;
-        };
-        overlays = projectOverlays;
-      };
-    in
+    { system, pkgs, ... }:
     {
       devShells.default = pkgs.mkShell {
         packages = with pkgs; [
           nixd
           nil
           alejandra
+          nixpkgs-fmt
+          nixpkgs-lint
           inputs.agenix.packages.${system}.default
         ];
       };

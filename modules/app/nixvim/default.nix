@@ -2,7 +2,6 @@
   lib,
   config,
   pkgs,
-  inputs,
   ...
 }:
 let
@@ -947,6 +946,7 @@ let
     # formatters
     python3Packages.black
     python3Packages.isort
+    python3Packages.uv
     nodePackages.prettier
     shfmt
     go # provides gofmt and goimports
@@ -961,8 +961,8 @@ let
     yamlfmt
     # tools
     lsof
-    # inputs.opencode.packages.${system}.default
-    # inputs.opencode.packages.${system}.desktop
+    # pkgs.opencode
+    # pkgs.opencode-desktop
     # tree-sitter
   ];
 

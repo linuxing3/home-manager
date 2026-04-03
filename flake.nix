@@ -6,6 +6,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    cachix-deploy-flake = {
+      url = "github:cachix/cachix-deploy-flake";
+      inputs.home-manager.follows = "home-manager";
+    };
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-utils.url = "github:numtide/flake-utils";
     nix-index-database = {
@@ -31,11 +35,11 @@
 
   outputs =
     inputs@{
-      self,
       nixpkgs,
       home-manager,
       stylix,
       nixvim,
+      cachix-deploy-flake,
       helix-steel-system,
       nix-index-database,
       flake-parts,
@@ -60,119 +64,56 @@
       systemModules = [
         (./. + "/profiles" + ("/" + systemSettings.profile) + "/configuration.nix")
         stylix.nixosModules.stylix
-        # agenix.nixosModules.default
-        # ./security/security.nix
       ];
+      projectOverlays = [
+        helix-steel-system.overlays.default
+        (import ./overlays)
+      ];
+      pkgs = import nixpkgs {
+        system = systemSettings.system;
+        config = {
+          allowUnfree = true;
+          allowUnsupportedSystem = true;
+          allowUnfreePredicate = _: true;
+        };
+        overlays = projectOverlays;
+      };
       args = {
         inherit userSettings;
         inherit systemSettings;
         inherit inputs;
       };
-      projectOverlays = [
-        helix-steel-system.overlays.default
-        (final: prev: {
-          libsForQt5 = prev.libsForQt5 // {
-            fcitx5-with-addons = prev.qt6Packages.fcitx5-with-addons;
-          };
-          helix-steel-system = final.helix.overrideAttrs (old: {
-            cargoBuildFeatures = (
-              (old.cargoBuildFeatures or [ ])
-              ++ [
-                "git"
-                "steel"
-              ]
-            );
-          });
-        })
-        (import ./overlays)
-      ];
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./flake/devshells.nix
+        ./flake/packages.nix
       ];
 
       systems = supportedSystems;
 
-      perSystem =
-        { system, ... }:
-        let
-          pkgs = import nixpkgs {
-            inherit system;
-            config = {
-              allowUnfree = true;
-              allowUnsupportedSystem = true;
-              allowUnfreePredicate = _: true;
-            };
-            overlays = projectOverlays;
-          };
-          hmSwitch = pkgs.writeShellApplication {
-            name = "home-manager-switch";
-            runtimeInputs = [ pkgs.home-manager ];
-            text = ''
-              backup_ext="''${HM_BACKUP_EXT:-hm-bak}"
-              exec home-manager \
-                -b "$backup_ext" \
-                switch \
-                --flake ${self}#${userSettings.username} \
-                --no-update-lock-file \
-                --no-write-lock-file \
-                "$@"
-            '';
-          };
-        in
-        {
-          packages = {
-            default = hmSwitch;
-            home-manager-switch = hmSwitch;
-            bootstrap = hmSwitch;
-          };
-          apps = {
-            default = {
-              type = "app";
-              program = "${hmSwitch}/bin/home-manager-switch";
-            };
-            home-manager-switch = {
-              type = "app";
-              program = "${hmSwitch}/bin/home-manager-switch";
-            };
-            bootstrap = {
-              type = "app";
-              program = "${hmSwitch}/bin/home-manager-switch";
-            };
-          };
+      _module.args = {
+        inherit userSettings systemSettings;
+        inherit homeModules;
+      };
 
+      flake = {
+        homeConfigurations = {
+          "${userSettings.username}" = home-manager.lib.homeManagerConfiguration {
+            inherit pkgs;
+            modules = homeModules;
+            extraSpecialArgs = args;
+          };
         };
 
-      flake =
-        let
-          pkgs = import nixpkgs {
+        nixosConfigurations = {
+          system = nixpkgs.lib.nixosSystem {
+            inherit pkgs;
             system = systemSettings.system;
-            config = {
-              allowUnfree = true;
-              allowUnsupportedSystem = true;
-              allowUnfreePredicate = _: true;
-            };
-            overlays = projectOverlays;
-          };
-        in
-        {
-          homeConfigurations = {
-            "${userSettings.username}" = home-manager.lib.homeManagerConfiguration {
-              inherit pkgs;
-              modules = homeModules;
-              extraSpecialArgs = args;
-            };
-          };
-
-          nixosConfigurations = {
-            system = nixpkgs.lib.nixosSystem {
-              inherit pkgs;
-              system = systemSettings.system;
-              modules = systemModules;
-              specialArgs = args;
-            };
+            modules = systemModules;
+            specialArgs = args;
           };
         };
+      };
     };
 }

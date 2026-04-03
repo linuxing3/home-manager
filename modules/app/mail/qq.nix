@@ -1,5 +1,5 @@
-{ config,...}: let
-in {
+{ config, ... }:
+{
 
   accounts.email = {
 
@@ -31,6 +31,9 @@ in {
               TLSType = "IMAPS";
               PipelineDepth = 10;
               Timeout = 60;
+            };
+            channel = {
+              Patterns = "* !Trash";
             };
           };
         };
