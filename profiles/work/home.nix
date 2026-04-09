@@ -1,8 +1,44 @@
-{ pkgs, userSettings, systemSettings, ... }:
-
 {
-
-  imports = [
+  pkgs,
+  inputs,
+  userSettings,
+  systemSettings,
+  lib,
+  ...
+}: let
+  sidexRuntimeLibs = with pkgs; [
+    stdenv.cc.cc
+    stdenv.cc
+    zlib
+    openssl
+    glib
+    gtk3
+    webkitgtk_4_1
+    libsoup_3
+    libxkbcommon
+  ];
+  sidexRuntimeLibPath = lib.makeLibraryPath sidexRuntimeLibs;
+  moduleToggles = {
+    kitty = false;
+    zellij = false;
+    tmux = false;
+    nvim = false;
+    doom = false;
+    pythonExtra = false;
+    rust = false;
+    nodejs = false;
+    cc = false;
+    gl = false;
+    qutebrowser = false;
+    brave = false;
+    hyprland = false;
+    sway = false;
+    i3 = false;
+    chineseIbus = false;
+    nihongo = false;
+    virtualization = false;
+  };
+  baseImports = [
     # ------------- security -------------------
     ../../security/security.nix
 
@@ -15,44 +51,40 @@
     ../../modules/app/git/git.nix
     ../../modules/app/ranger/ranger.nix
 
-    # ------------- tui -------------------
-    # ../../modules/tui/kitty.nix
-    # ../../modules/tui/zellij.nix
-    # ../../modules/tui/tmux.nix
-
     # ------------- editor -------------------
     ../../modules/app/helix
     ../../modules/app/nixvim
-    # ../../modules/app/nvim/nvim.nix
-    # ../../modules/app/doom-emacs/doom-slim.nix
-
-    # ------------- lang -------------------
-    # ../../modules/lang/python/python-extra.nix
-    # ../../modules/lang/rust/rust.nix
-    # ../../modules/lang/nodejs/nodejs.nix
-    # ../../modules/lang/cc/cc.nix
-    # ../../modules/lang/gl/gl.nix
 
     # ------------- app -------------------
     ../../modules/app/mail/default.nix
-    # ../../modules/app/browser/qutebrowser.nix
-    # ../../modules/app/browser/brave.nix
 
     # ------------- wm/gui -------------------
     ../../modules/gui/fuzzel.nix
     ../../modules/gui/gui-collection.nix
-    # ../../modules/wm/hyprland/hyprland.nix
-    # ../../modules/wm/sway/sway.nix
     ../../modules/wm/xmonad/xmonad.nix
-    # ../../modules/wm/i3/i3.nix
-
-    # ------------- input -------------------
-    # ../../modules/wm/input/chinese-ibus.nix
-    # ../../modules/wm/input/nihongo.nix
-
-    # ------------- virtualization -------------------
-    # ../../modules/app/virtualization/virtualization.nix
   ];
+  optionalImports =
+    []
+    ++ lib.optionals moduleToggles.kitty [../../modules/tui/kitty.nix]
+    ++ lib.optionals moduleToggles.zellij [../../modules/tui/zellij.nix]
+    ++ lib.optionals moduleToggles.tmux [../../modules/tui/tmux.nix]
+    ++ lib.optionals moduleToggles.nvim [../../modules/app/nvim/nvim.nix]
+    ++ lib.optionals moduleToggles.doom [../../modules/app/doom-emacs/doom-slim.nix]
+    ++ lib.optionals moduleToggles.pythonExtra [../../modules/lang/python/python-extra.nix]
+    ++ lib.optionals moduleToggles.rust [../../modules/lang/rust/rust.nix]
+    ++ lib.optionals moduleToggles.nodejs [../../modules/lang/nodejs/nodejs.nix]
+    ++ lib.optionals moduleToggles.cc [../../modules/lang/cc/cc.nix]
+    ++ lib.optionals moduleToggles.gl [../../modules/lang/gl/gl.nix]
+    ++ lib.optionals moduleToggles.qutebrowser [../../modules/app/browser/qutebrowser.nix]
+    ++ lib.optionals moduleToggles.brave [../../modules/app/browser/brave.nix]
+    ++ lib.optionals moduleToggles.hyprland [../../modules/wm/hyprland/hyprland.nix]
+    ++ lib.optionals moduleToggles.sway [../../modules/wm/sway/sway.nix]
+    ++ lib.optionals moduleToggles.i3 [../../modules/wm/i3/i3.nix]
+    ++ lib.optionals moduleToggles.chineseIbus [../../modules/wm/input/chinese-ibus.nix]
+    ++ lib.optionals moduleToggles.nihongo [../../modules/wm/input/nihongo.nix]
+    ++ lib.optionals moduleToggles.virtualization [../../modules/app/virtualization/virtualization.nix];
+in {
+  imports = baseImports ++ optionalImports;
 
   home.username = userSettings.username;
   home.homeDirectory = "/home/" + userSettings.username;
@@ -74,6 +106,22 @@
     comma
     cachix
 
+    inputs.hermes-agent.packages.${pkgs.system}.default
+
+    # SideX build/runtime deps (Nix-first install)
+    rustc
+    cargo
+    pkg-config
+    gobject-introspection
+    cairo
+    pango
+    atk
+    gtk3
+    webkitgtk_4_1
+    libsoup_3
+    glib
+    openssl
+    zlib
   ];
 
   home.nixvim.enable = true;
@@ -84,6 +132,15 @@
     VISUAL = userSettings.editor;
     SPAWNEDITOR = userSettings.spawnEditor;
     BROWSER = userSettings.browser;
+    GOG_ACCOUNT = userSettings.emailAlt;
+
+    # Agent browser runtime paths on Nix (avoid glibc/loader lookup issues)
+    PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
+
+    # SideX runtime linker paths on Nix (GLIBC/WebKitGTK)
+    LD_LIBRARY_PATH = sidexRuntimeLibPath;
+    NIX_LD_LIBRARY_PATH = sidexRuntimeLibPath;
+    NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
   };
 
   news.display = "silent";
