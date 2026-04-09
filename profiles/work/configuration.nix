@@ -18,6 +18,79 @@
     autofs = false;
     firefox = false;
   };
+  coreCliPackages = with pkgs; [
+    helix-steel-system
+    wget
+    curl
+    git
+    gh
+    lazygit
+  ];
+  sessionToolPackages = with pkgs; [
+    zellij
+    tmux
+    nnn
+    yazi
+    lf
+  ];
+  storageSupportPackages = with pkgs; [
+    dosfstools
+    exfat
+    nfs-utils
+    btrfs-progs
+    btrfs-snap
+    hplip
+  ];
+  deploymentPackages = with pkgs; [
+    cachix
+    gnupg
+  ];
+  waylandRuntimePackages = with pkgs; [
+    wayland
+    wayland-protocols
+    libxkbcommon
+    libglvnd
+    mesa
+    swiftshader
+    xwayland
+    xdg-desktop-portal
+    xdg-desktop-portal-gtk
+  ];
+  nixLdBaseLibraries = with pkgs; [
+    stdenv.cc.cc
+    glib
+    nss
+    nspr
+    atk
+    at-spi2-atk
+    at-spi2-core
+    cairo
+    cups
+    dbus
+    expat
+    libdrm
+    libgbm
+    libxkbcommon
+    pango
+    gtk3
+  ];
+  nixLdX11Libraries = with pkgs.xorg; [
+    libX11
+    libXcomposite
+    libXdamage
+    libXext
+    libXfixes
+    libXrandr
+    libxcb
+    libxshmfence
+  ];
+  nixLdGraphicsLibraries = with pkgs; [
+    alsa-lib
+    mesa
+    libGL
+    udev
+    zlib
+  ];
 in {
   imports =
     [
@@ -179,97 +252,19 @@ in {
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    # neovim
-    # vim
-    helix-steel-system
-
-    wget
-    curl
-    git
-    gh
-    lazygit
-
-    zellij
-    tmux
-
-    nnn
-    yazi
-    lf
-
-    # st
-    # dwm
-
-    dosfstools
-    exfat
-    nfs-utils
-    btrfs-progs
-    btrfs-snap
-    # for hp printer
-    hplip
-
-    cachix
-    gnupg
-
-    # wayland runtime/system libs
-    wayland
-    wayland-protocols
-    libxkbcommon
-    libglvnd
-    mesa
-    swiftshader
-    xwayland
-    xdg-desktop-portal
-    xdg-desktop-portal-gtk
-
-    # (
-    #   let
-    #     base = pkgs.appimageTools.defaultFhsEnvArgs;
-    #   in
-    #     pkgs.buildFHSEnv (base
-    #       // {
-    #         name = "fhs";
-    #         targetPkgs = pkgs: (base.targetPkgs pkgs) ++ [pkgs.pkg-config];
-    #         profile = "export FHS=1";
-    #         runScript = "bash";
-    #         extraOutputsToInstall = ["dev"];
-    #       })
-    # )
-  ];
+  environment.systemPackages =
+    coreCliPackages
+    ++ sessionToolPackages
+    ++ storageSupportPackages
+    ++ deploymentPackages
+    ++ waylandRuntimePackages;
 
   programs.nix-ld = {
     enable = true;
-    libraries = with pkgs; [
-      stdenv.cc.cc
-      glib
-      nss
-      nspr
-      atk
-      at-spi2-atk
-      at-spi2-core
-      cairo
-      cups
-      dbus
-      expat
-      libdrm
-      libgbm
-      libxkbcommon
-      pango
-      gtk3
-      xorg.libX11
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXrandr
-      xorg.libxcb
-      xorg.libxshmfence
-      alsa-lib
-      mesa
-      libGL
-      udev
-      zlib
-    ];
+    libraries =
+      nixLdBaseLibraries
+      ++ nixLdX11Libraries
+      ++ nixLdGraphicsLibraries;
   };
 
   # programs.gnupg.agent = {

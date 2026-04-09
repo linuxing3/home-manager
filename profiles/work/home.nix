@@ -83,32 +83,28 @@
     ++ lib.optionals moduleToggles.chineseIbus [../../modules/wm/input/chinese-ibus.nix]
     ++ lib.optionals moduleToggles.nihongo [../../modules/wm/input/nihongo.nix]
     ++ lib.optionals moduleToggles.virtualization [../../modules/app/virtualization/virtualization.nix];
-in {
-  imports = baseImports ++ optionalImports;
-
-  home.username = userSettings.username;
-  home.homeDirectory = "/home/" + userSettings.username;
-  home.enableNixpkgsReleaseCheck = false;
-
-  home.stateVersion = "25.11"; # Please read the comment before changing.
-  home.packages = with pkgs; [
+  fileManagerPackages = with pkgs; [
     yazi
     nnn
-
+  ];
+  terminalPackages = with pkgs; [
     st
-
+  ];
+  collaborationPackages = with pkgs; [
     gh
     lazygit
     zellij
     tmux
-
+  ];
+  workflowPackages = with pkgs; [
     just
     comma
     cachix
-
+  ];
+  agentPackages = [
     inputs.hermes-agent.packages.${pkgs.system}.default
-
-    # SideX build/runtime deps (Nix-first install)
+  ];
+  sidexRuntimePackages = with pkgs; [
     rustc
     cargo
     pkg-config
@@ -123,6 +119,21 @@ in {
     openssl
     zlib
   ];
+in {
+  imports = baseImports ++ optionalImports;
+
+  home.username = userSettings.username;
+  home.homeDirectory = "/home/" + userSettings.username;
+  home.enableNixpkgsReleaseCheck = false;
+
+  home.stateVersion = "25.11"; # Please read the comment before changing.
+  home.packages =
+    fileManagerPackages
+    ++ terminalPackages
+    ++ collaborationPackages
+    ++ workflowPackages
+    ++ agentPackages
+    ++ sidexRuntimePackages;
 
   home.nixvim.enable = true;
 
