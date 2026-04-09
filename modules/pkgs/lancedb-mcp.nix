@@ -45,7 +45,7 @@ stdenv.mkDerivation {
     # Create wrapper script
     makeWrapper ${pythonEnv}/bin/python $out/bin/lancedb-mcp \
       --add-flags "$out/lib/lancedb-mcp/lancedb_mcp.py" \
-      --set SENTENCE_TRANSFORMERS_HOME "\$HOME/.cache/huggingface"
+      --set SENTENCE_TRANSFORMERS_HOME "/sources/huggingface"
 
     runHook postInstall
   '';

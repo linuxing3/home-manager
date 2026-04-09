@@ -30,7 +30,11 @@
     nixvim = {
       url = "github:nix-community/nixvim/nixos-25.11";
     };
-
+    qmd = {
+      url = "github:tobi/qmd";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    hermes-agent.url = "github:NousResearch/hermes-agent";
   };
 
   outputs =
@@ -67,7 +71,7 @@
       ];
       projectOverlays = [
         helix-steel-system.overlays.default
-        (import ./overlays)
+        (import ./overlays { inherit inputs; })
       ];
       pkgs = import nixpkgs {
         system = systemSettings.system;
@@ -78,10 +82,19 @@
         };
         overlays = projectOverlays;
       };
+      patchedInputs = inputs // {
+        hermes-agent = inputs.hermes-agent // {
+          packages = inputs.hermes-agent.packages // {
+            "${systemSettings.system}" = inputs.hermes-agent.packages.${systemSettings.system} // {
+              default = pkgs.hermes-agent;
+            };
+          };
+        };
+      };
       args = {
         inherit userSettings;
         inherit systemSettings;
-        inherit inputs;
+        inputs = patchedInputs;
       };
     in
     flake-parts.lib.mkFlake { inherit inputs; } {

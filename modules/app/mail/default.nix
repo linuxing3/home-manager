@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, userSettings, ... }:
 {
   imports = [
     ./mfa.nix
@@ -40,8 +40,8 @@
     host           smtp.qq.com
     port           465
     tls_starttls   off
-    from           linuxing3@qq.com
-    user           linuxing3
+    from           ${userSettings.email}
+    user           ${userSettings.nickname}
     passwordeval   cat ${config.age.secrets."mail-qq-pass.age".path}
 
     # mfa

@@ -2,7 +2,10 @@
 rec {
   username = import ./username.nix; # username
   name = username; # name/identifier
+  nickname = "linuxing3"; # email (used for certain configurations)
+  realname = "Xing Wenju"; # email (used for certain configurations)
   email = "linuxing3@qq.com"; # email (used for certain configurations)
+  emailAlt = "xingwenju@gmail.com"; # email (used for certain configurations)
   dotfilesDir = "/home/${username}/.config/home-manager"; # absolute path of the local repo
   initialHashedPassword = "$7$CU..../....qejXlflvte/eOFsclGcRG0$vPxrUfc8MZh/9VY1py86B8GVs516vrQcScjvN/YEs5B";
   mainSshAuthorizedKeys = [

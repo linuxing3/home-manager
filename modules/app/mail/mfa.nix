@@ -1,16 +1,16 @@
-{config, ...}: let
+{config, userSettings, ...}: let
   address = "xing_wenju@mfa.gov.cn";
   host = "mail.mfa.gov.cn";
-  realName = "Xing Wenju";
+  realName = userSettings.realname;
   accountConfig = ''
     [retriever]
     type = SimplePOP3SSLRetriever
-    server = mail.mfa.gov.cn
+    server = ${host}
     port = 995
     ssl_version = tlsv1_2
     ssl_ciphers = AES128-SHA
 
-    username = xing_wenju@mfa.gov.cn
+    username = ${address}
     password_command = ("cat", "${config.age.secrets."mail-mfa-pass.age".path}")
 
     [destination]

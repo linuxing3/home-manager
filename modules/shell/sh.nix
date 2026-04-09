@@ -54,7 +54,7 @@ in {
     enable = true;
     # autosuggestion.enable = true;
     # syntaxHighlighting.enable = true;
-    # enableCompletion = true;
+    enableCompletion = false;
     shellAliases = myAliases;
     initContent = ''
       # Ensure Nix is loaded (for non-interactive or edge cases)
@@ -131,7 +131,6 @@ in {
     #     src = "${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k";
     #   }
     # ];
-
   };
 
   programs.bash = {
@@ -181,7 +180,7 @@ in {
         GALLIUM_DRIVER=llvmpipe \
         command ghostty "$@"
       }
-     '';
+    '';
   };
 
   programs.zoxide = {

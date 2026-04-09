@@ -1,4 +1,4 @@
-{ config,...}: let
+{ config, userSettings, ...}: let
 in {
 
   accounts.email = {
@@ -6,19 +6,19 @@ in {
     accounts = {
       qq = {
         primary = true;
-        address = "linuxing3@qq.com";
-        userName = "linuxing3";
-        realName = "Xing Wenju";
+        address = userSettings.email;
+        userName = userSettings.nickname;
+        realName = userSettings.realname;
         maildir = {
           path = "qq";
         };
         passwordCommand = "cat ${config.age.secrets."mail-qq-pass.age".path}";
         imap.port = 993;
         imap.host = "imap.qq.com";
-        imap.tls.useStartTls = true;
+        imap.tls.useStartTls = false;
         smtp.port = 465;
         smtp.host = "smtp.qq.com";
-        smtp.tls.useStartTls = true;
+        smtp.tls.useStartTls = false;
         msmtp.enable = true;
         neomutt.enable = true;
         neomutt.sendMailCommand = "msmtp";
