@@ -52,7 +52,6 @@
     ../../modules/app/ranger/ranger.nix
 
     # ------------- editor -------------------
-    ../../modules/app/helix
     ../../modules/app/nixvim
 
     # ------------- app -------------------
@@ -60,7 +59,6 @@
 
     # ------------- wm/gui -------------------
     ../../modules/gui/fuzzel.nix
-    ../../modules/gui/gui-collection.nix
     ../../modules/wm/xmonad/xmonad.nix
   ];
   optionalImports =
@@ -90,6 +88,9 @@
   terminalPackages = with pkgs; [
     st
   ];
+  editorPackages = with pkgs; [
+    helix-steel-system
+  ];
   collaborationPackages = with pkgs; [
     git
     gh
@@ -101,6 +102,16 @@
     just
     comma
     cachix
+  ];
+  desktopMediaPackages = with pkgs; [
+    nautilus
+    pcmanfm
+    imv
+    sxiv
+    nsxiv
+    vlc
+    mpv
+    viu
   ];
   agentPackages = [
     inputs.hermes-agent.packages.${pkgs.system}.default
@@ -131,8 +142,10 @@ in {
   home.packages =
     fileManagerPackages
     ++ terminalPackages
+    ++ editorPackages
     ++ collaborationPackages
     ++ workflowPackages
+    ++ desktopMediaPackages
     ++ agentPackages
     ++ sidexRuntimePackages;
 
