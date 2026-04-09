@@ -91,6 +91,7 @@
     st
   ];
   collaborationPackages = with pkgs; [
+    git
     gh
     lazygit
     zellij

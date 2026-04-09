@@ -1,15 +1,16 @@
-{ pkgs, userSettings, ... }:
 {
-  home.packages = [ pkgs.git pkgs.lazygit ];
-
+  pkgs,
+  userSettings,
+  ...
+}: {
   programs.lazygit.enable = true;
   programs.lazygit.settings = {
     gui = {
       theme = {
         lightTheme = true;
-        activeBorderColor = [ "blue" "bold" ];
-        inactiveBorderColor = [ "black" ];
-        selectedLineBgColor = [ "default" ];
+        activeBorderColor = ["blue" "bold"];
+        inactiveBorderColor = ["black"];
+        selectedLineBgColor = ["default"];
       };
     };
   };
@@ -82,5 +83,4 @@
       ];
     };
   };
-
 }

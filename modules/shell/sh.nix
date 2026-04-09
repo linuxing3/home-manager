@@ -219,14 +219,6 @@ in {
   };
 
   home.packages = with pkgs; [
-    disfetch
-    lolcat
-    gnugrep
-    gnused
-    cowsay
-
-    just
-
     # console
     antibody
     patchelf
@@ -234,9 +226,6 @@ in {
     rio
 
     # rust cli
-    onefetch
-    bat
-    eza
     sd
     xcp
     dysk
@@ -246,9 +235,6 @@ in {
     erdtree
     lsd
     procs
-    bottom
-    fd
-    bc
     mcfly
     mdcat
     miniserve
