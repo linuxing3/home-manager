@@ -1,12 +1,31 @@
-{ pkgs, userSettings, systemSettings, ... }:
-
 {
+  lib,
+  pkgs,
+  userSettings,
+  systemSettings,
+  ...
+}: let
+  moduleToggles = {
+    systemStylix = false;
+    graphics = false;
+    hyprland = false;
+    niri = false;
+    xmonad = false;
+    dwm = false;
+    printing = false;
+    pipewire = false;
+    gvfs = false;
+    autofs = false;
+    firefox = false;
+  };
+in {
   imports =
-    [ # Include the results of the hardware scan.
+    [
+      # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      # ./stylix.nix
-      # ../../modules/hardware/graphics.nix
-    ];
+    ]
+    ++ lib.optionals moduleToggles.systemStylix [./stylix.nix]
+    ++ lib.optionals moduleToggles.graphics [../../modules/hardware/graphics.nix];
 
   fonts.packages = with pkgs; [
     # dejavu_fonts
@@ -38,68 +57,62 @@
   };
   services.getty.autologinUser = userSettings.username;
 
-  # xserver
-  # programs = {
-    # hyprland = {
-    #   enable = true;
-    #   # withUWSM = true;
-    #   xwayland = {
-    #     enable = true;
-    #   };
-    #   portalPackage = pkgs.xdg-desktop-portal-hyprland;
-    # };
-    # niri = {
-    #   enable = true;
-    # };
-  # };
+  programs.hyprland = lib.mkIf moduleToggles.hyprland {
+    enable = true;
+    # withUWSM = true;
+    xwayland.enable = true;
+    portalPackage = pkgs.xdg-desktop-portal-hyprland;
+  };
 
-  # services.xserver = {
-  #   enable = true;
-  #   windowManager.xmonad = {
-  #     enable = true;
-  #     enableConfiguredRecompile = true;
-  #     enableContribAndExtras = true;
-  #   };
-  #   windowManager.dwm = {
-  #     enable = true;
-  #   };
-  # };
+  programs.niri = lib.mkIf moduleToggles.niri {
+    enable = true;
+  };
 
-  # # Enable CUPS to print documents.
-  # services.printing.enable = true;
+  programs.firefox.enable = moduleToggles.firefox;
 
-  # # Enable sound with pipewire.
-  # services.pulseaudio.enable = false;
-  # security.rtkit.enable = true;
-  # services.pipewire = {
-  #   enable = true;
-  #   alsa.enable = true;
-  #   alsa.support32Bit = true;
-  #   pulse.enable = true;
-  # };
+  services.xserver = lib.mkIf (moduleToggles.xmonad || moduleToggles.dwm) {
+    enable = true;
+    windowManager.xmonad = lib.mkIf moduleToggles.xmonad {
+      enable = true;
+      enableConfiguredRecompile = true;
+      enableContribAndExtras = true;
+    };
+    windowManager.dwm = lib.mkIf moduleToggles.dwm {
+      enable = true;
+    };
+  };
 
-  # Enable gv fifileSystems
-  # services.gvfs.enable = true;
+  services.printing.enable = moduleToggles.printing;
+
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = moduleToggles.pipewire;
+  services.pipewire = lib.mkIf moduleToggles.pipewire {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+
+  services.gvfs.enable = moduleToggles.gvfs;
 
   xdg.portal = {
     enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    extraPortals = [pkgs.xdg-desktop-portal-gtk];
     config.common.default = "*";
   };
 
-  # Enable auto mounts
-  # services.autofs = {
-  #   enable = true;
-  #   autoMaster = let
-  #     mapConf = pkgs.writeText "autofs.mnt" ''
-  #       win7 -fstype=ntfs :/dev/disk/by-uuid/523481103480F7ED
-  #       app -fstype=ntfs :/dev/disk/by-uuid/9ED80960D8093853
-  #       data -fstype=ntfs :/dev/disk/by-uuid/8A7CFD4C7CFD3393
-  #     '';
-  #   in ''
-  #     /autofs ${mapConf} --timeout 20
-  #   '';
-  # };
+  services.autofs = lib.mkIf moduleToggles.autofs {
+    enable = true;
+    autoMaster = let
+      mapConf = pkgs.writeText "autofs.mnt" ''
+        win7 -fstype=ntfs :/dev/disk/by-uuid/523481103480F7ED
+        app -fstype=ntfs :/dev/disk/by-uuid/9ED80960D8093853
+        data -fstype=ntfs :/dev/disk/by-uuid/8A7CFD4C7CFD3393
+      '';
+    in ''
+      /autofs ${mapConf} --timeout 20
+    '';
+  };
 
   # Bootloader
   # Use systemd-boot if uefi, default to grub otherwise
@@ -164,9 +177,6 @@
     openssh.authorizedKeys.keys = userSettings.mainSshAuthorizedKeys;
   };
 
-  # Install firefox.
-  # programs.firefox.enable = true;
-
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -189,7 +199,7 @@
 
     # st
     # dwm
- 
+
     dosfstools
     exfat
     nfs-utils
@@ -227,12 +237,40 @@
     # )
   ];
 
-  # programs.nix-ld = {
-  #   enable = true;
-  #   libraries = with pkgs; [
-  #     stdenv.cc.cc
-  #   ];
-  # };
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      stdenv.cc.cc
+      glib
+      nss
+      nspr
+      atk
+      at-spi2-atk
+      at-spi2-core
+      cairo
+      cups
+      dbus
+      expat
+      libdrm
+      libgbm
+      libxkbcommon
+      pango
+      gtk3
+      xorg.libX11
+      xorg.libXcomposite
+      xorg.libXdamage
+      xorg.libXext
+      xorg.libXfixes
+      xorg.libXrandr
+      xorg.libxcb
+      xorg.libxshmfence
+      alsa-lib
+      mesa
+      libGL
+      udev
+      zlib
+    ];
+  };
 
   # programs.gnupg.agent = {
   #    enable = true;
@@ -289,5 +327,4 @@
   ];
 
   system.stateVersion = "24.11"; # Did you read the comment?
-
 }
