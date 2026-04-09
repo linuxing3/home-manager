@@ -12,9 +12,13 @@ configs/nnn/.lastd
 configs/nnn/.selection
 configs/elinks/cookies
 .agent-logs
+.cache/
+.claw/
+.codex/
 .helix
 .helix
 .helix
 .helix/recent-files.txt
 security/secrets/.helix
 security/secrets/.helix
+.omx/

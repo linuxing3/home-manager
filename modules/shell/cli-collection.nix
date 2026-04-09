@@ -1,13 +1,17 @@
-{ pkgs, inputs, ... }:
-let
-  system = pkgs.stdenv.hostPlatform.system;
-in
 {
+  pkgs,
+  inputs,
+  ...
+}: let
+  system = pkgs.stdenv.hostPlatform.system;
+  qmd = pkgs.callPackage ../pkgs/qmd.nix {
+    src = inputs.qmd.outPath;
+  };
+in {
   # Collection of useful CLI apps
   home.packages = with pkgs; [
-
     steel
-    
+
     # greeter
     cage
     greetd
@@ -125,7 +129,6 @@ in
     hunspell
     hunspellDicts.en_US-large
 
-
     # json/toml/yml
     jq
     yq
@@ -169,8 +172,12 @@ in
     # viewer
     inputs.doxx.packages.${system}.default
     inputs.xleak.packages.${system}.default
+    qmd
 
+    # MCP servers
+    lancedb-mcp
 
+    # agent browser (native CLI)
+    agent-browser
   ];
-
 }
