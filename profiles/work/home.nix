@@ -21,7 +21,7 @@
   moduleToggles = {
     kitty = false;
     zellij = false;
-    tmux = false;
+    tmux = true;
     nvim = false;
     doom = false;
     pythonExtra = false;
@@ -96,7 +96,6 @@
     gh
     lazygit
     zellij
-    tmux
   ];
   workflowPackages = with pkgs; [
     just
