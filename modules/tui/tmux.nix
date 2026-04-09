@@ -3,11 +3,16 @@
   lib,
   pkgs,
   ...
-}: let
+}:
+let
   opensessionsDir = "${config.home.homeDirectory}/.local/share/opensessions";
-in {
+  fzfLinksDir = "${config.home.homeDirectory}/.local/share/tmux-fzf-links";
+in
+{
   home.packages = with pkgs; [
     bun
+    fzf
+    git
   ];
 
   programs.tmux = {
@@ -22,6 +27,26 @@ in {
     prefix = "C-a";
     shell = "${pkgs.zsh}/bin/zsh";
     terminal = "xterm-256color";
+    plugins = with pkgs.tmuxPlugins; [
+      jump
+      cpu
+      sidebar
+      logging
+      resurrect
+      fzf-tmux-url
+      prefix-highlight
+      tmux-floax
+      tmux-fzf
+      tmux-powerline
+      tmux-thumbs
+      tmux-which-key
+      gruvbox
+      catppuccin
+      nord
+      rose-pine
+      onedark-theme
+      tokyo-night-tmux
+    ];
     extraConfig = ''
       set -g allow-passthrough on
       set -ga update-environment TERM
@@ -92,15 +117,28 @@ in {
       bind-key -n M-] paste-buffer -p
 
       # OpenSessions (local checkout mode per upstream docs)
-      set-environment -g SESSIONIZER_DIR "${config.home.homeDirectory}/Code:${config.home.homeDirectory}/.config"
-      source-file "${opensessionsDir}/opensessions.tmux"
+      set-environment -g SESSIONIZER_DIR "/sources:${config.home.homeDirectory}/.config"
+      run-shell "${opensessionsDir}/opensessions.tmux"
+
+      # === tmux-fzf-links ===
+      set-option -g @fzf-links-editor-open-cmd "tmux new-window -n 'hx' ${config.home.homeDirectory}/.nix-profile/bin/hx +%line '%file'"
+      set-option -g @fzf-links-browser-open-cmd "/usr/bin/brave-browser '%url'"
+      # set-option -g @fzf-links-fzf-path "${pkgs.fzf}/bin/fzf"
+      set-option -g @fzf-links-fzf-display-options "-w 100% --maxnum-displayed 20 --multi --track --no-preview"
+      set-option -g @fzf-links-log-filename "~/.local/state/tmux-fzf-links.log"
+      set-option -g @fzf-links-python "python3"
+      set-option -g @fzf-links-use-colors on
+      set-option -g @fzf-links-hide-bottom-bar off
+
+      # FzfLinks (local checkout mode per upstream docs)
+      run-shell "${fzfLinksDir}"/fzf-links.tmux
 
       # Optional local overrides
       if-shell "[ -f ~/.config/tmux/private.conf ]" "source-file ~/.config/tmux/private.conf"
     '';
   };
 
-  home.activation.opensessionsCheckout = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.opensessionsCheckout = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     target="${opensessionsDir}"
     if [ ! -d "$target/.git" ]; then
       $DRY_RUN_CMD mkdir -p "$(dirname "$target")"
@@ -113,6 +151,15 @@ in {
       if [ -z "$DRY_RUN_CMD" ]; then
         cd "$target"
         ${pkgs.bun}/bin/bun install --frozen-lockfile
+      fi
+    fi
+  '';
+  home.activation.fzfLinksCheckout = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    target="${fzfLinksDir}"
+    if [ ! -d "$target/.git" ]; then
+      $DRY_RUN_CMD mkdir -p "$(dirname "$target")"
+      if [ -z "$DRY_RUN_CMD" ]; then
+        ${pkgs.git}/bin/git clone --depth=1 https://github.com/alberti42/tmux-fzf-links.git "$target"
       fi
     fi
   '';
