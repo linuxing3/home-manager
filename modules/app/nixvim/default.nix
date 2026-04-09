@@ -3,10 +3,9 @@
   config,
   pkgs,
   ...
-}:
-let
-  system = pkgs.stdenv.hostPlatform.system;
+}: let
   cfg = config.home.nixvim;
+  # --- Theme and TUI bridge assets -----------------------------------------
   opencodeThemeConfig = {
     ".config/opencode/themes/oxocarbon.json" = {
       text = builtins.toJSON {
@@ -243,6 +242,7 @@ let
       };
     };
   };
+  # --- Home Manager-facing Nixvim payload ----------------------------------
   nixvimConfig = {
     home.packages = nixvimPackages;
     home.file = lib.mkMerge [
@@ -789,20 +789,20 @@ let
           enable = true;
           settings = {
             formatters_by_ft = {
-              css = [ "prettier" ];
-              go = [ "gofmt" ];
-              html = [ "prettier" ];
-              json = [ "prettier" ];
-              lua = [ "stylua" ];
-              markdown = [ "prettier" ];
-              nix = [ "alejandra" ];
+              css = ["prettier"];
+              go = ["gofmt"];
+              html = ["prettier"];
+              json = ["prettier"];
+              lua = ["stylua"];
+              markdown = ["prettier"];
+              nix = ["alejandra"];
               python = [
                 "isort"
                 "black"
               ];
-              rust = [ "rustfmt" ];
-              sh = [ "shfmt" ];
-              yaml = [ "yamlfmt" ];
+              rust = ["rustfmt"];
+              sh = ["shfmt"];
+              yaml = ["yamlfmt"];
             };
           };
         };
@@ -848,7 +848,7 @@ let
             nil_ls = {
               enable = true;
               settings = {
-                formatting.command = [ "nixpkgs-fmt" ];
+                formatting.command = ["nixpkgs-fmt"];
               };
             };
             pyright = {
@@ -941,7 +941,7 @@ let
     };
   };
 
-  # Shared packages
+  # --- Editor/runtime toolchain packages -----------------------------------
   nixvimPackages = with pkgs; [
     # formatters
     python3Packages.black
@@ -965,19 +965,17 @@ let
     # pkgs.opencode-desktop
     # tree-sitter
   ];
-
-in
-{
-
+in {
+  # --- Module option surface ------------------------------------------------
   options.home.nixvim = {
     enable = lib.mkEnableOption "enable nixvim in home-manager";
   };
 
+  # --- Activated configuration ---------------------------------------------
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
-      { }
+      {}
       nixvimConfig
     ]
   );
-
 }

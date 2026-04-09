@@ -1,9 +1,14 @@
-{ config, pkgs, userSettings, ... }:
-
 {
+  config,
+  pkgs,
+  userSettings,
+  ...
+}: {
+  # --- Runtime packages -----------------------------------------------------
   home.packages = with pkgs; [
   ];
 
+  # --- Waybar module graph --------------------------------------------------
   programs.waybar = {
     enable = true;
     settings = {
@@ -249,6 +254,7 @@
         };
       };
     };
+    # --- Stylix-derived CSS -------------------------------------------------
     style =
       ''
         * {
@@ -561,5 +567,4 @@
               }
       '';
   };
-
 }
