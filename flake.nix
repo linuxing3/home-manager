@@ -35,6 +35,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hermes-agent.url = "github:NousResearch/hermes-agent";
+    oxwm.url = "github:tonybanters/oxwm";
   };
 
   outputs =

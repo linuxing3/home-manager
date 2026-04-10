@@ -6,18 +6,6 @@
   lib,
   ...
 }: let
-  sidexRuntimeLibs = with pkgs; [
-    stdenv.cc.cc
-    stdenv.cc
-    zlib
-    openssl
-    glib
-    gtk3
-    webkitgtk_4_1
-    libsoup_3
-    libxkbcommon
-  ];
-  sidexRuntimeLibPath = lib.makeLibraryPath sidexRuntimeLibs;
   moduleToggles = {
     kitty = false;
     zellij = false;
@@ -29,6 +17,7 @@
     nodejs = false;
     cc = false;
     gl = false;
+    chrome = false;
     qutebrowser = false;
     brave = false;
     hyprland = false;
@@ -59,7 +48,7 @@
 
     # ------------- wm/gui -------------------
     ../../modules/gui/fuzzel.nix
-    ../../modules/wm/xmonad/xmonad.nix
+    ../../modules/wm/oxwm/oxwm.nix
   ];
   optionalImports =
     []
@@ -73,6 +62,7 @@
     ++ lib.optionals moduleToggles.nodejs [../../modules/lang/nodejs/nodejs.nix]
     ++ lib.optionals moduleToggles.cc [../../modules/lang/cc/cc.nix]
     ++ lib.optionals moduleToggles.gl [../../modules/lang/gl/gl.nix]
+    ++ lib.optionals moduleToggles.chrome [../../modules/app/browser/chrome.nix]
     ++ lib.optionals moduleToggles.qutebrowser [../../modules/app/browser/qutebrowser.nix]
     ++ lib.optionals moduleToggles.brave [../../modules/app/browser/brave.nix]
     ++ lib.optionals moduleToggles.hyprland [../../modules/wm/hyprland/hyprland.nix]
@@ -115,21 +105,6 @@
   agentPackages = [
     inputs.hermes-agent.packages.${pkgs.system}.default
   ];
-  sidexRuntimePackages = with pkgs; [
-    rustc
-    cargo
-    pkg-config
-    gobject-introspection
-    cairo
-    pango
-    atk
-    gtk3
-    webkitgtk_4_1
-    libsoup_3
-    glib
-    openssl
-    zlib
-  ];
 in {
   imports = baseImports ++ optionalImports;
 
@@ -145,8 +120,7 @@ in {
     ++ collaborationPackages
     ++ workflowPackages
     ++ desktopMediaPackages
-    ++ agentPackages
-    ++ sidexRuntimePackages;
+    ++ agentPackages;
 
   home.nixvim.enable = true;
 
@@ -161,10 +135,6 @@ in {
     # Agent browser runtime paths on Nix (avoid glibc/loader lookup issues)
     PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
 
-    # SideX runtime linker paths on Nix (GLIBC/WebKitGTK)
-    LD_LIBRARY_PATH = sidexRuntimeLibPath;
-    NIX_LD_LIBRARY_PATH = sidexRuntimeLibPath;
-    NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
   };
 
   news.display = "silent";

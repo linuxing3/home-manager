@@ -693,6 +693,9 @@ in {
           enable = true;
           settings.preset = "helix";
         };
+        fff = {
+          enable = true;
+        };
       };
       viAlias = true;
       vimAlias = true;

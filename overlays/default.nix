@@ -28,6 +28,8 @@ let
   ];
 in
 {
+  oxwm = inputs.oxwm.packages.${prev.system}.default;
+
   hermes-agent = final.stdenv.mkDerivation {
     pname = "hermes-agent";
     version = "0.7.0+patched";
