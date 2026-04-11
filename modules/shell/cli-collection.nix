@@ -22,7 +22,6 @@ in {
 
     # lsp and formatter
     taplo
-    prettier
     typos-lsp
     stylua
     lua-language-server

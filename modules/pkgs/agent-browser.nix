@@ -22,6 +22,7 @@
     stdenv.cc.cc
     zlib
   ];
+  engine = "lightpanda";
 in
   stdenv.mkDerivation {
     pname = "agent-browser";
@@ -48,6 +49,7 @@ in
       # spawns system browsers, and leaking Nix libgcc into /opt browser builds
       # makes them fail against the host glibc before DevToolsActivePort appears.
       makeWrapper $out/lib/agent-browser/agent-browser $out/bin/agent-browser \
+        --set-default AGENT_BROWSER_ENGINE ${engine}\
         --unset LD_LIBRARY_PATH \
         --set NIX_LD ${dynamicLinker} \
         --set NIX_LD_LIBRARY_PATH ${runtimeLibPath}

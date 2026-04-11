@@ -5,7 +5,8 @@
   systemSettings,
   lib,
   ...
-}: let
+}:
+let
   moduleToggles = {
     kitty = false;
     zellij = false;
@@ -51,26 +52,28 @@
     ../../modules/wm/oxwm/oxwm.nix
   ];
   optionalImports =
-    []
-    ++ lib.optionals moduleToggles.kitty [../../modules/tui/kitty.nix]
-    ++ lib.optionals moduleToggles.zellij [../../modules/tui/zellij.nix]
-    ++ lib.optionals moduleToggles.tmux [../../modules/tui/tmux.nix]
-    ++ lib.optionals moduleToggles.nvim [../../modules/app/nvim/nvim.nix]
-    ++ lib.optionals moduleToggles.doom [../../modules/app/doom-emacs/doom-slim.nix]
-    ++ lib.optionals moduleToggles.pythonExtra [../../modules/lang/python/python-extra.nix]
-    ++ lib.optionals moduleToggles.rust [../../modules/lang/rust/rust.nix]
-    ++ lib.optionals moduleToggles.nodejs [../../modules/lang/nodejs/nodejs.nix]
-    ++ lib.optionals moduleToggles.cc [../../modules/lang/cc/cc.nix]
-    ++ lib.optionals moduleToggles.gl [../../modules/lang/gl/gl.nix]
-    ++ lib.optionals moduleToggles.chrome [../../modules/app/browser/chrome.nix]
-    ++ lib.optionals moduleToggles.qutebrowser [../../modules/app/browser/qutebrowser.nix]
-    ++ lib.optionals moduleToggles.brave [../../modules/app/browser/brave.nix]
-    ++ lib.optionals moduleToggles.hyprland [../../modules/wm/hyprland/hyprland.nix]
-    ++ lib.optionals moduleToggles.sway [../../modules/wm/sway/sway.nix]
-    ++ lib.optionals moduleToggles.i3 [../../modules/wm/i3/i3.nix]
-    ++ lib.optionals moduleToggles.chineseIbus [../../modules/wm/input/chinese-ibus.nix]
-    ++ lib.optionals moduleToggles.nihongo [../../modules/wm/input/nihongo.nix]
-    ++ lib.optionals moduleToggles.virtualization [../../modules/app/virtualization/virtualization.nix];
+    [ ]
+    ++ lib.optionals moduleToggles.kitty [ ../../modules/tui/kitty.nix ]
+    ++ lib.optionals moduleToggles.zellij [ ../../modules/tui/zellij.nix ]
+    ++ lib.optionals moduleToggles.tmux [ ../../modules/tui/tmux.nix ]
+    ++ lib.optionals moduleToggles.nvim [ ../../modules/app/nvim/nvim.nix ]
+    ++ lib.optionals moduleToggles.doom [ ../../modules/app/doom-emacs/doom-slim.nix ]
+    ++ lib.optionals moduleToggles.pythonExtra [ ../../modules/lang/python/python-extra.nix ]
+    ++ lib.optionals moduleToggles.rust [ ../../modules/lang/rust/rust.nix ]
+    ++ lib.optionals moduleToggles.nodejs [ ../../modules/lang/nodejs/nodejs.nix ]
+    ++ lib.optionals moduleToggles.cc [ ../../modules/lang/cc/cc.nix ]
+    ++ lib.optionals moduleToggles.gl [ ../../modules/lang/gl/gl.nix ]
+    ++ lib.optionals moduleToggles.chrome [ ../../modules/app/browser/chrome.nix ]
+    ++ lib.optionals moduleToggles.qutebrowser [ ../../modules/app/browser/qutebrowser.nix ]
+    ++ lib.optionals moduleToggles.brave [ ../../modules/app/browser/brave.nix ]
+    ++ lib.optionals moduleToggles.hyprland [ ../../modules/wm/hyprland/hyprland.nix ]
+    ++ lib.optionals moduleToggles.sway [ ../../modules/wm/sway/sway.nix ]
+    ++ lib.optionals moduleToggles.i3 [ ../../modules/wm/i3/i3.nix ]
+    ++ lib.optionals moduleToggles.chineseIbus [ ../../modules/wm/input/chinese-ibus.nix ]
+    ++ lib.optionals moduleToggles.nihongo [ ../../modules/wm/input/nihongo.nix ]
+    ++ lib.optionals moduleToggles.virtualization [
+      ../../modules/app/virtualization/virtualization.nix
+    ];
   fileManagerPackages = with pkgs; [
     yazi
     nnn
@@ -102,10 +105,15 @@
     mpv
     viu
   ];
-  agentPackages = [
+  agentPackages = with pkgs; [
     inputs.hermes-agent.packages.${pkgs.system}.default
+    playwright
+    python3Packages.playwright
+    playwright-driver
+    playwright-mcp
   ];
-in {
+in
+{
   imports = baseImports ++ optionalImports;
 
   home.username = userSettings.username;
@@ -134,6 +142,7 @@ in {
 
     # Agent browser runtime paths on Nix (avoid glibc/loader lookup issues)
     PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
+    AGENT_BROWSER_ENGINE = "lightpanda";
 
   };
 

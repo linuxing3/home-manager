@@ -52,6 +52,7 @@ Keep runtime marker contracts stable and non-destructive when overlays are appli
 - No new dependencies without explicit request.
 - Keep diffs small, reviewable, and reversible.
 - Run lint, typecheck, tests, and static analysis after changes.
+- When a task produces durable environment or workflow learnings, persist them to OMX project memory and to the Obsidian vault at `/share/data/workspace/obsidian/raw/Development/nixos` rather than `04_Metadata`.
 - Final reports must include changed files, simplifications made, and remaining risks.
 
 <lore_commit_protocol>

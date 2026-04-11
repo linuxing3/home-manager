@@ -11,7 +11,6 @@
     python3Packages.black
     python3Packages.isort
     python3Packages.uv
-    nodePackages.prettier
     shfmt
     go # provides gofmt and goimports
     rustfmt

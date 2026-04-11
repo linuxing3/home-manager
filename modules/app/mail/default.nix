@@ -27,6 +27,35 @@
 
   programs.himalaya.enable = true;
 
+  systemd.user.services.qq-mail-sync = {
+    Unit = {
+      Description = "Sync QQ mail via mbsync and refresh mu index";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.zsh}/bin/zsh -ilc '${pkgs.isync}/bin/mbsync qq && ${pkgs.mu}/bin/mu index'";
+    };
+  };
+
+  systemd.user.timers.qq-mail-sync = {
+    Unit = {
+      Description = "Run QQ mail sync periodically";
+    };
+
+    Timer = {
+      OnBootSec = "2m";
+      OnUnitActiveSec = "10m";
+      Unit = "qq-mail-sync.service";
+    };
+
+    Install = {
+      WantedBy = [ "timers.target" ];
+    };
+  };
+
   home.file.".msmtprc".text = ''
     # Set default values for all following accounts.
     defaults
