@@ -14,7 +14,6 @@ configs/elinks/cookies
 .agent-logs
 .cache/
 .claw/
-.codex/
 .helix
 .helix
 .helix
@@ -22,3 +21,11 @@ configs/elinks/cookies
 security/secrets/.helix
 security/secrets/.helix
 .omx/
+.codex/*
+!.codex/agents/
+!.codex/agents/**
+!.codex/skills/
+!.codex/skills/**
+.codex/skills/.system/**
+!.codex/prompts/
+!.codex/prompts/**

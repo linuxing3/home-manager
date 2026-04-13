@@ -36,7 +36,8 @@
 
     Service = {
       Type = "oneshot";
-      ExecStart = "${pkgs.zsh}/bin/zsh -ilc '${pkgs.isync}/bin/mbsync qq && ${pkgs.mu}/bin/mu index'";
+      # 铁律：所有命令行程序通过 zsh 登录交互 shell 启动
+      ExecStart = "${pkgs.zsh}/bin/zsh -ilc 'mbsync qq && mu index'";
     };
   };
 

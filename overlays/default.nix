@@ -1,15 +1,14 @@
-{ inputs }:
-final: prev:
-let
+{inputs}: final: prev: let
   hermesUpstreamInputs = inputs.hermes-agent.inputs;
-  hermesSrc = prev.runCommand "hermes-agent-source-patched" { } ''
+  hermesSrc = prev.runCommand "hermes-agent-source-patched" {} ''
     cp -r ${inputs.hermes-agent.outPath} $out
     chmod -R u+w $out
     sed -i 's/"hermes_time", "rl_cli"/"hermes_time", "hermes_logging", "rl_cli"/' \
       $out/pyproject.toml
   '';
   hermesVenv = final.callPackage "${hermesSrc}/nix/python.nix" {
-    inherit (hermesUpstreamInputs)
+    inherit
+      (hermesUpstreamInputs)
       pyproject-build-systems
       pyproject-nix
       uv2nix
@@ -26,8 +25,7 @@ let
     openssh
     ripgrep
   ];
-in
-{
+in {
   oxwm = inputs.oxwm.packages.${prev.system}.default;
 
   hermes-agent = final.stdenv.mkDerivation {
@@ -36,7 +34,7 @@ in
 
     dontUnpack = true;
     dontBuild = true;
-    nativeBuildInputs = [ final.makeWrapper ];
+    nativeBuildInputs = [final.makeWrapper];
 
     installPhase = ''
       runHook preInstall
@@ -48,7 +46,7 @@ in
         makeWrapper ${hermesVenv}/bin/${name} $out/bin/${name} \
           --suffix PATH : "${final.lib.makeBinPath hermesRuntimeDeps}" \
           --set HERMES_BUNDLED_SKILLS $out/share/hermes-agent/skills
-      '') [ "hermes" "hermes-agent" "hermes-acp" ]}
+      '') ["hermes" "hermes-agent" "hermes-acp"]}
 
       runHook postInstall
     '';
@@ -62,8 +60,9 @@ in
     };
   };
 
-  lancedb-mcp = final.callPackage ../modules/pkgs/lancedb-mcp.nix { };
-  agent-browser = final.callPackage ../modules/pkgs/agent-browser.nix { };
+  lancedb-mcp = final.callPackage ../modules/pkgs/lancedb-mcp.nix {};
+  lightpanda = final.callPackage ../modules/pkgs/lightpanda.nix {};
+  agent-browser = final.callPackage ../modules/pkgs/agent-browser.nix {};
   nnn = prev.nnn.override (oldAttrs: {
     withNerdIcons = true;
   });
@@ -74,18 +73,20 @@ in
       url = "https://github.com/LukeSmithxyz/st/archive/master.tar.gz";
       sha256 = "1cqnl8zlxccqg0901gx21h06j9wk3ja6lr8wp4k85ni4msf4m09g";
     };
-    buildInputs = oldAttrs.buildInputs ++ (with prev; [ harfbuzz ]);
+    buildInputs = oldAttrs.buildInputs ++ (with prev; [harfbuzz]);
     postPatch = ''
       sed -i 's|"NotoColorEmoji:pixelsize=10:antialias=true:autohint=true" }|"NotoColorEmoji:pixelsize=10:antialias=true:autohint=true", "Source Han Sans SC:pixelsize=16:antialias=true:autohint=true" }|' config.h
       sed -i '/"fontalt0", STRING, \&font2\[0\]/a\	{ "fontalt1", STRING, \&font2[1] },' config.h
     '';
   });
-  libsForQt5 = prev.libsForQt5 // {
-    fcitx5-with-addons = prev.qt6Packages.fcitx5-with-addons;
-  };
+  libsForQt5 =
+    prev.libsForQt5
+    // {
+      fcitx5-with-addons = prev.qt6Packages.fcitx5-with-addons;
+    };
   helix-steel-system = final.helix.overrideAttrs (old: {
     cargoBuildFeatures = (
-      (old.cargoBuildFeatures or [ ])
+      (old.cargoBuildFeatures or [])
       ++ [
         "git"
         "steel"

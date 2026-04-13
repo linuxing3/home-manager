@@ -24,8 +24,6 @@ let
     hyprland = false;
     sway = false;
     i3 = false;
-    chineseIbus = false;
-    nihongo = false;
     virtualization = false;
   };
   baseImports = [
@@ -69,8 +67,6 @@ let
     ++ lib.optionals moduleToggles.hyprland [ ../../modules/wm/hyprland/hyprland.nix ]
     ++ lib.optionals moduleToggles.sway [ ../../modules/wm/sway/sway.nix ]
     ++ lib.optionals moduleToggles.i3 [ ../../modules/wm/i3/i3.nix ]
-    ++ lib.optionals moduleToggles.chineseIbus [ ../../modules/wm/input/chinese-ibus.nix ]
-    ++ lib.optionals moduleToggles.nihongo [ ../../modules/wm/input/nihongo.nix ]
     ++ lib.optionals moduleToggles.virtualization [
       ../../modules/app/virtualization/virtualization.nix
     ];
@@ -131,6 +127,11 @@ in
     ++ agentPackages;
 
   home.nixvim.enable = true;
+
+  # Clear the old agent-browser executable override workaround. The package now
+  # defaults to the native Lightpanda engine, so keeping a browser-specific
+  # executablePath here forces stale Chrome/Brave launch behavior.
+  home.file.".agent-browser/config.json".text = builtins.toJSON {};
 
   home.sessionVariables = {
     TERM = "xterm-256color";

@@ -176,7 +176,8 @@ in {
     # MCP servers
     lancedb-mcp
 
-    # agent browser (native CLI)
+    # Lightpanda + agent browser (native CLIs)
+    lightpanda
     agent-browser
   ];
 }

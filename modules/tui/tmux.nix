@@ -89,9 +89,11 @@ in
       bind-key Space command-prompt "new-window -n %1 \"exec %1\""
       bind-key / command-prompt "split-window \"exec man %%\""
       bind-key S command-prompt "new-window -n %1 \"ssh %1\""
-      bind-key -n M-n new-window
-      bind-key -n M-e new-window hx
-      bind-key -n M-m new-window nnn
+      bind -n M-m new-window
+      bind -n M-n split-window -h \; select-layout tiled
+      bind -n M-o next-layout
+      bind -n M-g select-pane -m
+      bind -n M-y run 'tmux swap-pane -s \{marked\} && tmux select-pane -M'
       bind-key '|' split-window -h
       bind-key '-' split-window
       bind-key -n M-| split-window -h
