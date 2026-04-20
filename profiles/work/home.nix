@@ -44,6 +44,8 @@ let
 
     # ------------- app -------------------
     ../../modules/app/mail/default.nix
+    ../../modules/app/hermes/default.nix
+    ../../modules/app/playwright/default.nix
 
     # ------------- wm/gui -------------------
     ../../modules/gui/fuzzel.nix
@@ -101,13 +103,6 @@ let
     mpv
     viu
   ];
-  agentPackages = with pkgs; [
-    inputs.hermes-agent.packages.${pkgs.system}.default
-    playwright
-    python3Packages.playwright
-    playwright-driver
-    playwright-mcp
-  ];
 in
 {
   imports = baseImports ++ optionalImports;
@@ -123,8 +118,7 @@ in
     ++ editorPackages
     ++ collaborationPackages
     ++ workflowPackages
-    ++ desktopMediaPackages
-    ++ agentPackages;
+    ++ desktopMediaPackages;
 
   home.nixvim.enable = true;
 
@@ -142,7 +136,6 @@ in
     GOG_ACCOUNT = userSettings.emailAlt;
 
     # Agent browser runtime paths on Nix (avoid glibc/loader lookup issues)
-    PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
     AGENT_BROWSER_ENGINE = "lightpanda";
 
   };
@@ -156,4 +149,5 @@ in
     # Match the Cachix Deploy agent name to this host's configured identity.
     name = systemSettings.hostname;
   };
+
 }

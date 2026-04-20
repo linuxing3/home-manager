@@ -8,6 +8,7 @@
     src = inputs.qmd.outPath;
   };
 in {
+  
   # Collection of useful CLI apps
   home.packages = with pkgs; [
     steel
@@ -179,5 +180,9 @@ in {
     # Lightpanda + agent browser (native CLIs)
     lightpanda
     agent-browser
+
+    # NotebookLM unofficial CLI/API
+    notebooklm-py
+    notebooklm-client
   ];
 }

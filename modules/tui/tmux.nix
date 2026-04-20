@@ -101,10 +101,6 @@ in
       bind-key -n M-H previous-window
       bind-key -n M-L next-window
       bind-key -n M-w kill-pane
-      bind-key -n M-Left select-pane -L
-      bind-key -n M-Right select-pane -R
-      bind-key -n M-Up select-pane -U
-      bind-key -n M-Down select-pane -D
       bind-key -n C-h select-pane -L
       bind-key -n C-l select-pane -R
       bind-key -n C-k select-pane -U

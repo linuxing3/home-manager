@@ -128,7 +128,18 @@ in {
     font = "${pkgs.terminus_font}/share/consolefonts/ter-u28n.psf.gz";
     keyMap = "us";
   };
-  services.getty.autologinUser = userSettings.username;
+  services.getty.autologinUser = lib.mkForce null;
+
+  services.greetd = {
+    enable = true;
+    vt = 2;
+    settings = {
+      default_session = {
+        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --remember --remember-user-session";
+        user = "greeter";
+      };
+    };
+  };
 
   programs.hyprland = lib.mkIf moduleToggles.hyprland {
     enable = true;

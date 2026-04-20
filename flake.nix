@@ -36,6 +36,7 @@
     };
     hermes-agent.url = "github:NousResearch/hermes-agent?ref=v2026.4.13";
     oxwm.url = "github:tonybanters/oxwm";
+    worktrunk.url = "github:max-sixty/worktrunk";
   };
 
   outputs =
@@ -44,7 +45,6 @@
       home-manager,
       stylix,
       nixvim,
-      cachix-deploy-flake,
       helix-steel-system,
       nix-index-database,
       flake-parts,
