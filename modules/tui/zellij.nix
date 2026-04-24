@@ -1,13 +1,20 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
+let
+  cfg = config.my.features.home;
+in
 {
-  home.packages = with pkgs; [
-    zellij
-  ];
+  options.my.features.home.zellij = lib.mkEnableOption "Enable zellij module";
 
-  home.file = {
-    ".config/zellij" = {
-      source = ../../configs/zellij;
-      recursive = true;
+  config = lib.mkIf cfg.zellij {
+    home.packages = with pkgs; [
+      zellij
+    ];
+
+    home.file = {
+      ".config/zellij" = {
+        source = ../../configs/zellij;
+        recursive = true;
+      };
     };
   };
 }

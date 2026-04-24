@@ -4,22 +4,12 @@
   pkgs,
   userSettings,
   ...
-}: {
-  # --- Imported helper modules ---------------------------------------------
-  imports =
-    [
-      (import ../../app/dmenu-scripts/networkmanager-dmenu.nix {
-        dmenu_command = "fuzzel -d";
-        inherit config lib pkgs;
-      })
-    ]
-    ++ [
-      (import ./hyprprofiles/hyprprofiles.nix {
-        dmenuCmd = "fuzzel -d";
-        inherit config lib pkgs;
-      })
-    ];
-
+}:
+let
+  cfg = config.my.features.home;
+in
+{
+  config = lib.mkIf cfg.hyprland {
   # --- Core runtime packages ------------------------------------------------
   home.packages = with pkgs; [
     hyprland
@@ -459,4 +449,5 @@
       }
 
     '';
+  };
 }

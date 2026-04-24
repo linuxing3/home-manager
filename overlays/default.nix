@@ -11,9 +11,13 @@ let
     (import ./packages/notebooklm-client.nix { inherit inputs; })
     (import ./packages/nnn.nix { inherit inputs; })
     (import ./packages/st.nix { inherit inputs; })
+    (import ./packages/dwm.nix { inherit inputs; })
     (import ./packages/libsForQt5.nix { inherit inputs; })
     (import ./packages/helix-steel-system.nix { inherit inputs; })
     (import ./packages/opencode-desktop.nix { inherit inputs; })
+    (import ./packages/mcp-cli.nix { inherit inputs; })
+    (import ./packages/openfang.nix { inherit inputs; })
+    (import ./packages/tdf.nix { inherit inputs; })
   ];
 in
 builtins.foldl' (acc: overlayFn: acc // (overlayFn final prev)) { } packageOverlays

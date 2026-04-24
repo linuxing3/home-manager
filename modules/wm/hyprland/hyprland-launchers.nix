@@ -1,12 +1,17 @@
 {
   config,
+  lib,
   pkgs,
   userSettings,
   ...
-}: {
+}:
+let
+  cfg = config.my.features.home;
+in
+{
+  config = lib.mkIf cfg.hyprland {
   # --- App launcher frontends ----------------------------------------------
   programs.fuzzel.enable = true;
-  programs.fuzzel.package = pkgs.fuzzel;
   programs.fuzzel.settings = {
     main = {
       font = userSettings.font + ":size=20";
@@ -132,4 +137,5 @@
   #     default-timeout = 0;
   #   };
   # };
+  };
 }

@@ -1,8 +1,14 @@
 {
   config,
+  lib,
   userSettings,
   ...
-}: {
+}:
+let
+  cfg = config.my.features.home;
+in
+{
+  config = lib.mkIf cfg.hyprland {
   # --- Generated desktop assets and dock styling ---------------------------
   home.file.".local/share/pixmaps/hyprland-logo-stylix.svg".source = config.lib.stylix.colors {
     template = builtins.readFile ../../pkgs/hyprland-logo-stylix.svg.mustache;
@@ -440,4 +446,5 @@
 
   # services.udiskie.enable = true;
   # services.udiskie.tray = "always";
+  };
 }

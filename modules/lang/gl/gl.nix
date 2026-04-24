@@ -1,35 +1,42 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
+let
+  cfg = config.my.features.home;
+in
 {
-  home.packages = with pkgs; [
-    libGL
-    vulkan-headers
-    vulkan-loader
+  options.my.features.home.gl = lib.mkEnableOption "Enable graphics/OpenGL dev libraries module";
 
-    xorg.libXrandr
-    xorg.libXinerama
-    xorg.libXcursor
-    xorg.libX11
-    xorg.libXi
-    xorg.libXext
-    xorg.libXxf86vm
-    libxkbcommon
+  config = lib.mkIf cfg.gl {
+    home.packages = with pkgs; [
+      libGL
+      vulkan-headers
+      vulkan-loader
 
-    wayland
-    wayland-scanner
-    wayland-protocols
+      xorg.libXrandr
+      xorg.libXinerama
+      xorg.libXcursor
+      xorg.libX11
+      xorg.libXi
+      xorg.libXext
+      xorg.libXxf86vm
+      libxkbcommon
+
+      wayland
+      wayland-scanner
+      wayland-protocols
 
 
-    # imgui
-    # glfw
-    # SDL2
+      # imgui
+      # glfw
+      # SDL2
 
-    # alsa-lib
-    # libpulseaudio
+      # alsa-lib
+      # libpulseaudio
 
-    # raylib
-    # raylib-games
-    # libGLU
+      # raylib
+      # raylib-games
+      # libGLU
 
-    # vcpkg
-  ];
+      # vcpkg
+    ];
+  };
 }

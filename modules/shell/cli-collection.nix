@@ -41,6 +41,10 @@ in {
     aria
     lynx
     elinks
+    ddgr
+
+    # speech (OpenAI Whisper CLI)
+    python3Packages.openai-whisper
 
     # mail in console
     mw
@@ -151,6 +155,7 @@ in {
 
     # pdf
     zathura
+    tdf
 
     # djvu
     djvulibre
@@ -176,6 +181,9 @@ in {
 
     # MCP servers
     lancedb-mcp
+
+    # MCP toolchain
+    openfang
 
     # Lightpanda + agent browser (native CLIs)
     lightpanda

@@ -1,13 +1,19 @@
-{ config, pkgs, inputs, ... }:
-
+{ config, lib, pkgs, inputs, ... }:
+let
+  cfg = config.my.features.home;
+in
 {
-  programs.neovim = {
-    enable = true;
-    viAlias = true;
-    vimAlias = true;
+  options.my.features.home.nvim = lib.mkEnableOption "Enable nvim module";
+
+  config = lib.mkIf cfg.nvim {
+    programs.neovim = {
+      enable = true;
+      viAlias = true;
+      vimAlias = true;
+    };
+    home.file.".config/nvim" = {
+      source = ../../../configs/nvim;
+      recursive = true;
+    };
   };
-  home.file.".config/nvim".source = ../../../configs/nvim;
-  home.file.".config/nvim".recursive = true;
-  home.file.".config/nvim/lua".lua = ../../../configs/nvim/lua;
-  home.file.".config/nvim/lua".recursive = true;
 }

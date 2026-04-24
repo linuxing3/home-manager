@@ -1,5 +1,7 @@
-{ config, pkgs, userSettings, ... }:
-let generateHomepage = name: font: config:
+{ config, lib, pkgs, userSettings, ... }:
+let
+  cfg = config.my.features.home;
+  generateHomepage = name: font: config:
   ''<!DOCTYPE html>
     <html>
 
@@ -88,6 +90,9 @@ let generateHomepage = name: font: config:
   '';
 in
 {
+  options.my.features.home.qutebrowser = lib.mkEnableOption "Enable qutebrowser module";
+
+  config = lib.mkIf cfg.qutebrowser {
 
   home.packages = [
       pkgs.qutebrowser
@@ -388,4 +393,5 @@ Bard
   home.file.".browser/Bard/config/qute-home.html".text = generateHomepage "Bard" userSettings.font config;
   home.file.".browser/Bard/config/logo.png".source = ./qutebrowser-logo.png;
 
+  };
 }

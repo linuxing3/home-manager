@@ -1,22 +1,27 @@
-{ pkgs, ... }:
-
+{ config, lib, pkgs, ... }:
+let
+  cfg = config.my.features.home;
+in
 {
-  home.packages = with pkgs; [
-    kitty.terminfo
-    (writeShellScriptBin "kitty" ''
-      if [ -x /usr/bin/kitty ]; then
-        exec /usr/bin/kitty "$@"
-      fi
+  options.my.features.home.kitty = lib.mkEnableOption "Enable kitty module";
 
-      exec ${kitty}/bin/kitty "$@"
-    '')
-  ];
+  config = lib.mkIf cfg.kitty {
+    home.packages = with pkgs; [
+      kitty.terminfo
+      (writeShellScriptBin "kitty" ''
+        if [ -x /usr/bin/kitty ]; then
+          exec /usr/bin/kitty "$@"
+        fi
 
-  home.file = {
-    ".config/kitty" = {
-      source = ../../configs/kitty;
-      recursive = true;
+        exec ${kitty}/bin/kitty "$@"
+      '')
+    ];
+
+    home.file = {
+      ".config/kitty" = {
+        source = ../../configs/kitty;
+        recursive = true;
+      };
     };
   };
-
 }

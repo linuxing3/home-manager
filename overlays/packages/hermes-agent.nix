@@ -31,7 +31,7 @@ in
 {
   hermes-agent = final.stdenv.mkDerivation {
     pname = "hermes-agent";
-    version = "0.9.0+patched";
+    version = "0.11.0+patched";
 
     dontUnpack = true;
     dontBuild = true;

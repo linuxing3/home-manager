@@ -7,25 +7,8 @@
   ...
 }:
 let
-  moduleToggles = {
-    kitty = false;
-    zellij = false;
-    tmux = true;
-    nvim = false;
-    doom = false;
-    pythonExtra = false;
-    rust = false;
-    nodejs = false;
-    cc = false;
-    gl = false;
-    chrome = false;
-    qutebrowser = false;
-    brave = false;
-    hyprland = false;
-    sway = false;
-    i3 = false;
-    virtualization = false;
-  };
+  features = import ../../nix/features.nix;
+  moduleToggles = features.profiles.work.home;
   baseImports = [
     # ------------- security -------------------
     ../../security/security.nix
@@ -45,39 +28,40 @@ let
     # ------------- app -------------------
     ../../modules/app/mail/default.nix
     ../../modules/app/hermes/default.nix
+    ../../modules/app/hermes-python-tools/default.nix
     ../../modules/app/playwright/default.nix
+    ../../modules/app/rclone/default.nix
 
     # ------------- wm/gui -------------------
     ../../modules/gui/fuzzel.nix
     ../../modules/wm/oxwm/oxwm.nix
   ];
-  optionalImports =
-    [ ]
-    ++ lib.optionals moduleToggles.kitty [ ../../modules/tui/kitty.nix ]
-    ++ lib.optionals moduleToggles.zellij [ ../../modules/tui/zellij.nix ]
-    ++ lib.optionals moduleToggles.tmux [ ../../modules/tui/tmux.nix ]
-    ++ lib.optionals moduleToggles.nvim [ ../../modules/app/nvim/nvim.nix ]
-    ++ lib.optionals moduleToggles.doom [ ../../modules/app/doom-emacs/doom-slim.nix ]
-    ++ lib.optionals moduleToggles.pythonExtra [ ../../modules/lang/python/python-extra.nix ]
-    ++ lib.optionals moduleToggles.rust [ ../../modules/lang/rust/rust.nix ]
-    ++ lib.optionals moduleToggles.nodejs [ ../../modules/lang/nodejs/nodejs.nix ]
-    ++ lib.optionals moduleToggles.cc [ ../../modules/lang/cc/cc.nix ]
-    ++ lib.optionals moduleToggles.gl [ ../../modules/lang/gl/gl.nix ]
-    ++ lib.optionals moduleToggles.chrome [ ../../modules/app/browser/chrome.nix ]
-    ++ lib.optionals moduleToggles.qutebrowser [ ../../modules/app/browser/qutebrowser.nix ]
-    ++ lib.optionals moduleToggles.brave [ ../../modules/app/browser/brave.nix ]
-    ++ lib.optionals moduleToggles.hyprland [ ../../modules/wm/hyprland/hyprland.nix ]
-    ++ lib.optionals moduleToggles.sway [ ../../modules/wm/sway/sway.nix ]
-    ++ lib.optionals moduleToggles.i3 [ ../../modules/wm/i3/i3.nix ]
-    ++ lib.optionals moduleToggles.virtualization [
-      ../../modules/app/virtualization/virtualization.nix
-    ];
+  featureModules = [
+    ../../modules/tui/kitty.nix
+    ../../modules/tui/zellij.nix
+    ../../modules/tui/tmux.nix
+    ../../modules/app/nvim/nvim.nix
+    ../../modules/app/doom-emacs/doom-slim.nix
+    ../../modules/lang/python/python-extra.nix
+    ../../modules/lang/rust/rust.nix
+    ../../modules/lang/nodejs/nodejs.nix
+    ../../modules/lang/cc/cc.nix
+    ../../modules/lang/gl/gl.nix
+    ../../modules/app/browser/chrome.nix
+    ../../modules/app/browser/qutebrowser.nix
+    ../../modules/app/browser/brave.nix
+    ../../modules/wm/hyprland/hyprland.nix
+    ../../modules/wm/sway/sway.nix
+    ../../modules/wm/i3/i3.nix
+    ../../modules/app/virtualization/virtualization.nix
+  ];
   fileManagerPackages = with pkgs; [
     yazi
     nnn
   ];
   terminalPackages = with pkgs; [
     st
+    dwm
   ];
   editorPackages = with pkgs; [
     helix-steel-system
@@ -105,7 +89,7 @@ let
   ];
 in
 {
-  imports = baseImports ++ optionalImports;
+  imports = baseImports ++ featureModules;
 
   home.username = userSettings.username;
   home.homeDirectory = "/home/" + userSettings.username;
@@ -125,7 +109,7 @@ in
   # Clear the old agent-browser executable override workaround. The package now
   # defaults to the native Lightpanda engine, so keeping a browser-specific
   # executablePath here forces stale Chrome/Brave launch behavior.
-  home.file.".agent-browser/config.json".text = builtins.toJSON {};
+  home.file.".agent-browser/config.json".text = builtins.toJSON { };
 
   home.sessionVariables = {
     TERM = "xterm-256color";
@@ -137,17 +121,35 @@ in
 
     # Agent browser runtime paths on Nix (avoid glibc/loader lookup issues)
     AGENT_BROWSER_ENGINE = "lightpanda";
-
   };
 
   news.display = "silent";
 
   programs.home-manager.enable = true;
 
+  my.features.home = {
+    kitty = moduleToggles.kitty;
+    zellij = moduleToggles.zellij;
+    tmux = moduleToggles.tmux;
+    nvim = moduleToggles.nvim;
+    doom = moduleToggles.doom;
+    pythonExtra = moduleToggles.pythonExtra;
+    rust = moduleToggles.rust;
+    nodejs = moduleToggles.nodejs;
+    cc = moduleToggles.cc;
+    gl = moduleToggles.gl;
+    chrome = moduleToggles.chrome;
+    qutebrowser = moduleToggles.qutebrowser;
+    brave = moduleToggles.brave;
+    hyprland = moduleToggles.hyprland;
+    sway = moduleToggles.sway;
+    i3 = moduleToggles.i3;
+    virtualization = moduleToggles.virtualization;
+  };
+
   services.cachix-agent = {
     enable = true;
     # Match the Cachix Deploy agent name to this host's configured identity.
     name = systemSettings.hostname;
   };
-
 }

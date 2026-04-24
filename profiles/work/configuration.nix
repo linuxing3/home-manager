@@ -5,19 +5,8 @@
   systemSettings,
   ...
 }: let
-  moduleToggles = {
-    systemStylix = false;
-    graphics = false;
-    hyprland = false;
-    niri = false;
-    xmonad = false;
-    dwm = false;
-    printing = false;
-    pipewire = false;
-    gvfs = false;
-    autofs = false;
-    firefox = false;
-  };
+  features = import ../../nix/features.nix;
+  moduleToggles = features.profiles.work.system;
   coreCliPackages = with pkgs; [
     helix-steel-system
     wget
@@ -132,13 +121,21 @@ in {
 
   services.greetd = {
     enable = true;
-    vt = 2;
     settings = {
       default_session = {
-        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --remember --remember-user-session";
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-user-session";
         user = "greeter";
       };
     };
+  };
+  systemd.services.greetd.serviceConfig = {
+    StandardInput = "tty";
+    StandardOutput = "tty";
+    StandardError = "journal";
+    TTYPath = "/dev/tty1";
+    TTYReset = true;
+    TTYVHangup = true;
+    TTYVTDisallocate = true;
   };
 
   programs.hyprland = lib.mkIf moduleToggles.hyprland {
