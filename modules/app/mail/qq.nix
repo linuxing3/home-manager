@@ -32,9 +32,6 @@ in {
               PipelineDepth = 10;
               Timeout = 60;
             };
-            channel = {
-              Patterns = "* !Trash";
-            };
           };
         };
       };

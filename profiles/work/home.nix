@@ -38,6 +38,9 @@ let
   ];
   featureModules = [
     ../../modules/tui/kitty.nix
+    ../../modules/tui/ghostty.nix
+    ../../modules/tui/wezterm.nix
+    ../../modules/tui/warp.nix
     ../../modules/tui/zellij.nix
     ../../modules/tui/tmux.nix
     ../../modules/app/nvim/nvim.nix
@@ -129,6 +132,9 @@ in
 
   my.features.home = {
     kitty = moduleToggles.kitty;
+    ghostty = moduleToggles.ghostty;
+    wezterm = moduleToggles.wezterm;
+    warp = moduleToggles.warp;
     zellij = moduleToggles.zellij;
     tmux = moduleToggles.tmux;
     nvim = moduleToggles.nvim;

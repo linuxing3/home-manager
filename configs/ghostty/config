@@ -5,6 +5,6 @@
 font-size = 14
 
 command = "zsh"
-theme = "gruvbox"
+theme = "Gruvbox Dark"
 window-decoration = "none"
 window-padding-y = 10,0

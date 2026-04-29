@@ -284,14 +284,14 @@ in {
   services.openssh.enable = true;
 
   nix.settings.substituters = [
-    "https://nix-community.cachix.org"
     "https://ghostty.cachix.org"
+    "https://nix-community.cachix.org"
     "https://cache.nixos.org"
   ];
 
   nix.settings.trusted-substituters = [
-    "https://nix-community.cachix.org"
     "https://ghostty.cachix.org"
+    "https://nix-community.cachix.org"
     "https://cache.nixos.org"
   ];
 

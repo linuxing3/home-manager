@@ -3,6 +3,9 @@
     work = {
       home = {
         kitty = false;
+        ghostty = true;
+        wezterm = true;
+        warp = true;
         zellij = false;
         tmux = true;
         nvim = false;

@@ -185,6 +185,9 @@ in {
     # MCP toolchain
     openfang
 
+    # Open Design
+    open-design
+
     # Lightpanda + agent browser (native CLIs)
     lightpanda
     agent-browser
@@ -192,5 +195,8 @@ in {
     # NotebookLM unofficial CLI/API
     notebooklm-py
     notebooklm-client
+
+    # Hermes Web UI CLI
+    hermes-web-ui
   ];
 }

@@ -66,6 +66,12 @@ in {
       autoload -U compinit
       compinit -C
 
+      # Guard: when spawned from hermes runtime under /nix/store/.../site-packages,
+      # reset interactive shells to HOME so startup is usable.
+      if [[ -o interactive && "$PWD" == /nix/store/*/site-packages* ]]; then
+        builtin cd "$HOME" 2>/dev/null || builtin cd /
+      fi
+
       # Simple configuration
       PROMPT=" ◉ %U%F{magenta}%n%f%u@%U%F{blue}%m%f%u:%F{yellow}%~%f
        %F{green}→%f "
@@ -79,27 +85,6 @@ in {
       # gpg pinentry on tty
       export GPG_TTY="$(tty)"
 
-      # Prefer host ICD list, but auto-fallback to SwiftShader when Arise/Glenfly ICD is absent.
-      SWIFTSHADER_ICD="${pkgs.swiftshader}/share/vulkan/icd.d/vk_swiftshader_icd.json"
-      if [ -d /run/opengl-driver/share/vulkan/icd.d ]; then
-        export VK_DRIVER_FILES="$(printf '%s:' /run/opengl-driver/share/vulkan/icd.d/*.json | sed 's/:$//')"
-      elif [ -d /usr/share/vulkan/icd.d ]; then
-        export VK_DRIVER_FILES="$(printf '%s:' /usr/share/vulkan/icd.d/*.json | sed 's/:$//')"
-      fi
-      if [ -n "$VK_DRIVER_FILES" ]; then
-        export VK_ICD_FILENAMES="$VK_DRIVER_FILES"
-      fi
-      if [ "''${VK_FORCE_SWIFTSHADER:-0}" = "1" ]; then
-        export VK_ICD_FILENAMES="$SWIFTSHADER_ICD"
-      elif [ -n "$VK_ICD_FILENAMES" ] && ! echo "$VK_ICD_FILENAMES" | grep -Eqi '(arise|glenfly).*\.json'; then
-        export VK_ICD_FILENAMES="$SWIFTSHADER_ICD"
-      fi
-      if [ -d /run/opengl-driver/share/vulkan/explicit_layer.d ]; then
-        export VK_LAYER_PATH="$(printf '%s:' /run/opengl-driver/share/vulkan/explicit_layer.d/*.json | sed 's/:$//')"
-      elif [ -d /usr/share/vulkan/explicit_layer.d ]; then
-        export VK_LAYER_PATH="$(printf '%s:' /usr/share/vulkan/explicit_layer.d/*.json | sed 's/:$//')"
-      fi
-
       # Load my api keys env when agenix has materialized the runtime file.
       if [ -f ${config.age.secrets."api-keys.age".path} ] && { [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; }; then
         eval "$(cat ${config.age.secrets."api-keys.age".path})"
@@ -107,79 +92,21 @@ in {
 
       # Load my extra file when present
       [ -f ~/.config/zsh/extra/private.zsh ] && source ~/.config/zsh/extra/private.zsh
+      '';
 
-      ghostty() {
-        GDK_BACKEND=x11 \
-        GSK_RENDERER=cairo \
-        LIBGL_ALWAYS_SOFTWARE=1 \
-        MESA_LOADER_DRIVER_OVERRIDE=llvmpipe \
-        GALLIUM_DRIVER=llvmpipe \
-        command ghostty "$@"
-      }
-    '';
-    # plugins = [
-    #   {
-    #     name = "fzf-tab";
-    #     src = "${pkgs.zsh-fzf-tab}/share/fzf-tab";
-    #   }
-    #   {
-    #     name = "vi-mode";
-    #     src = "${pkgs.zsh-vi-mode}/share/zsh-vi-mode";
-    #   }
-    #   {
-    #     name = "powerlevel10k";
-    #     src = "${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k";
-    #   }
-    # ];
   };
 
   programs.bash = {
     enable = true;
     enableCompletion = true;
     shellAliases = myAliases;
-    initExtra = ''
-      # Simple configuration
-      PROMPT=" ◉ %U%F{magenta}%n%f%u@%U%F{blue}%m%f%u:%F{yellow}%~%f
-       %F{green}→%f "
-      RPROMPT="%F{red}▂%f%F{yellow}▄%f%F{green}▆%f%F{cyan}█%f%F{blue}▆%f%F{magenta}▄%f%F{white}▂%f"
-      [ $TERM = "dumb" ] && PS1='$ '
-    '';
     bashrcExtra = ''
       # gpg pinentry on tty
       export GPG_TTY="$(tty)"
 
-      # Prefer host ICD list, but auto-fallback to SwiftShader when Arise/Glenfly ICD is absent.
-      SWIFTSHADER_ICD="${pkgs.swiftshader}/share/vulkan/icd.d/vk_swiftshader_icd.json"
-      if [ -d /run/opengl-driver/share/vulkan/icd.d ]; then
-        export VK_DRIVER_FILES="$(printf '%s:' /run/opengl-driver/share/vulkan/icd.d/*.json | sed 's/:$//')"
-      elif [ -d /usr/share/vulkan/icd.d ]; then
-        export VK_DRIVER_FILES="$(printf '%s:' /usr/share/vulkan/icd.d/*.json | sed 's/:$//')"
-      fi
-      if [ -n "$VK_DRIVER_FILES" ]; then
-        export VK_ICD_FILENAMES="$VK_DRIVER_FILES"
-      fi
-      if [ "''${VK_FORCE_SWIFTSHADER:-0}" = "1" ]; then
-        export VK_ICD_FILENAMES="$SWIFTSHADER_ICD"
-      elif [ -n "$VK_ICD_FILENAMES" ] && ! echo "$VK_ICD_FILENAMES" | grep -Eqi '(arise|glenfly).*\.json'; then
-        export VK_ICD_FILENAMES="$SWIFTSHADER_ICD"
-      fi
-      if [ -d /run/opengl-driver/share/vulkan/explicit_layer.d ]; then
-        export VK_LAYER_PATH="$(printf '%s:' /run/opengl-driver/share/vulkan/explicit_layer.d/*.json | sed 's/:$//')"
-      elif [ -d /usr/share/vulkan/explicit_layer.d ]; then
-        export VK_LAYER_PATH="$(printf '%s:' /usr/share/vulkan/explicit_layer.d/*.json | sed 's/:$//')"
-      fi
-
       # Load my extra file when present
       [ -f ~/.config/bash/extra/private.bash ] && source ~/.config/bash/extra/private.bash
 
-      ghostty() {
-        GDK_BACKEND=x11 \
-        GSK_RENDERER=cairo \
-        LIBGL_ALWAYS_SOFTWARE=1 \
-        MESA_LOADER_DRIVER_OVERRIDE=llvmpipe \
-        GALLIUM_DRIVER=llvmpipe \
-        command ghostty "$@"
-      }
     '';
   };
 

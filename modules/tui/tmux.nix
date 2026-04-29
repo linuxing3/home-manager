@@ -7,6 +7,7 @@
 let
   cfg = config.my.features.home;
   fzfLinksDir = "${config.home.homeDirectory}/.local/share/tmux-fzf-links";
+  omtLinksDir = "${config.home.homeDirectory}/.local/share/oh-my-tmux";
 in
 {
   options.my.features.home.tmux = lib.mkEnableOption "Enable tmux module";
@@ -52,7 +53,7 @@ in
       clock24 = true;
       escapeTime = 0;
       focusEvents = false;
-      historyLimit = 2000;
+      historyLimit = 10000;
       keyMode = "vi";
       mouse = true;
       prefix = "C-b";
@@ -69,10 +70,9 @@ in
         tmux-floax
         tmux-fzf
         tmux-thumbs
-        tmux-which-key
-        gruvbox
+        # gruvbox
         # tmux-powerline
-        # catppuccin
+        catppuccin
         # nord
         # rose-pine
         # onedark-theme
@@ -98,6 +98,7 @@ in
         bind-key Space command-prompt "new-window -n %1 \"exec %1\""
         bind-key / command-prompt "split-window \"exec man %%\""
         bind-key S command-prompt "new-window -n %1 \"ssh %1\""
+        bind -n M-t new-window 
         bind -n M-m run-shell "tmux_split_curdir"
         bind -n M-n split-window -h \; select-layout tiled
         bind -n M-o next-layout
@@ -123,7 +124,31 @@ in
         bind-key -T copy-mode-vi x send-keys -X select-line
         bind-key -n M-] paste-buffer -p
 
-        # === tmux-fzf-links ===
+        # Copy to system clipboard on mouse drag release (cross-platform)
+        if-shell "command -v pbcopy >/dev/null 2>&1" {
+            bind -T copy-mode MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "pbcopy"
+            bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "pbcopy"
+        } {
+            if-shell "command -v xclip >/dev/null 2>&1" {
+                bind -T copy-mode MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "xclip -selection clipboard"
+                bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "xclip -selection clipboard"
+            } {
+                bind -T copy-mode MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "xsel --clipboard --input"
+                bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "xsel --clipboard --input"
+            }
+        }
+
+        # Scroll enters copy mode automatically, exits when you reach the bottom
+        bind -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'copy-mode -e'"
+
+        # Scroll mode: Option+Tab to enter, i/k to scroll up/down, q or Escape to exit
+        bind -n M-Tab if -F '#{pane_in_mode}' 'send-keys -X cancel' 'copy-mode'
+        bind -T copy-mode i send-keys -X -N 2 scroll-up
+        bind -T copy-mode k send-keys -X -N 2 scroll-down
+        bind -T copy-mode I send-keys -X halfpage-up
+        bind -T copy-mode K send-keys -X halfpage-down
+
+        # tmux-fzf-links
         set-option -g @fzf-links-editor-open-cmd "tmux new-window -n 'hx' hx +%line '%file'"
         set-option -g @fzf-links-browser-open-cmd "/usr/bin/brave-browser '%url'"
         set-option -g @fzf-links-fzf-path "${pkgs.fzf}/bin/fzf"
@@ -136,8 +161,13 @@ in
         # FzfLinks (local checkout mode per upstream docs)
         run-shell "${fzfLinksDir}"/fzf-links.tmux
 
+        # Optional oh-my-tmux overrides
+        # if-shell "[ -f ${omtLinksDir}/.tmux.conf ]" "source-file ${omtLinksDir}/.tmux.conf"
+        # if-shell "[ -f ${omtLinksDir}/.tmux.conf.local ]" "source-file ${omtLinksDir}/.tmux.conf.local"
+
         # Optional local overrides
         if-shell "[ -f ~/.config/tmux/private.conf ]" "source-file ~/.config/tmux/private.conf"
+
       '';
     };
 
@@ -147,6 +177,15 @@ in
         $DRY_RUN_CMD mkdir -p "$(dirname "$target")"
         if [ -z "$DRY_RUN_CMD" ]; then
           ${pkgs.git}/bin/git clone --depth=1 https://github.com/alberti42/tmux-fzf-links.git "$target"
+        fi
+      fi
+    '';
+    home.activation.omtLinksCheckout = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      target="${omtLinksDir}"
+      if [ ! -d "$target/.git" ]; then
+        $DRY_RUN_CMD mkdir -p "$(dirname "$target")"
+        if [ -z "$DRY_RUN_CMD" ]; then
+          ${pkgs.git}/bin/git clone --depth=1 https://github.com/gpakosz/.tmux.git "$target"
         fi
       fi
     '';
