@@ -17,9 +17,11 @@ let
     (import ./packages/helix-steel-system.nix { inherit inputs; })
     (import ./packages/opencode-desktop.nix { inherit inputs; })
     (import ./packages/mcp-cli.nix { inherit inputs; })
+    (import ./packages/codex-github.nix { inherit inputs; })
     (import ./packages/openfang.nix { inherit inputs; })
     (import ./packages/open-design.nix { inherit inputs; })
     (import ./packages/tdf.nix { inherit inputs; })
+    (import ./packages/jcode.nix { inherit inputs; })
   ];
 in
 builtins.foldl' (acc: overlayFn: acc // (overlayFn final prev)) { } packageOverlays

@@ -4,9 +4,9 @@
   ...
 }: let
   system = pkgs.stdenv.hostPlatform.system;
-  qmd = pkgs.callPackage ../pkgs/qmd.nix {
-    src = inputs.qmd.outPath;
-  };
+  # qmd = pkgs.callPackage ../pkgs/qmd.nix {
+  #   src = inputs.qmd.outPath;
+  # };
 in {
   
   # Collection of useful CLI apps
@@ -177,13 +177,13 @@ in {
     # viewer
     inputs.doxx.packages.${system}.default
     inputs.xleak.packages.${system}.default
-    qmd
+    # qmd
 
     # MCP servers
-    lancedb-mcp
+    # lancedb-mcp
 
     # MCP toolchain
-    openfang
+    # openfang
 
     # Open Design
     open-design
@@ -198,5 +198,8 @@ in {
 
     # Hermes Web UI CLI
     hermes-web-ui
+
+    # jcode coding agent
+    jcode
   ];
 }
