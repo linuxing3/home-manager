@@ -34,12 +34,10 @@
       url = "github:tobi/qmd";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    hermes-agent.url = "github:NousResearch/hermes-agent?ref=v2026.4.23";
+    hermes-agent.url = "github:NousResearch/hermes-agent?ref=v2026.5.7";
     oxwm.url = "github:tonybanters/oxwm";
     worktrunk.url = "github:max-sixty/worktrunk";
     ghostty = {
-      # Keep Ghostty on its own upstream-pinned nixpkgs so Zig toolchain stays compatible.
-      # (Following our root nixpkgs can break when ghostty requires newer zig_* attrs.)
       url = "github:ghostty-org/ghostty";
     };
     wezterm.url = "github:wezterm/wezterm?dir=nix";

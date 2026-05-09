@@ -1,8 +1,9 @@
 {
-  lib,
-  buildNpmPackage,
-  fetchFromGitHub,
-  nodejs_24,
+lib,
+buildNpmPackage,
+fetchFromGitHub,
+makeWrapper,
+nodejs_24,
 }:
 buildNpmPackage rec {
   pname = "hermes-web-ui";
@@ -21,7 +22,12 @@ buildNpmPackage rec {
     cp ${./hermes-web-ui-package-lock.json} package-lock.json
   '';
 
-  nativeBuildInputs = [ nodejs_24 ];
+  nativeBuildInputs = [ makeWrapper nodejs_24 ];
+
+  postInstall = ''
+    wrapProgram $out/bin/hermes-web-ui \
+      --set-default NODE_OPTIONS "--disable-warning=ExperimentalWarning"
+  '';
 
   meta = with lib; {
     description = "Web dashboard CLI for Hermes Agent";

@@ -199,7 +199,5 @@ in {
     # Hermes Web UI CLI
     hermes-web-ui
 
-    # jcode coding agent
-    jcode
   ];
 }

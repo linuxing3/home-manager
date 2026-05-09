@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo *)",
+      "Bash(gh api *)",
+      "Bash(java -version)",
+      "Bash(dpkg --print-architecture)",
+      "mcp__fff__find_files",
+      "mcp__fff__grep",
+      "Bash(home-manager switch *)"
+    ]
+  }
+}

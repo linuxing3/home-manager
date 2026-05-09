@@ -10,8 +10,7 @@
     Service = {
       Type = "simple";
       WorkingDirectory = "/sources/hermes-workspace";
-      ExecStartPre = "${pkgs.zsh}/bin/zsh -ilc 'pnpm build'";
-      ExecStart = "${pkgs.zsh}/bin/zsh -ilc 'NODE_OPTIONS=\"--max-old-space-size=2048\" node server-entry.js'";
+      ExecStart = "/usr/local/bin/pnpm run start";
       Restart = "on-failure";
       RestartSec = 2;
       Environment = [

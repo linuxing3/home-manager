@@ -27,6 +27,9 @@
     mpv
     viu
 
+    # Browser
+    librewolf
+
   ];
 
 }

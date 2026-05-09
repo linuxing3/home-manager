@@ -1,7 +1,6 @@
 {
   lib,
-  rust-bin,
-  makeRustPlatform,
+  rustPlatform,
   fetchFromGitHub,
   pkg-config,
   python3,
@@ -9,12 +8,7 @@
   zlib,
   libgit2,
 }:
-(let
-  rustPlatform190 = makeRustPlatform {
-    cargo = rust-bin.stable."1.90.0".default;
-    rustc = rust-bin.stable."1.90.0".default;
-  };
-in rustPlatform190.buildRustPackage) rec {
+rustPlatform.buildRustPackage rec {
   pname = "jcode";
   version = "0.11.15";
 

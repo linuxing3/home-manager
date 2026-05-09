@@ -81,6 +81,7 @@ let
     cachix
   ];
   desktopMediaPackages = with pkgs; [
+    librewolf
     nautilus
     pcmanfm
     imv
