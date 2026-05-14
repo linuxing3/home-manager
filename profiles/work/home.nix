@@ -31,6 +31,7 @@ let
     ../../modules/app/hermes-python-tools/default.nix
     ../../modules/app/playwright/default.nix
     ../../modules/app/rclone/default.nix
+    ../../modules/app/browser/librewolf.nix
 
     # ------------- wm/gui -------------------
     ../../modules/gui/fuzzel.nix

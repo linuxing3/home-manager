@@ -30,3 +30,4 @@ security/secrets/.helix
 !.codex/prompts/
 !.codex/prompts/**
 .dmux/
+.playwright-cli
