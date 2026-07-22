@@ -48,7 +48,7 @@
     signer = "gpg";
     key = "8DB2F92A1DAB1EBB";
     format = "openpgp";
-    signByDefault = true;
+    signByDefault = false;
   };
 
   programs.gpg.enable = true;

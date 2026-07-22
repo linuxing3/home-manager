@@ -1,7 +1,9 @@
-{ inputs, ...}:
-{
+{inputs, ...}: {
   imports = [
     inputs.agenix.homeManagerModules.default
+  ];
+  age.identityPaths = [
+    "/home/${import ../nix/username.nix}/.ssh/id_ed25519"
   ];
   # age.secretsDir = "/etc/agenix";
   age.secrets = let
@@ -10,5 +12,6 @@
     builtins.mapAttrs (name: attrs: {
       file = ./secrets/${name};
       mode = "0600";
-    }) secrets;
+    })
+    secrets;
 }

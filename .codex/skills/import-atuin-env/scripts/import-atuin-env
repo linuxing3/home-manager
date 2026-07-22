@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source_file=${1:-"$HOME/Downloads/sources/env"}
+sync_after=false
+if [[ ${2:-} == "--sync" ]]; then sync_after=true; elif [[ $# -gt 1 ]]; then printf 'usage: %s [dotenv-file] [--sync]\n' "$0" >&2; exit 2; fi
+[[ -f "$source_file" ]] || { printf 'env file not found: %s\n' "$source_file" >&2; exit 1; }
+
+atuin_bin=${ATUIN_BIN:-}
+if [[ -z "$atuin_bin" ]]; then
+  if command -v atuin >/dev/null 2>&1; then atuin_bin=$(command -v atuin)
+  elif [[ -x "$HOME/.nix-profile/bin/atuin" ]]; then atuin_bin="$HOME/.nix-profile/bin/atuin"
+  else printf 'atuin executable not found\n' >&2; exit 1; fi
+fi
+
+empty=0; assignments=0; line_number=0
+while IFS= read -r line || [[ -n "$line" ]]; do
+  line_number=$((line_number + 1)); line=${line%$'\r'}
+  [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+  [[ "$line" == export\ * ]] && line=${line#export }
+  [[ "$line" == *=* ]] || { printf 'invalid assignment on line %d; no changes made\n' "$line_number" >&2; exit 1; }
+  name=${line%%=*}; value=${line#*=}
+  [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || { printf 'invalid variable name on line %d; no changes made\n' "$line_number" >&2; exit 1; }
+  assignments=$((assignments + 1)); [[ -z "$value" ]] && empty=$((empty + 1))
+done < "$source_file"
+
+imported=0
+while IFS= read -r line || [[ -n "$line" ]]; do
+  line=${line%$'\r'}; [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+  [[ "$line" == export\ * ]] && line=${line#export }
+  name=${line%%=*}; value=${line#*=}; [[ -z "$value" ]] && continue
+  if (( ${#value} >= 2 )); then
+    first=${value:0:1}; last=${value: -1}
+    if [[ ( "$first" == '"' && "$last" == '"' ) || ( "$first" == "'" && "$last" == "'" ) ]]; then value=${value:1:${#value}-2}; fi
+  fi
+  "$atuin_bin" dotfiles var set "$name" "$value" >/dev/null
+  imported=$((imported + 1))
+done < "$source_file"
+
+"$atuin_bin" dotfiles var list >/dev/null
+if [[ "$sync_after" == true ]]; then "$atuin_bin" sync >/dev/null; fi
+printf 'imported=%d skipped_empty=%d assignments=%d synced=%s\n' "$imported" "$empty" "$assignments" "$sync_after"

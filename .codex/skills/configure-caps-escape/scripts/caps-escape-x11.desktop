@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Caps Lock as Escape
+Exec=/usr/local/bin/caps-escape-x11
+OnlyShowIn=Deepin;DDE;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

@@ -8,7 +8,6 @@
   #   src = inputs.qmd.outPath;
   # };
 in {
-  
   # Collection of useful CLI apps
   home.packages = with pkgs; [
     # dev
@@ -74,6 +73,7 @@ in {
     # Command Line
     onefetch
     disfetch
+    secretspec
 
     lolcat
     cowsay
@@ -171,6 +171,5 @@ in {
     # NotebookLM unofficial CLI/API
     # notebooklm-py
     # notebooklm-client
-
   ];
 }

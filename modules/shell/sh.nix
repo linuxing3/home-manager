@@ -30,6 +30,46 @@
     "$HOME/.local/bin"
     ".git/safe/../../bin"
   ];
+  agenixEnv = pkgs.writeShellApplication {
+    name = "agenix-env";
+    runtimeInputs = [pkgs.bash];
+    text = ''
+      set -euo pipefail
+      secret_file=${config.age.secrets."api-keys-new.age".path}
+      if [[ ! -r "$secret_file" ]]; then
+        echo "agenix-env: api-keys-new.age is not materialized; check the Agenix identity and user service" >&2
+        exit 1
+      fi
+      if [[ "''${1:-}" != "--" || $# -lt 2 ]]; then
+        echo "usage: agenix-env -- command [args...]" >&2
+        exit 2
+      fi
+      shift
+      exec ${pkgs.bash}/bin/bash -c 'set -a; . "$1"; shift; exec "$@"' agenix-env "$secret_file" "$@"
+    '';
+  };
+  agentEnv = pkgs.writeShellApplication {
+    name = "agent-env";
+    runtimeInputs = [pkgs.coreutils];
+    text = ''
+      set -euo pipefail
+      if [[ "''${1:-}" != "--" || $# -lt 2 ]]; then
+        echo "usage: agent-env -- command [args...]" >&2
+        exit 2
+      fi
+      shift
+      command_name=$(basename -- "$1")
+      case "$command_name" in
+        git|gh|curl|wget|ssh|scp|rsync|codex|claude|opencode|hermes|jcode)
+          exec ${agenixEnv}/bin/agenix-env -- "$@"
+          ;;
+        *)
+          echo "agent-env: command is not allowlisted: $command_name" >&2
+          exit 126
+          ;;
+      esac
+    '';
+  };
 in {
   home.sessionPath = sessionPath;
 
@@ -48,6 +88,16 @@ in {
     enableBashIntegration = true;
     enableFishIntegration = true;
     nix-direnv.enable = true;
+  };
+
+  programs.atuin = {
+    enable = true;
+    enableZshIntegration = true;
+    enableBashIntegration = true;
+    flags = [
+      "--disable-ctrl-r"
+      "--disable-up-arrow"
+    ];
   };
 
   programs.zsh = {
@@ -87,8 +137,7 @@ in {
 
       # Load my extra file when present
       [ -f ~/.config/zsh/extra/private.zsh ] && source ~/.config/zsh/extra/private.zsh
-      '';
-
+    '';
   };
 
   programs.bash = {
@@ -122,12 +171,10 @@ in {
     fileWidget.options = [
       "--preview 'if [ -d {} ]; then eza --tree --color=always {} | head -200; else bat -n --color=always --line-range :500 {}; fi'"
     ];
-    changeDirWidget = {
-      command = "fd --type=d --hidden --strip-cwd-prefix --exclude .git";
-      options = [
-        "--preview 'eza --tree --color=always {} | head -200'"
-      ];
-    };
+    changeDirWidget.command = "fd --type=d --hidden --strip-cwd-prefix --exclude .git";
+    changeDirWidget.options = [
+      "--preview 'eza --tree --color=always {} | head -200'"
+    ];
 
     ## Theme
     defaultOptions = [
@@ -141,35 +188,37 @@ in {
     ];
   };
 
-  home.packages = with pkgs; [
-    # console
-    patchelf
-    nushell
-    rio
+  home.packages =
+    [agenixEnv agentEnv]
+    ++ (with pkgs; [
+      # console
+      patchelf
+      nushell
+      rio
 
-    # rust cli
-    sd
-    xcp
-    dysk
-    delta
-    dua
-    dust
-    erdtree
-    lsd
-    procs
-    mcfly
-    mdcat
-    miniserve
-    mise
-    monolith
-    mprocs
-    ouch
-    pastel
-    qsv
-    rnr
-    ruff
-    skim
-    teehee
-    watchexec
-  ];
+      # rust cli
+      sd
+      xcp
+      dysk
+      delta
+      dua
+      dust
+      erdtree
+      lsd
+      procs
+      mcfly
+      mdcat
+      miniserve
+      mise
+      monolith
+      mprocs
+      ouch
+      pastel
+      qsv
+      rnr
+      ruff
+      skim
+      teehee
+      watchexec
+    ]);
 }

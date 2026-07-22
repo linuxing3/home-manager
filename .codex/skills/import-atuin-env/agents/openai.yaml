@@ -1,0 +1,4 @@
+interface:
+  display_name: "Import Env into Atuin"
+  short_description: "Safely import dotenv variables into Atuin"
+  default_prompt: "Use $import-atuin-env to import a dotenv file into Atuin Dotfiles without exposing secrets."

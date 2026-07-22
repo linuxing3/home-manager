@@ -5,11 +5,10 @@
   systemSettings,
   lib,
   ...
-}:
-let
-    baseImports = [
+}: let
+  baseImports = [
     # ------------- security -------------------
-    # ../../security/security.nix
+    ../../security/security.nix
 
     # ------------- style -------------------
     # ../../modules/gui/stylix.nix
@@ -68,9 +67,7 @@ let
     mpv
     viu
   ];
-in
-{
-
+in {
   imports = baseImports;
   home.username = userSettings.username;
   home.homeDirectory = "/home/" + userSettings.username;
@@ -91,7 +88,24 @@ in
     BROWSER = userSettings.browser;
   };
 
+  home.file.".Xdefaults".text = ''
+    *.font: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true;
+    *.fontalt0: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true;
+    *.alpha: 0.9
+  '';
+
   news.display = "silent";
+
+  nix = {
+    package = pkgs.nix;
+    settings = {
+      trusted-users = [userSettings.username];
+      extra-substituters = ["https://cache.numtide.com"];
+      extra-trusted-public-keys = [
+        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      ];
+    };
+  };
 
   programs.home-manager.enable = true;
 
