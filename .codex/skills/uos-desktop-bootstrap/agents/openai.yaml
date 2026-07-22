@@ -1,4 +1,4 @@
 interface:
   display_name: "UOS Desktop Bootstrap"
-  short_description: "Bootstrap secure UOS Nix desktop settings"
-  default_prompt: "Use $uos-desktop-bootstrap to bootstrap this UOS desktop with the project’s Nix, Agenix, Atuin, keyboard, terminal, and automation settings."
+  short_description: "Bootstrap and repair the UOS Nix desktop"
+  default_prompt: "Use $uos-desktop-bootstrap to bootstrap or repair this UOS desktop, including oxwm, Nix, secrets, keyboard, terminal, and automation settings."

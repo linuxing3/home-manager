@@ -1,6 +1,6 @@
 ---
 name: uos-desktop-bootstrap
-description: Bootstrap and repair this project’s UOS Desktop environment on Debian/UOS-style systems using Home Manager, Agenix, Atuin, SecretSpec, XKB keyboard mappings, st terminfo, and secure AI/CLI automation. Use when setting up a new UOS host, restoring this desktop profile, or applying the project’s complete workstation configuration.
+description: Bootstrap and repair this project’s UOS Desktop environment on Debian/UOS-style systems using Home Manager, oxwm, Agenix, Atuin, SecretSpec, XKB keyboard mappings, st terminfo, and secure AI/CLI automation. Use when setting up a new UOS host, restoring this desktop profile, fixing oxwm screenshot-to-clipboard support, or applying the project’s complete workstation configuration.
 ---
 
 # UOS Desktop Bootstrap
@@ -20,7 +20,15 @@ Apply changes in this order and verify each boundary before continuing.
 - Install the project-local `configure-caps-escape` skill’s system mapping: TTY `loadkeys` plus action-based XKB for X11/DDE/oxwm. Do not use `xmodmap`; it cannot implement Shift-sensitive Caps behavior correctly. Wayland compositors must use their native XKB option.
 - Verify `infocmp st-256color`, the console map, and the X11 keymap after authentication.
 
-## 3. Activate Home Manager
+## 3. Repair oxwm screenshot capture
+
+- Define a `screenshot-to-clipboard` helper with `pkgs.writeShellApplication` in `modules/wm/oxwm/oxwm.nix`.
+- Put both `maim` and `xclip` in `runtimeInputs`; do not rely on either tool being incidentally installed or available in oxwm's inherited `PATH`.
+- Capture a selected X11 region with `maim --select` and pipe it to `xclip -selection clipboard -target image/png -in`.
+- Bind oxwm's screenshot key directly to `oxwm.spawn({ "screenshot-to-clipboard" })` instead of embedding a shell pipeline in `config.lua`.
+- Build `.#homeConfigurations.Designers.activationPackage`, activate Home Manager, restart oxwm, and verify that an image can be pasted into an image-aware application.
+
+## 4. Activate Home Manager
 
 Run:
 
@@ -31,20 +39,20 @@ env PATH=/nix/var/nix/profiles/default/bin:$HOME/.nix-profile/bin \
 
 The profile provides the `bat` alias, Atuin Bash/Zsh integration, `secretspec`, `.Xdefaults`, the Numtide cache settings, `agenix-env`, and the allowlisted `agent-env` wrapper. Run Alejandra and focused Home Manager evaluation before activation; treat unrelated `cachix-agent` failures separately.
 
-## 4. Manage secrets with Agenix
+## 5. Manage secrets with Agenix
 
 - Keep sensitive values in an encrypted `.age` file, never Atuin or shell startup.
 - When replacing an unavailable recipient, encrypt a new file with the generated SSH public key using `age`, validate decryption with the matching private key without printing contents, and update `security/secrets/secrets.nix` plus `security/security.nix` together.
 - If old encrypted files cannot be decrypted, scope Agenix to the new file only rather than pretending migration succeeded; retain old encrypted files as recoverable backups outside the active mapping.
 - Confirm the user Agenix service succeeds and the materialized runtime file is mode `0600` before exposing it.
 
-## 5. Keep Atuin non-secret
+## 6. Keep Atuin non-secret
 
 - Use `.codex/skills/import-atuin-env/scripts/import-atuin-env` for dotenv imports. It parses safely without `source`/`eval`, skips empty assignments, and does not sync by default.
 - Review a names-only secret list and remove reviewed secret names with `remove-reviewed-secrets names-file --apply`.
 - Do not delete the plaintext source until Agenix decryption and approved Atuin cleanup are verified. Never run `atuin sync` for secret values.
 
-## 6. Provide automation access
+## 7. Provide automation access
 
 - Use `agent-env -- command` for approved automation tools (`git`, `gh`, `curl`, SSH tools, and configured AI CLIs). Secrets exist only in the child process.
 - Use `agenix-env -- command` only for an explicitly authorized arbitrary command.
@@ -56,4 +64,5 @@ The profile provides the `bat` alias, Atuin Bash/Zsh integration, `secretspec`, 
 - `agent-env -- <approved-command>` succeeds; the parent shell has no secret variables afterward.
 - Atuin contains only reviewed non-secret variables.
 - `secretspec --version`, `infocmp st-256color`, and keyboard mapping checks pass.
+- The oxwm screenshot helper contains resolved `maim` and `xclip` runtime dependencies, and `Mod+S` copies a selected PNG to the X11 clipboard.
 - Alejandra and focused Home Manager evaluation pass; report full flake-check blockers separately from bootstrap failures.

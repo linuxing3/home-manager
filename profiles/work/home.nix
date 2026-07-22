@@ -32,7 +32,7 @@
 
     # ------------- wm/gui -------------------
     # ../../modules/gui/fuzzel.nix
-    # ../../modules/wm/oxwm/oxwm.nix
+    ../../modules/wm/oxwm/oxwm.nix
   ];
   fileManagerPackages = with pkgs; [
     yazi
@@ -42,7 +42,7 @@
     dwm
     st
   ];
-  editorPackages = [];
+  editorPackages = with pkgs; [ helix ];
   collaborationPackages = with pkgs; [
     git
     gh
@@ -90,6 +90,10 @@ in {
     *.font: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true;
     *.fontalt0: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true;
     *.alpha: 0.9
+  '';
+
+  home.file.".xsessionrc".text = ''
+    ${pkgs.xrdb}/bin/xrdb -merge "$HOME/.Xdefaults"
   '';
 
   news.display = "silent";
