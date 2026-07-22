@@ -14,7 +14,6 @@
         allowUnfreePredicate = _: true;
       };
       overlays = [
-        inputs.helix-steel-system.overlays.default
         (import ../overlays)
       ];
     };

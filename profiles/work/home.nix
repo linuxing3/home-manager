@@ -42,9 +42,7 @@
     dwm
     st
   ];
-  editorPackages = with pkgs; [
-    helix
-  ];
+  editorPackages = [];
   collaborationPackages = with pkgs; [
     git
     gh
