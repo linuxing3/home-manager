@@ -41,13 +41,18 @@ Expected: output contains `/home/Designers/.nix-profile/bin/hermes gateway run` 
 Run:
 
 ```sh
-systemctl --user is-active agenix.service
-stat -c '%a %U:%G %n' "$XDG_RUNTIME_DIR/agenix/api-keys-new"
+systemctl --user show agenix.service \
+  -p Type -p Result -p ExecMainStatus
+stat -Lc '%a %U:%G %n' "$XDG_RUNTIME_DIR/agenix/api-keys-new.age"
 test -x /home/Designers/.nix-profile/bin/agenix-env
 test -x /home/Designers/.nix-profile/bin/hermes
+/home/Designers/.nix-profile/bin/agenix-env -- /usr/bin/true
 ```
 
-Expected: `agenix.service` is `active`, the materialized file is owned by `Designers` with mode `600`, and both executable checks exit zero.
+Expected: `agenix.service` is `Type=oneshot` with `Result=success` and
+`ExecMainStatus=0`; the materialized file is owned by `Designers` with mode
+`600`; both executable checks and the non-outputting wrapper smoke test exit
+zero.
 
 - [ ] **Step 3: Update the drop-in**
 
