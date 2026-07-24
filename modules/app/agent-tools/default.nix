@@ -37,8 +37,8 @@ in {
     "$rtk_bin" init -g --codex
     "$rtk_bin" init --agent hermes
 
-    if ! "$codex_bin" mcp get fff 2>/dev/null |
-      ${pkgs.gnugrep}/bin/grep -Fq "command: $fff_bin"; then
+    if ! "$codex_bin" mcp get fff --json 2>/dev/null |
+      ${pkgs.jq}/bin/jq -e --arg command "$fff_bin" '.transport.command == $command' >/dev/null; then
       "$codex_bin" mcp remove fff >/dev/null 2>&1 || true
       "$codex_bin" mcp add fff -- "$fff_bin"
     fi
