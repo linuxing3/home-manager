@@ -43,8 +43,8 @@ in {
       "$codex_bin" mcp add fff -- "$fff_bin"
     fi
 
-    if ! "$hermes_bin" mcp list 2>/dev/null |
-      ${pkgs.gnugrep}/bin/grep -Fq "$fff_bin"; then
+    if ! "$hermes_bin" config get mcp_servers.fff.command 2>/dev/null |
+      ${pkgs.gnugrep}/bin/grep -Fxq "$fff_bin"; then
       "$hermes_bin" mcp remove fff >/dev/null 2>&1 || true
       "$hermes_bin" mcp add fff --command "$fff_bin"
     fi
