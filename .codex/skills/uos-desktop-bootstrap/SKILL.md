@@ -1,6 +1,6 @@
 ---
 name: uos-desktop-bootstrap
-description: Bootstrap and repair this project’s UOS Desktop environment on Debian/UOS-style systems using Home Manager, oxwm, Agenix, Atuin, SecretSpec, XKB keyboard mappings, st terminfo, and secure AI/CLI automation. Use when setting up a new UOS host, restoring this desktop profile, fixing oxwm screenshot-to-clipboard support, or applying the project’s complete workstation configuration.
+description: Use when setting up or repairing this project’s UOS Desktop environment, including Home Manager activation, oxwm screenshots, Agenix secrets, keyboard mappings, terminal configuration, automation access, or a Hermes Gateway systemd service that loops with Python module import errors.
 ---
 
 # UOS Desktop Bootstrap
@@ -58,6 +58,56 @@ The profile provides the `bat` alias, Atuin Bash/Zsh integration, `secretspec`, 
 - Use `agenix-env -- command` only for an explicitly authorized arbitrary command.
 - Never place secret values in prompts, command arguments, logs, shell startup files, or temporary files.
 
+## 8. Repair Hermes Gateway
+
+Use this procedure when `hermes-gateway.service` loops in `activating
+(auto-restart)` with `ModuleNotFoundError: No module named 'hermes_cli'` or
+`No module named 'gateway'`.
+
+1. Confirm the Nix package contains `hermes_cli` and `gateway`. Do not add
+   `PYTHONPATH` manually: the Hermes wrapper carries the full transitive Python
+   dependency set.
+2. Confirm `agenix.service` is `Type=oneshot`, `Result=success`, and
+   `ExecMainStatus=0`. It is normally `inactive (dead)` after success.
+3. Confirm the materialized file without reading it:
+
+   ```sh
+   stat -Lc '%a %U:%G %n' \
+     "$XDG_RUNTIME_DIR/agenix/api-keys-new.age"
+   /home/Designers/.nix-profile/bin/agenix-env -- /usr/bin/true
+   ```
+
+   Require mode `600`, owner `Designers`, and a successful smoke test.
+4. Create
+   `~/.config/systemd/user/hermes-gateway.service.d/nix-wrapper.conf`:
+
+   ```ini
+   [Service]
+   ExecStart=
+   ExecStart=/home/Designers/.nix-profile/bin/agenix-env -- /usr/bin/env -u API_SERVER_CORS_ORIGINS -u API_SERVER_ENABLED -u API_SERVER_HOST -u API_SERVER_KEY -u API_SERVER_MODEL_NAME -u API_SERVER_PORT -u FEISHU_ALLOWED_USERS -u FEISHU_ALLOW_ALL_USERS -u FEISHU_ALLOW_BOTS -u FEISHU_APP_ID -u FEISHU_APP_SECRET -u FEISHU_CONNECTION_MODE -u FEISHU_DOMAIN -u FEISHU_ENCRYPT_KEY -u FEISHU_HOME_CHANNEL -u FEISHU_HOME_CHANNEL_NAME -u FEISHU_HOME_CHANNEL_THREAD_ID -u FEISHU_VERIFICATION_TOKEN /home/Designers/.nix-profile/bin/hermes gateway run
+   ExecStopPost=
+   ```
+
+   The empty assignments replace the generated bare-Python commands. Stable
+   Home Manager profile paths survive Nix store upgrades. `agenix-env` injects
+   secrets only into the child process. The `env -u` list prevents global
+   Agenix values from unintentionally enabling the API Server or Feishu.
+5. Reload, restart, and verify:
+
+   ```sh
+   systemctl --user daemon-reload
+   systemctl --user restart hermes-gateway.service
+   systemctl --user is-enabled hermes-gateway.service
+   systemctl --user is-active hermes-gateway.service
+   systemctl --user show hermes-gateway.service \
+     -p ExecStart -p Result -p ExecMainStatus -p NRestarts -p MainPID
+   /home/Designers/.nix-profile/bin/hermes gateway status
+   ```
+
+   Require `enabled`, `active`, `Result=success`, `ExecMainStatus=0`, and no
+   new restarts. Inspect only post-restart logs. Never print `/proc/*/environ`
+   values; compare variable names if environment propagation must be checked.
+
 ## Acceptance checks
 
 - `agenix.service` completes successfully and the expected runtime secret exists with restrictive permissions.
@@ -65,4 +115,5 @@ The profile provides the `bat` alias, Atuin Bash/Zsh integration, `secretspec`, 
 - Atuin contains only reviewed non-secret variables.
 - `secretspec --version`, `infocmp st-256color`, and keyboard mapping checks pass.
 - The oxwm screenshot helper contains resolved `maim` and `xclip` runtime dependencies, and `Mod+S` copies a selected PNG to the X11 clipboard.
+- `hermes-gateway.service` uses `agenix-env` plus the Nix Hermes wrapper, omits API Server and Feishu variables, remains active, and records no new error-level logs.
 - Alejandra and focused Home Manager evaluation pass; report full flake-check blockers separately from bootstrap failures.
