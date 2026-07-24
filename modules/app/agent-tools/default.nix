@@ -13,6 +13,15 @@ in {
     pkgs.rtk
   ];
 
+  home.sessionPath = [profileBin];
+
+  programs.bash.profileExtra = lib.mkAfter ''
+    case ":$PATH:" in
+      *:${profileBin}:*) ;;
+      *) export PATH=${lib.escapeShellArg profileBin}:$PATH ;;
+    esac
+  '';
+
   xdg.configFile."rtk/config.toml".text = ''
     [telemetry]
     enabled = false
