@@ -18,6 +18,7 @@
     ../../modules/shell/cli-collection.nix
     ../../modules/app/git/git.nix
     ../../modules/app/ranger/ranger.nix
+    ../../modules/app/agent-tools/default.nix
 
     # ------------- editor -------------------
     # ../../modules/app/nixvim
