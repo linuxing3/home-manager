@@ -84,6 +84,8 @@ in {
     EDITOR = userSettings.editor;
     VISUAL = userSettings.editor;
     SPAWNEDITOR = userSettings.spawnEditor;
+    AI_BROWSER = lib.getExe pkgs.agent-browser;
+    AGENT_BROWSER = lib.getExe pkgs.agent-browser;
     BROWSER = userSettings.browser;
   };
 

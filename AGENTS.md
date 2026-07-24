@@ -35,3 +35,11 @@ No commit history is available in this checkout. Use concise, imperative subject
 ## Security & Configuration Tips
 
 Do not commit plaintext secrets. Use Agenix-managed encrypted files for sensitive values. Treat password hashes, SSH keys, hostnames, and user settings in `nix/` as sensitive configuration and avoid unrelated edits.
+
+## AI Browser Automation
+
+Use the Nix-installed `agent-browser` for headless browser automation. Read its
+version-matched core guidance with `agent-browser skills get core --full` before
+complex interactions. Keep graphical links and OAuth flows on the configured
+desktop `BROWSER`; do not replace desktop MIME associations with
+`agent-browser`.
