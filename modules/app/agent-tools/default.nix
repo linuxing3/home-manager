@@ -18,7 +18,7 @@ in {
     enabled = false
   '';
 
-  home.activation.configureAgentTools = lib.hm.dag.entryAfter ["linkGeneration"] ''
+  home.activation.configureAgentTools = lib.hm.dag.entryAfter ["installPackages"] ''
     export HOME=${lib.escapeShellArg homeDir}
     export RTK_TELEMETRY_DISABLED=1
 
