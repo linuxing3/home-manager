@@ -21,6 +21,7 @@
     ../../modules/app/agent-tools/default.nix
 
     # ------------- editor -------------------
+    ../../modules/app/nvim/nvim.nix
     # ../../modules/app/nixvim
 
     # ------------- app -------------------
@@ -35,6 +36,24 @@
     # ../../modules/gui/fuzzel.nix
     ../../modules/wm/oxwm/oxwm.nix
   ];
+  crabboxPackage = pkgs.buildGoModule {
+    pname = "crabbox";
+    version = "0.22.1-e73b02f";
+    src = pkgs.fetchFromGitHub {
+      owner = "openclaw";
+      repo = "crabbox";
+      rev = "e73b02f6455f0e41c35c5a1b4f0dab3e65911005";
+      hash = "sha256-JErrI5TU3BlVsYyH1NELkO14ct5J5AjdKP2B1aghFFw=";
+    };
+    vendorHash = "sha256-963ZX9X5extYKc9KaKkiX/mI5u4F5uoZPcHPWXAO/Hk=";
+    subPackages = ["cmd/crabbox"];
+    env.CGO_ENABLED = 0;
+    ldflags = [
+      "-s"
+      "-w"
+      "-X github.com/openclaw/crabbox/internal/cli.version=0.22.1-e73b02f"
+    ];
+  };
   fileManagerPackages = with pkgs; [
     yazi
     nnn
@@ -43,7 +62,7 @@
     dwm
     st
   ];
-  editorPackages = with pkgs; [ helix ];
+  editorPackages = with pkgs; [helix];
   collaborationPackages = with pkgs; [
     git
     gh
@@ -54,6 +73,21 @@
     just
     comma
     cachix
+    crabboxPackage
+  ];
+  networkPackages = with pkgs; [
+    cloudflared
+    cloudflare-warp
+    tailscale
+    wrangler
+  ];
+  browserRuntimePackages = with pkgs; [
+    bun
+    chromium
+  ];
+  termscopeRuntimePackages = with pkgs; [
+    python3
+    television
   ];
   desktopMediaPackages = with pkgs; [
     librewolf
@@ -72,13 +106,18 @@ in {
   home.homeDirectory = "/home/" + userSettings.username;
   home.enableNixpkgsReleaseCheck = false;
 
+  my.features.home.nvim = true;
+
   home.stateVersion = "25.11"; # Please read the comment before changing.
   home.packages =
     fileManagerPackages
     ++ terminalPackages
     ++ editorPackages
     ++ collaborationPackages
-    ++ workflowPackages;
+    ++ workflowPackages
+    ++ networkPackages
+    ++ browserRuntimePackages
+    ++ termscopeRuntimePackages;
 
   home.sessionVariables = {
     EDITOR = userSettings.editor;

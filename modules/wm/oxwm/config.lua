@@ -139,7 +139,9 @@ oxwm.rule.add({ instance = "gimp", floating = true })
 -- oxwm.rule.add({ class = "Alacritty", tag = 9, focus = true })
 -- oxwm.rule.add({ class = "firefox", title = "Library", floating = true })
 -- oxwm.rule.add({ class = "firefox", tag = 2 })
--- oxwm.rule.add({ instance = "mpv", floating = true })
+oxwm.rule.add({ instance = "mpv", floating = true })
+oxwm.rule.add({ class = "st", title = "hx", floating = true })
+oxwm.rule.add({ class = "st", title = "nnn", floating = true })
 
 -- To find window properties, use xprop and click on the window
 -- WM_CLASS(STRING) shows both instance and class (instance, class)
@@ -188,8 +190,8 @@ oxwm.key.bind({ modkey }, "Return", oxwm.spawn_terminal())
 -- Launch Dmenu
 oxwm.key.bind({ modkey }, "D", oxwm.spawn({ "sh", "-c", "dmenu_run -l 10" }))
 oxwm.key.bind({ modkey }, "G", oxwm.spawn({ "sh", "-c", "brave-browser" }))
-oxwm.key.bind({ modkey }, "E", oxwm.spawn({ "sh", "-c", "st -e hx" }))
-oxwm.key.bind({ modkey }, "A", oxwm.spawn({ "sh", "-c", "st -e nnn" }))
+oxwm.key.bind({ modkey }, "E", oxwm.spawn({ "sh", "-c", "st -t hx -e hx" }))
+oxwm.key.bind({ modkey }, "A", oxwm.spawn({ "sh", "-c", "st -t nnn -e nnn" }))
 -- Copy screenshot to clipboard
 oxwm.key.bind({ modkey }, "S", oxwm.spawn({ "screenshot-to-clipboard" }))
 oxwm.key.bind({ modkey }, "Q", oxwm.client.kill())
@@ -199,13 +201,13 @@ oxwm.key.bind({ modkey, "Shift" }, "Slash", oxwm.show_keybinds())
 
 -- Window state toggles
 oxwm.key.bind({ modkey, "Shift" }, "F", oxwm.client.toggle_fullscreen())
-oxwm.key.bind({ modkey, "Shift" }, "Space", oxwm.client.toggle_floating())
+oxwm.key.bind({ modkey }, "F", oxwm.client.toggle_floating())
 
 -- Layout management
-oxwm.key.bind({ modkey }, "F", oxwm.layout.set("normie"))
-oxwm.key.bind({ modkey }, "C", oxwm.layout.set("tiling"))
+-- oxwm.key.bind({ modkey }, "F", oxwm.layout.set("normie"))
+-- oxwm.key.bind({ modkey }, "C", oxwm.layout.set("tiling"))
 -- Cycle through layouts
-oxwm.key.bind({ modkey }, "N", oxwm.layout.cycle())
+oxwm.key.bind({ modkey, "Shift" }, "Space", oxwm.layout.cycle())
 
 -- Master area controls (tiling layout)
 
@@ -301,6 +303,14 @@ oxwm.key.chord({
     { { modkey }, "Space" },
     { {},         "T" }
 }, oxwm.spawn_terminal())
+oxwm.key.chord({
+    { { modkey }, "Space" },
+    { {},         "N" }
+}, oxwm.spawn({"sh", "-c", "st -e nnn"}))
+oxwm.key.chord({
+    { { modkey }, "Space" },
+    { {},         "E" }
+}, oxwm.spawn({"sh", "-c", "st -e hx"}))
 
 -------------------------------------------------------------------------------
 -- Autostart
@@ -314,4 +324,3 @@ oxwm.key.chord({
 -- oxwm.autostart("/opt/apps/com.sogou.sogoupinyin-uos/files/bin/sogouImeService-uos")
 -- oxwm.autostart("/opt/apps/com.sogou.sogoupinyin-uos/files/bin/sogouImeService-watchdog-uos")
 oxwm.autostart("xrdb -merge ~/.Xdefaults")
-oxwm.autostart("setxkbmap -option caps:escape_shifted_capslock")

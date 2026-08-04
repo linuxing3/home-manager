@@ -1,4 +1,0 @@
-#!/bin/sh
-set -eu
-[ -n "${DISPLAY:-}" ] || exit 0
-setxkbmap -option caps:escape_shifted_capslock

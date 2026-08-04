@@ -1,4 +1,4 @@
 interface:
   display_name: "Configure Caps/Escape"
-  short_description: "Configure Caps/Escape for TTY and desktops"
-  default_prompt: "Use $configure-caps-escape to map Caps Lock to Escape and Shift+Caps Lock to Caps Lock system-wide."
+  short_description: "Configure Caps/Escape and right Ctrl remapping"
+  default_prompt: "Use $configure-caps-escape to map Caps Lock to Escape on tap, Control on hold, and right Control to Caps Lock system-wide."
