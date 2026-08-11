@@ -72,17 +72,6 @@ working_dir = {working_dir}
 [[tabs]]
 name = "codex"
 command = "codex"
-
-[[tabs]]
-name = "helix"
-command = "hx"
-
-[[tabs]]
-name = "nnn"
-command = "nnn"
-
-[[tabs]]
-name = "terminal"
 """.format(
         name=toml_string(name),
         description=toml_string("nnn bookmark: {}".format(name)),
