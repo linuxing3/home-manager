@@ -2,9 +2,7 @@
   pkgs,
   userSettings,
   ...
-}:
-{
-
+}: {
   programs.lazygit.enable = true;
   programs.lazygit.settings = {
     gui = {
@@ -14,8 +12,8 @@
           "blue"
           "bold"
         ];
-        inactiveBorderColor = [ "black" ];
-        selectedLineBgColor = [ "default" ];
+        inactiveBorderColor = ["black"];
+        selectedLineBgColor = ["default"];
       };
     };
   };
@@ -29,6 +27,7 @@
     init.defaultBranch = "main";
     merge.conflictstyle = "diff3";
     diff.colorMoved = "default";
+    gpg.program = "${pkgs.gnupg}/bin/gpg";
     core = {
       whitespace = "trailing-space,space-before-tab";
     };
@@ -46,16 +45,19 @@
 
   programs.git.signing = {
     signer = "gpg";
-    key = "8DB2F92A1DAB1EBB";
+    key = "A47DEFCBCE9E667E47FB26594B170EAF43290D30";
     format = "openpgp";
-    signByDefault = false;
+    signByDefault = true;
   };
 
-  programs.gpg.enable = true;
+  programs.gpg = {
+    enable = true;
+    package = pkgs.gnupg;
+  };
   services.gpg-agent = {
     enable = true;
     enableSshSupport = true;
-    pinentry.package = pkgs.pinentry-curses;
+    pinentry.package = pkgs.pinentry-gnome3;
     extraConfig = ''
       allow-loopback-pinentry
     '';

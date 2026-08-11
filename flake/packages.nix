@@ -1,23 +1,9 @@
 {
   inputs,
   userSettings,
-  systemSettings,
-  homeModules,
   ...
 }: {
   perSystem = {pkgs, ...}: let
-    deployPkgs = import inputs.nixpkgs {
-      inherit (pkgs) system;
-      config = {
-        allowUnfree = true;
-        allowUnsupportedSystem = true;
-        allowUnfreePredicate = _: true;
-      };
-      overlays = [
-        (import ../overlays)
-      ];
-    };
-    cachixDeployLib = inputs.cachix-deploy-flake.lib deployPkgs;
     hmSwitch = pkgs.writeShellApplication {
       name = "home-manager-switch";
       runtimeInputs = [pkgs.home-manager];
@@ -32,27 +18,11 @@
           "$@"
       '';
     };
-    deploySpec = cachixDeployLib.spec {
-      agents = {
-        "${systemSettings.hostname}" =
-          cachixDeployLib.homeManager {
-            extraSpecialArgs = {
-              inherit inputs userSettings systemSettings;
-            };
-          } (
-            {...}: {
-              imports = homeModules;
-            }
-          );
-      };
-    };
   in {
     packages = {
       default = hmSwitch;
       home-manager-switch = hmSwitch;
       bootstrap = hmSwitch;
-      cachix-deploy = deploySpec;
-      deploy = deploySpec;
     };
     apps = {
       default = {

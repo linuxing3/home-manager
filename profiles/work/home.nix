@@ -1,8 +1,6 @@
 {
   pkgs,
-  inputs,
   userSettings,
-  systemSettings,
   lib,
   ...
 }: let
@@ -10,30 +8,22 @@
     # ------------- security -------------------
     ../../security/security.nix
 
-    # ------------- style -------------------
-    # ../../modules/gui/stylix.nix
-
     # ------------- cli -------------------
     ../../modules/shell/sh.nix
     ../../modules/shell/cli-collection.nix
     ../../modules/app/git/git.nix
     ../../modules/app/ranger/ranger.nix
     ../../modules/app/agent-tools/default.nix
+    ../../modules/tui/nnn-herdr-sync.nix
 
     # ------------- editor -------------------
     ../../modules/app/nvim/nvim.nix
-    # ../../modules/app/nixvim
 
     # ------------- app -------------------
-    # ../../modules/app/mail/default.nix
-    # ../../modules/app/hermes/default.nix
-    # ../../modules/app/hermes-python-tools/default.nix
-    # ../../modules/app/playwright/default.nix
-    # ../../modules/app/rclone/default.nix
-    # ../../modules/app/browser/librewolf.nix
+    ../../modules/app/cli-proxy-api/default.nix
+    ../../modules/app/rclone/default.nix
 
     # ------------- wm/gui -------------------
-    # ../../modules/gui/fuzzel.nix
     ../../modules/wm/oxwm/oxwm.nix
   ];
   crabboxPackage = pkgs.buildGoModule {
@@ -61,6 +51,7 @@
   terminalPackages = with pkgs; [
     dwm
     st
+    tabbed
   ];
   editorPackages = with pkgs; [helix];
   collaborationPackages = with pkgs; [
@@ -90,9 +81,7 @@
     television
   ];
   desktopMediaPackages = with pkgs; [
-    librewolf
-    nautilus
-    pcmanfm
+    zathura
     imv
     sxiv
     nsxiv
@@ -117,6 +106,7 @@ in {
     ++ workflowPackages
     ++ networkPackages
     ++ browserRuntimePackages
+    ++ desktopMediaPackages
     ++ termscopeRuntimePackages;
 
   home.sessionVariables = {
@@ -152,10 +142,4 @@ in {
   };
 
   programs.home-manager.enable = true;
-
-  services.cachix-agent = {
-    enable = true;
-    # Match the Cachix Deploy agent name to this host's configured identity.
-    name = systemSettings.hostname;
-  };
 }

@@ -1,6 +1,6 @@
 ---
 name: uos-desktop-bootstrap
-description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm, Agenix, keyboard or terminal configuration, automation access, or Hermes Gateway service failures.
+description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm, Agenix, keyboard or terminal configuration, automation access, or Hermes Gateway service failures.
 ---
 
 # UOS Desktop Bootstrap
@@ -37,7 +37,7 @@ env PATH=/nix/var/nix/profiles/default/bin:$HOME/.nix-profile/bin \
   home-manager switch --flake .#Designers -b hm-bak
 ```
 
-The profile provides the `bat` alias, Atuin Bash/Zsh integration, `secretspec`, `.Xdefaults`, the Numtide cache settings, `agenix-env`, and the allowlisted `agent-env` wrapper. Run Alejandra and focused Home Manager evaluation before activation; treat unrelated `cachix-agent` failures separately.
+The profile provides the `bat` alias, Atuin Bash/Zsh integration, `secretspec`, `.Xdefaults`, the Numtide cache settings, `agenix-env`, and the allowlisted `agent-env` wrapper. Run Alejandra and focused Home Manager evaluation before activation. If `cachix-agent` or `cachix-deploy-flake` fails, use section 15 instead of treating it as an unrelated permanent blocker.
 
 ## 5. Manage secrets with Agenix
 
@@ -252,6 +252,88 @@ still rejects directories and user-writable directory paths by design; this
 mapping intentionally launches privileged Helix directly so returning from
 Helix returns immediately to nnn.
 
+## 15. Remove stale Cachix Deploy integration
+
+Use this procedure when flake evaluation reports `attribute
+'cachix-deploy-flake' missing` or Home Manager repeatedly reports a failed
+`cachix-agent.service` after Cachix Deploy has been retired from this host.
+
+1. Confirm `flake.nix` and `flake.lock` no longer declare the
+   `cachix-deploy-flake` input. Do not re-add it merely to mask stale source
+   references.
+2. In `flake/packages.nix`, remove the deploy-only Nixpkgs import,
+   `cachixDeployLib`, `deploySpec`, the `cachix-deploy` and `deploy` package
+   outputs, and arguments that become unused such as `systemSettings` and
+   `homeModules`. Preserve the normal Home Manager switch packages and apps.
+3. Remove `services.cachix-agent` from `profiles/work/home.nix`. Keep the
+   ordinary `cachix` CLI package if it is still used for binary caches.
+4. Build `.#homeConfigurations.Designers.activationPackage` and confirm the
+   package output names are only the intended Home Manager switch outputs.
+5. After activation, require `systemctl --user status cachix-agent.service` to
+   report that the unit is absent and confirm it is not in
+   `systemctl --user --failed`.
+
+If `nix flake check` fails because its sandboxed syntax check cannot create
+`/nix/var/nix/profiles`, report that host-permission blocker separately. Run
+the formatting and lint derivations individually, parse the changed Nix files
+directly with `nix-instantiate --parse`, and require the focused activation
+package build to succeed.
+
+## 16. Run CLIProxyAPI as a user service
+
+On this host, `cli-proxy-api` is installed separately through `nix profile`
+from `numtide/llm-agents.nix`; it is not present in this flake's pinned
+Nixpkgs. Do not add a flake input or production dependency only to create the
+unit. Use the stable profile executable and the existing configuration:
+
+```nix
+{config, ...}: let
+  cliProxyApiDir = "${config.home.homeDirectory}/.cli-proxy-api";
+  cliProxyApiConfig = "${cliProxyApiDir}/config.yaml";
+in {
+  systemd.user.services.cli-proxy-api = {
+    Unit = {
+      Description = "CLIProxyAPI server";
+      After = ["network-online.target"];
+      Wants = ["network-online.target"];
+      ConditionPathExists = cliProxyApiConfig;
+    };
+    Service = {
+      Type = "simple";
+      WorkingDirectory = cliProxyApiDir;
+      ExecStart = "${config.home.homeDirectory}/.nix-profile/bin/cli-proxy-api -config ${cliProxyApiConfig}";
+      Restart = "on-failure";
+      RestartSec = 5;
+      UMask = "0077";
+    };
+    Install.WantedBy = ["default.target"];
+  };
+}
+```
+
+Place the module at `modules/app/cli-proxy-api/default.nix` and import it from
+the work profile. If the module is still untracked, build with the `path:.`
+flake reference so Nix includes it. Inspect the generated unit and compare the
+new and active Home Manager generations before activation; the expected delta
+is the unit plus its `default.target.wants` symlink.
+
+For a running manual instance, resolve the exact user-owned `cli-proxy-api`
+PID and port first, terminate only that PID with `SIGTERM`, then activate with
+`-b hm-bak`. If Home Manager says `User systemd daemon not running. Skipping
+reload.` while the user manager is actually reachable, run:
+
+```sh
+systemctl --user daemon-reload
+systemctl --user start cli-proxy-api.service
+```
+
+Require `is-enabled=enabled`, `is-active=active`, `Result=success`,
+`ExecMainStatus=0`, `NRestarts=0`, a systemd-owned main PID, and a listener on
+port `8317`. Check only post-start warning/error logs. Never print
+`config.yaml`, authentication files, or environment values. `UMask=0077`
+protects newly created files but does not repair existing permissions; inspect
+their modes separately and obtain authorization before changing them.
+
 ## Acceptance checks
 
 - `agenix.service` completes successfully and the expected runtime secret exists with restrictive permissions.
@@ -266,4 +348,6 @@ Helix returns immediately to nnn.
 - Restarted DDE components own their expected D-Bus names, produce no new errors, and reduce measured private memory.
 - `AI_BROWSER` and `AGENT_BROWSER` resolve to Nix `agent-browser`, while `BROWSER` remains the graphical desktop browser.
 - The activated nnn mapping retains literal `"$nnn"`, launches the absolute Helix path through sudo, and returns to nnn after exit.
+- No stale Cachix Deploy outputs or user unit remain, while the focused Home Manager activation package still builds.
+- `cli-proxy-api.service` is enabled and active with zero restarts, owns port `8317`, uses the existing config without exposing it, and survives the manual-to-systemd handoff.
 - Alejandra and focused Home Manager evaluation pass; report full flake-check blockers separately from bootstrap failures.

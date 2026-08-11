@@ -1,4 +1,4 @@
 interface:
   display_name: "UOS Desktop Bootstrap"
   short_description: "Bootstrap and repair the UOS Nix desktop"
-  default_prompt: "Use $uos-desktop-bootstrap to bootstrap or repair this UOS desktop, including Nix, Cloudflare, DDE, agent-browser, nnn, oxwm, Agenix secrets, automation, and Hermes Gateway."
+  default_prompt: "Use $uos-desktop-bootstrap to bootstrap or repair this UOS desktop, including Nix, Cachix cleanup, CLIProxyAPI services, Cloudflare, DDE, agent-browser, nnn, oxwm, Agenix secrets, automation, and Hermes Gateway."

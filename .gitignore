@@ -1,1 +1,6 @@
 .worktrees/
+.baoyu-skills/
+.codex/
+.direnv/
+.superpowers/
+url-to-markdown/

@@ -9,6 +9,12 @@
   rcloneConfigDir = "${config.xdg.configHome}/rclone";
   rcloneConfigPath = "${rcloneConfigDir}/rclone.conf";
 
+  # UOS provides a setuid FUSE 2 helper. Reuse it because the FUSE 3 helper in
+  # the Nix store cannot carry the setuid bit required for user mounts.
+  fusermount3Compat = pkgs.writeShellScriptBin "fusermount3" ''
+    exec /usr/bin/fusermount "$@"
+  '';
+
   onedriveConnect = pkgs.writeShellScriptBin "onedrive-connect" ''
         set -euo pipefail
 
@@ -48,6 +54,7 @@
   '';
 in {
   home.packages = [
+    fusermount3Compat
     pkgs.rclone
     onedriveConnect
     onedriveSync

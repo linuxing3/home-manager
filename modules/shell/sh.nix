@@ -76,10 +76,12 @@ in {
   home.sessionVariables = {
     SHELL = "zsh";
     VISUAL = "hx";
-    NNN_OPENER = "xnuke";
+    NNN_OPTS = "co";
+    NNN_OPENER = "${config.xdg.configHome}/nnn/plugins/nuke";
     NNN_FIFO = "/tmp/nnn.fifo";
+    NNN_TERMINAL = "${pkgs.st}/bin/st";
     NNN_TMPFILE = "~/.config/nnn/.lastd";
-    NNN_PLUG = "p:preview_tabbed;v:imgview;l:launch;n:xnuke;z:fzcd;s:-!sudo ${pkgs.helix}/bin/hx \\\"\\$nnn\\\"*;r:gitroot;e:gpge;d:gpgd;S:gpgs;i:gpgv;g:-!git diff;";
+    NNN_PLUG = "p:preview-tabbed;v:imgview;l:launch;n:xnuke;z:fzcd;s:-!sudo ${pkgs.helix}/bin/hx \\\"\\$nnn\\\"*;r:gitroot;e:gpge;d:gpgd;S:gpgs;i:gpgv;g:-!git diff;";
   };
 
   programs.direnv = {

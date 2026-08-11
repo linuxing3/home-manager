@@ -5,7 +5,7 @@ description: Use when a Linux machine needs system-wide Caps Lock tap-hold remap
 
 # Configure Caps/Escape
 
-Use `scripts/install-caps-escape install` with administrator privileges. The workflow installs a `keyd` config that makes `Caps Lock` send `Escape` when tapped, act as `Control` when held with other keys, and uses the `shift` layer so `Left Shift + Right Shift` act as Caps Lock together.
+Use `scripts/install-caps-escape install` with administrator privileges. The workflow installs a `keyd` config that makes `Caps Lock` send `Escape` when tapped, act as `Control` when held with other keys, makes `Left Control` send `Control+B`, and uses the `shift` layer so `Left Shift + Right Shift` act as Caps Lock together.
 
 The installer writes `/etc/keyd/default.conf`, checks it with `keyd check`, and enables `keyd.service`. This is the system-wide path for both TTYs and desktop sessions. Do not use `xmodmap` or XKB options for this mapping; they cannot reliably express the tap-hold behavior across the whole machine.
 
