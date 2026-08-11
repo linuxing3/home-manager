@@ -7,13 +7,55 @@
   homeDir = config.home.homeDirectory;
   profileBin = "${homeDir}/.nix-profile/bin";
   fffBin = "${profileBin}/fff-mcp";
+  piCompatWrapper = pkgs.writeShellApplication {
+    name = "pi";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.fd
+      pkgs.ripgrep
+    ];
+    text = ''
+      profile_pi=${lib.escapeShellArg "${profileBin}/pi"}
+      system_loader=/lib/ld-linux-aarch64.so.1
+
+      if [[ ! -x "$profile_pi" ]]; then
+        echo "pi: the Nix profile executable is missing: $profile_pi" >&2
+        exit 127
+      fi
+
+      resolved_pi=$(readlink -f -- "$profile_pi")
+      package_root=$(dirname -- "$(dirname -- "$resolved_pi")")
+      package_dir="$package_root/libexec/pi"
+      standalone_pi="$package_dir/pi"
+
+      # llm-agents.nix's Bun standalone mixes the Nix loader with UOS libc on
+      # aarch64. Starting it with the UOS loader keeps the runtime consistent.
+      if [[ -x "$system_loader" && -x "$standalone_pi" ]]; then
+        export PI_PACKAGE_DIR="$package_dir"
+        export PI_SKIP_VERSION_CHECK=1
+        export PI_TELEMETRY=0
+        exec "$system_loader" "$standalone_pi" "$@"
+      fi
+
+      exec "$profile_pi" "$@"
+    '';
+  };
 in {
   home.packages = [
     pkgs.fff-mcp
     pkgs.rtk
   ];
 
-  home.sessionPath = [profileBin];
+  home.sessionPath = lib.mkAfter [profileBin];
+
+  home.file.".local/bin/pi".source = "${piCompatWrapper}/bin/pi";
+
+  programs.zsh.initContent = lib.mkAfter ''
+    # UOS prepends the Nix profile after .zprofile; restore user-local shims.
+    path=("$HOME/.local/bin" "''${path[@]}")
+    typeset -U path
+    export PATH
+  '';
 
   programs.bash.profileExtra = lib.mkAfter ''
     case ":$PATH:" in
@@ -25,6 +67,7 @@ in {
   xdg.configFile."rtk/config.toml".text = ''
     [telemetry]
     enabled = false
+    consent_given = false
   '';
 
   home.activation.configureAgentTools = lib.hm.dag.entryAfter ["installPackages" "linkGeneration"] ''

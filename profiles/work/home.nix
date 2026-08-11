@@ -14,6 +14,8 @@
     ../../modules/app/git/git.nix
     ../../modules/app/ranger/ranger.nix
     ../../modules/app/agent-tools/default.nix
+    ../../modules/app/credential-backup/default.nix
+    ../../modules/app/secretspec-bitwarden/default.nix
     ../../modules/tui/nnn-herdr-sync.nix
 
     # ------------- editor -------------------
