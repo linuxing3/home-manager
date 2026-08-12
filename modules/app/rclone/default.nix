@@ -31,16 +31,31 @@
         exec rclone config reconnect ${remoteName}:
   '';
 
-  onedriveSync = pkgs.writeShellScriptBin "onedrive-sync" ''
-    set -euo pipefail
-    mkdir -p '${syncDir}'
-    exec rclone sync ${remoteName}: '${syncDir}' \
-      --create-empty-src-dirs \
-      --fast-list \
-      --exclude '/个人保管库/**' \
-      --exclude '/Personal Vault/**' \
-      "$@"
-  '';
+  onedriveSync = pkgs.writeShellApplication {
+    name = "onedrive-sync";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.rclone
+    ];
+    text = ''
+      mkdir -p '${syncDir}'
+
+      if ! rclone about ${remoteName}: \
+        --contimeout 10s \
+        --timeout 30s \
+        >/dev/null 2>&1; then
+        echo "onedrive-sync: remote is not ready; run onedrive-connect" >&2
+        exit 0
+      fi
+
+      exec rclone sync ${remoteName}: '${syncDir}' \
+        --create-empty-src-dirs \
+        --fast-list \
+        --exclude '/个人保管库/**' \
+        --exclude '/Personal Vault/**' \
+        "$@"
+    '';
+  };
 
   onedriveCopy = pkgs.writeShellScriptBin "onedrive-copy" ''
     set -euo pipefail
@@ -85,7 +100,7 @@ in {
 
     Service = {
       Type = "oneshot";
-      ExecStart = "${pkgs.zsh}/bin/zsh -ilc 'onedrive-sync'";
+      ExecStart = "${onedriveSync}/bin/onedrive-sync";
     };
   };
 
