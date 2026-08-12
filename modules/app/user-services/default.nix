@@ -7,6 +7,39 @@
   homeDir = config.home.homeDirectory;
   profileBin = "${homeDir}/.nix-profile/bin";
   herdrConfig = "${config.xdg.configHome}/herdr";
+  serviceHardening = {
+    NoNewPrivileges = true;
+    PrivateDevices = true;
+    PrivateTmp = true;
+    ProtectControlGroups = true;
+    ProtectKernelModules = true;
+    ProtectKernelTunables = true;
+    ProtectSystem = "full";
+    RestrictAddressFamilies = [
+      "AF_INET"
+      "AF_INET6"
+      "AF_UNIX"
+    ];
+    RestrictSUIDSGID = true;
+    UMask = "0077";
+  };
+
+  nodeLoopbackListen = pkgs.writeText "node-loopback-listen.cjs" ''
+    const net = require("node:net");
+    const originalListen = net.Server.prototype.listen;
+
+    net.Server.prototype.listen = function (...args) {
+      if (typeof args[0] === "number") {
+        const hasHost = typeof args[1] === "string";
+        if (!hasHost) {
+          const callback = typeof args[1] === "function" ? args.splice(1, 1)[0] : undefined;
+          args.splice(1, 0, "127.0.0.1");
+          if (callback) args.push(callback);
+        }
+      }
+      return originalListen.apply(this, args);
+    };
+  '';
 
   collieLauncher = pkgs.writeShellApplication {
     name = "collie-launch";
@@ -40,13 +73,14 @@ in {
         Wants = ["network-online.target"];
         ConditionPathExists = "${homeDir}/.cloudflared/cursor-openai.yml";
       };
-      Service = {
-        Type = "simple";
-        ExecStart = "${pkgs.cloudflared}/bin/cloudflared --no-autoupdate tunnel --config ${homeDir}/.cloudflared/cursor-openai.yml run cursor-openai";
-        Restart = "on-failure";
-        RestartSec = 5;
-        UMask = "0077";
-      };
+      Service =
+        serviceHardening
+        // {
+          Type = "simple";
+          ExecStart = "${pkgs.cloudflared}/bin/cloudflared --no-autoupdate tunnel --config ${homeDir}/.cloudflared/cursor-openai.yml run cursor-openai";
+          Restart = "on-failure";
+          RestartSec = 5;
+        };
       Install.WantedBy = ["default.target"];
     };
 
@@ -57,21 +91,20 @@ in {
         StartLimitIntervalSec = 0;
         ConditionPathExists = "${herdrConfig}/plugins/github";
       };
-      Service = {
-        Type = "simple";
-        ExecStart = "${collieLauncher}/bin/collie-launch";
-        Restart = "on-failure";
-        RestartSec = 5;
-        NoNewPrivileges = true;
-        PrivateTmp = true;
-        UMask = "0077";
-        Environment = [
-          "HERDR_SOCKET_PATH=${herdrConfig}/herdr.sock"
-          "COLLIE_PORT=8787"
-          "HERDR_PLUGIN_CONFIG_DIR=${herdrConfig}/plugins/config/herdr.collie"
-        ];
-        EnvironmentFile = "-${herdrConfig}/plugins/config/herdr.collie/.env";
-      };
+      Service =
+        serviceHardening
+        // {
+          Type = "simple";
+          ExecStart = "${collieLauncher}/bin/collie-launch";
+          Restart = "on-failure";
+          RestartSec = 5;
+          Environment = [
+            "HERDR_SOCKET_PATH=${herdrConfig}/herdr.sock"
+            "COLLIE_PORT=8787"
+            "HERDR_PLUGIN_CONFIG_DIR=${herdrConfig}/plugins/config/herdr.collie"
+          ];
+          EnvironmentFile = "-${herdrConfig}/plugins/config/herdr.collie/.env";
+        };
       Install.WantedBy = ["default.target"];
     };
 
@@ -81,19 +114,20 @@ in {
         After = ["network.target"];
         ConditionPathExists = "/share/data/sources/cursor-to-openai/package.json";
       };
-      Service = {
-        Type = "simple";
-        WorkingDirectory = "/share/data/sources/cursor-to-openai";
-        EnvironmentFile = "${config.xdg.configHome}/cursor-to-openai.env";
-        Environment = [
-          "PORT=3010"
-          "PATH=${profileBin}:/usr/bin:/bin"
-        ];
-        ExecStart = "${profileBin}/npm run start";
-        Restart = "on-failure";
-        RestartSec = 5;
-        UMask = "0077";
-      };
+      Service =
+        serviceHardening
+        // {
+          Type = "simple";
+          WorkingDirectory = "/share/data/sources/cursor-to-openai";
+          EnvironmentFile = "${config.xdg.configHome}/cursor-to-openai.env";
+          Environment = [
+            "PORT=3010"
+            "PATH=${profileBin}:/usr/bin:/bin"
+          ];
+          ExecStart = "${profileBin}/node --require ${nodeLoopbackListen} src/app.js";
+          Restart = "on-failure";
+          RestartSec = 5;
+        };
       Install.WantedBy = ["default.target"];
     };
 
@@ -104,15 +138,16 @@ in {
         Wants = ["network-online.target"];
         ConditionPathExists = "${profileBin}/hermes";
       };
-      Service = {
-        Type = "simple";
-        WorkingDirectory = "${homeDir}/.hermes";
-        Environment = "PATH=${profileBin}:/usr/local/bin:/usr/bin:/bin";
-        ExecStart = "${profileBin}/hermes dashboard --host 127.0.0.1 --port 9119 --no-open --skip-build";
-        Restart = "on-failure";
-        RestartSec = 5;
-        UMask = "0077";
-      };
+      Service =
+        serviceHardening
+        // {
+          Type = "simple";
+          WorkingDirectory = "${homeDir}/.hermes";
+          Environment = "PATH=${profileBin}:/usr/local/bin:/usr/bin:/bin";
+          ExecStart = "${profileBin}/hermes dashboard --host 127.0.0.1 --port 9119 --no-open --skip-build";
+          Restart = "on-failure";
+          RestartSec = 5;
+        };
       Install.WantedBy = ["default.target"];
     };
 
@@ -124,42 +159,43 @@ in {
         StartLimitIntervalSec = 0;
         ConditionPathExists = "${profileBin}/hermes";
       };
-      Service = {
-        Type = "simple";
-        WorkingDirectory = "${homeDir}/.hermes";
-        Environment = [
-          "PATH=${profileBin}:${homeDir}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-          "HERMES_HOME=${homeDir}/.hermes"
-        ];
-        EnvironmentFile = "-${homeDir}/.hermes/.env";
-        UnsetEnvironment = [
-          "http_proxy"
-          "https_proxy"
-          "all_proxy"
-          "auto_proxy"
-          "ftp_proxy"
-          "no_proxy"
-          "HTTP_PROXY"
-          "HTTPS_PROXY"
-          "ALL_PROXY"
-          "FTP_PROXY"
-          "NO_PROXY"
-          "SOCKS_SERVER"
-          "SOCKS5_SERVER"
-        ];
-        ExecStart = "${profileBin}/hermes gateway run";
-        Restart = "always";
-        RestartSec = 5;
-        RestartForceExitStatus = 75;
-        RestartPreventExitStatus = 78;
-        KillMode = "mixed";
-        KillSignal = "SIGTERM";
-        ExecReload = "${pkgs.coreutils}/bin/kill -USR1 $MAINPID";
-        TimeoutStopSec = 60;
-        StandardOutput = "journal";
-        StandardError = "journal";
-        UMask = "0077";
-      };
+      Service =
+        serviceHardening
+        // {
+          Type = "simple";
+          WorkingDirectory = "${homeDir}/.hermes";
+          Environment = [
+            "PATH=${profileBin}:${homeDir}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            "HERMES_HOME=${homeDir}/.hermes"
+          ];
+          EnvironmentFile = "-${homeDir}/.hermes/.env";
+          UnsetEnvironment = [
+            "http_proxy"
+            "https_proxy"
+            "all_proxy"
+            "auto_proxy"
+            "ftp_proxy"
+            "no_proxy"
+            "HTTP_PROXY"
+            "HTTPS_PROXY"
+            "ALL_PROXY"
+            "FTP_PROXY"
+            "NO_PROXY"
+            "SOCKS_SERVER"
+            "SOCKS5_SERVER"
+          ];
+          ExecStart = "${profileBin}/hermes gateway run";
+          Restart = "always";
+          RestartSec = 5;
+          RestartForceExitStatus = 75;
+          RestartPreventExitStatus = 78;
+          KillMode = "mixed";
+          KillSignal = "SIGTERM";
+          ExecReload = "${pkgs.coreutils}/bin/kill -USR1 $MAINPID";
+          TimeoutStopSec = 60;
+          StandardOutput = "journal";
+          StandardError = "journal";
+        };
       Install.WantedBy = ["default.target"];
     };
   };

@@ -213,7 +213,7 @@
   });
 
   cliProxyDefaults = pkgs.writeText "cli-proxy-defaults.json" (builtins.toJSON {
-    host = "";
+    host = "127.0.0.1";
     port = 8317;
     tls = {
       enable = false;
