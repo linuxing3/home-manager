@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  remoteName = "onedrive";
+  remoteName = "onedrive-xingwenju0928";
   syncDir = "/share/data/workspace/onedrive";
   rcloneConfigDir = "${config.xdg.configHome}/rclone";
   rcloneConfigPath = "${rcloneConfigDir}/rclone.conf";
@@ -51,7 +51,10 @@
       exec rclone sync ${remoteName}: '${syncDir}' \
         --create-empty-src-dirs \
         --fast-list \
+        --exclude '/AGENTS.md' \
+        --exclude '/个人保管库/' \
         --exclude '/个人保管库/**' \
+        --exclude '/Personal Vault/' \
         --exclude '/Personal Vault/**' \
         "$@"
     '';
@@ -63,7 +66,9 @@
     exec rclone copy ${remoteName}: '${syncDir}' \
       --create-empty-src-dirs \
       --fast-list \
+      --exclude '/个人保管库/' \
       --exclude '/个人保管库/**' \
+      --exclude '/Personal Vault/' \
       --exclude '/Personal Vault/**' \
       "$@"
   '';
