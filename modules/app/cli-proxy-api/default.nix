@@ -16,11 +16,10 @@ in {
       ExecStart = "${config.home.homeDirectory}/.nix-profile/bin/cli-proxy-api -config ${cliProxyApiConfig}";
       Restart = "on-failure";
       RestartSec = 5;
+      # UOS systemd 241 rejects PrivateDevices and ProtectKernelModules in user units.
       NoNewPrivileges = true;
-      PrivateDevices = true;
       PrivateTmp = true;
       ProtectControlGroups = true;
-      ProtectKernelModules = true;
       ProtectKernelTunables = true;
       ProtectSystem = "full";
       RestrictAddressFamilies = [
