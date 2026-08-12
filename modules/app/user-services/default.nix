@@ -98,6 +98,10 @@ in {
           ExecStart = "${collieLauncher}/bin/collie-launch";
           Restart = "on-failure";
           RestartSec = 5;
+          # UOS systemd 241 cannot apply these in the user manager and exits
+          # with 218/CAPABILITIES before starting the bridge.
+          PrivateDevices = false;
+          ProtectKernelModules = false;
           Environment = [
             "HERDR_SOCKET_PATH=${herdrConfig}/herdr.sock"
             "COLLIE_PORT=8787"
