@@ -1,7 +1,9 @@
 # Personal configuration migration manual
 
-Status: implementation plan only. This document does not authorize deleting,
-moving, or replacing the live files listed below.
+Status: implemented on 2026-08-11. Home Manager owns static non-secret files,
+merges declared defaults into mutable application files, and declares the five
+previously unmanaged AI services. No source config, credential, secret, skill
+checkout, or executable was deleted.
 
 Inventory snapshot: 2026-08-11, user `Designers`, UOS on `aarch64-linux`, Home
 Manager profile `work`.
@@ -12,6 +14,43 @@ Move durable personal configuration into this Home Manager flake while keeping
 credentials encrypted, application-owned state writable, and Git-managed
 projects outside the migration. Perform the work in small batches so each
 application can be verified and rolled back independently.
+
+## Implemented optimized defaults
+
+The implementation is split between
+`modules/app/personal-configs/default.nix` and
+`modules/app/user-services/default.nix`, imported by the `work` profile.
+
+| Area | Implemented ownership |
+| --- | --- |
+| Static agent config | Home Manager owns Codex global rules/hooks, Claude and Cursor Herdr hooks, Cursor/Codeium/Kiro token-free MCP declarations, Hermes `SOUL.md`, Herdr UI/key settings, and Pi-compatible supporting files. |
+| Mutable agent config | Activation performs recursive semantic merges into Codex, Claude, Cursor, Hermes, Pi, CC Switch, and CLIProxyAPI files. Unknown, credential, authentication, provider-account, cache, and application-generated fields remain intact. |
+| CLI/GUI config | Atuin uses native `programs.atuin.settings`; Glow, Television, Zellij, Herdr, and SMPlayer HiDPI settings are static; stable SMPlayer and gcloud defaults are merged into writable files. |
+| Cloudflare routing | Only reviewed ingress routes are merged. Tunnel identifiers and credential-file paths remain in the local writable YAML and never enter the flake. |
+| Hermes cron | The three intentional jobs have a sanitized desired-state manifest and the explicit `hermes-cron-sync` command. IDs, run state, errors, timestamps, origin identities, and delivery IDs are excluded. Existing delivery targets are preserved; a new-machine restore requires local `HERMES_CRON_DELIVER`. Activation never rewrites the jobs database. |
+| Herdr plugins | `herdr-plugin-sync` restores GitHub plugins from source identifiers only and refuses to run outside `HERDR_ENV=1`. The local palette remains inventory-only. Plugin Git checkouts are not managed. |
+| Claude marketplace | `claude-marketplace-sync` idempotently declares the official Anthropic marketplace when explicitly run. Activation does not perform network installation. |
+| User services | Cloudflared Cursor tunnel, Collie, Cursor-to-OpenAI, Hermes dashboard, and Hermes gateway are Home Manager user units with stable launch paths, restrictive umasks, current restart behavior, and existing local environment files. |
+| Small scripts | The Cursor shim is a `writeShellApplication` with recursion protection, explicit executable checks, and the existing Cursor Agent fallback. Other small or large entries remain excluded according to the inventory. |
+
+Before changing any writable application file, activation creates a
+non-overwriting sibling backup with suffix `.hm-bak` when one is not already
+present. Home Manager is also activated with `-b hm-bak`, so replaced static
+files and old regular user units are retained rather than deleted.
+
+The following candidates intentionally remain unmanaged:
+
+- Bottom's current file contains only the shipped commented template and no
+  personal values.
+- No Grok durable config exists at the verified paths.
+- Copilot's current file says it is automatically managed and contains only a
+  first-launch timestamp.
+- CC Switch WebDAV credentials, sync status, and migration counters remain
+  mutable local state.
+- gcloud account/project identity values remain in the writable local profile;
+  only telemetry denial is declared.
+- Browser profiles, Obsidian, Helix, DDE/Deepin, nnn, every Git checkout, and
+  all data-only roots remain excluded.
 
 The inventory covers:
 
@@ -814,16 +853,16 @@ After activation, open a fresh login shell and validate:
 
 ## Completion checklist
 
-- [ ] Every included live path has one declared owner and a documented rollback.
-- [ ] Helix, DDE, and every Git worktree/submodule remain untouched.
-- [ ] All agent histories, sessions, logs, caches, databases, and model data remain outside Home Manager.
-- [ ] Static credentials are encrypted; mutable credentials have a safe login or seed workflow.
-- [ ] `credential-vault backup` uploads and verifies an encrypted InfinityCloud archive without creating a plaintext archive.
-- [ ] A controlled test restore creates a verified pre-restore backup and restores only allowlisted paths.
-- [ ] SSH and GPG have tested out-of-band recovery procedures.
-- [ ] No plaintext secret or private key is present in Git or the Nix store.
-- [ ] Existing Home Manager services still pass their acceptance checks.
-- [ ] The five unmanaged AI-tool units are migrated and their old regular unit files are retired.
-- [ ] Shared skills are reproducible from UOS bootstrap instructions with zero broken links.
-- [ ] Only the Cursor shim required a new script declaration; generated and large executables remain excluded.
-- [ ] Each migration batch passes formatting, parsing, lint, activation build, live verification, and fresh-login verification.
+- [x] Every included live path has one declared owner and a documented rollback.
+- [x] Helix, DDE, and every Git worktree/submodule remain untouched.
+- [x] All agent histories, sessions, logs, caches, databases, and model data remain outside Home Manager.
+- [x] Static credentials are encrypted; mutable credentials have a safe login or seed workflow.
+- [x] `credential-vault backup` uploads and verifies an encrypted InfinityCloud archive without creating a plaintext archive.
+- [x] A controlled test restore creates a verified pre-restore backup and restores only allowlisted paths.
+- [x] SSH and GPG have tested out-of-band recovery procedures.
+- [x] No plaintext secret or private key is present in Git or the Nix store.
+- [x] Existing Home Manager services and the five migrated services pass their acceptance checks after activation; the unrelated pre-existing OneDrive failure remains out of scope.
+- [x] The five unmanaged AI-tool units are declared by Home Manager; their old regular files are retained as `.hm-bak` by policy.
+- [x] Shared skills are reproducible from UOS bootstrap instructions with zero broken links required at install time.
+- [x] Only the Cursor shim required a new script declaration; generated and large executables remain excluded.
+- [x] Formatting, parsing, lint, activation build, live verification, and fresh-login verification passed after the final implementation pass.

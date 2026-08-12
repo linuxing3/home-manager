@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "github": [
+    "cloudmanic/herdr-plus",
+    "openclaw/crabbox/plugins/herdr",
+    "linuxing3/herdr-nnn",
+    "smarzban/herdr-file-viewer",
+    "alexarthurs/herdr-sidebar/plugins/herdr-sidebar",
+    "AltanS/collie",
+    "linuxing3/herdr-nvim",
+    "ogulcancelik/herdr-browser",
+    "iurysza/termscope"
+  ],
+  "local": [
+    "Herdr Palette"
+  ]
+}

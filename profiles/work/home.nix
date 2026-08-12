@@ -14,9 +14,12 @@
     ../../modules/app/git/git.nix
     ../../modules/app/ranger/ranger.nix
     ../../modules/app/agent-tools/default.nix
+    ../../modules/app/personal-configs/default.nix
     ../../modules/app/credential-backup/default.nix
     ../../modules/app/secretspec-bitwarden/default.nix
+    ../../modules/app/user-services/default.nix
     ../../modules/tui/nnn-herdr-sync.nix
+    ../../modules/tui/st-theme.nix
 
     # ------------- editor -------------------
     ../../modules/app/nvim/nvim.nix
@@ -119,16 +122,6 @@ in {
     AGENT_BROWSER = lib.getExe pkgs.agent-browser;
     BROWSER = userSettings.browser;
   };
-
-  home.file.".Xdefaults".text = ''
-    *.font: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true;
-    *.fontalt0: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true;
-    *.alpha: 0.9
-  '';
-
-  home.file.".xsessionrc".text = ''
-    ${pkgs.xrdb}/bin/xrdb -merge "$HOME/.Xdefaults"
-  '';
 
   news.display = "silent";
 

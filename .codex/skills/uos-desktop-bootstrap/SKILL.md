@@ -334,6 +334,69 @@ port `8317`. Check only post-start warning/error logs. Never print
 protects newly created files but does not repair existing permissions; inspect
 their modes separately and obtain authorization before changing them.
 
+## 17. Install shared AI skills
+
+Treat `~/.agents/skills` as the global source of truth for skills supported by
+the `skills` installer. Do not copy skill bodies or Git checkouts into this
+flake. Preserve project-local Codex skills in this repository's
+`.codex/skills/` and Codex system skills in the Codex installation that owns
+them; neither class should be replaced with a global link.
+
+Install the Baoyu suite globally for all supported agents:
+
+```sh
+/usr/bin/env PATH=/home/Designers/.nix-profile/bin:/usr/bin:/bin \
+  /home/Designers/.nix-profile/bin/npx --yes skills add \
+  jimliu/baoyu-skills -g --agent '*' -y
+```
+
+Install the CNB suite from its upstream Git source:
+
+```sh
+/usr/bin/env PATH=/home/Designers/.nix-profile/bin:/usr/bin:/bin \
+  /home/Designers/.nix-profile/bin/npx --yes skills add \
+  https://cnb.cool/cnb/skills/cnb-skill.git -g --agent '*' -y
+```
+
+Use the same global installer form for the AWS skill source published by AWS;
+first list the upstream package and review the discovered skill names, then
+install the reviewed set for all supported agents. Do not infer or pin a source
+from an existing copied directory when the lock manifest lacks provenance.
+
+Install `story-to-handdrawn-video` from its upstream repository rather than
+copying the checkout:
+
+```sh
+/usr/bin/env PATH=/home/Designers/.nix-profile/bin:/usr/bin:/bin \
+  /home/Designers/.nix-profile/bin/npx --yes skills add \
+  https://github.com/gnipbao/story-to-handdrawn-video.git \
+  -g --agent '*' -y
+```
+
+Hermes-curated skills belong to Hermes. Use `hermes skills search`, inspect the
+exact upstream identifier, and then `hermes skills install IDENTIFIER --yes`.
+The official `yuanbao` skill is tracked by Hermes' hub lock; bundled skills
+should be restored with `hermes skills repair-official`, not copied into the
+global root.
+
+After installation, require all of the following:
+
+1. `~/.agents/.skill-lock.json` parses and contains the expected upstream
+   sources and skill names.
+2. `npx skills list -g --json` succeeds and every installed skill directory has
+   a readable `SKILL.md`.
+3. Every supported agent root resolves to the global skills without broken
+   links; use `find` to report broken links and require zero results. Do not use
+   a historical symlink count as a success condition.
+4. Project-local and Codex system skills still resolve from their owning
+   locations.
+5. Run the project or system `quick_validate.py` using a Python environment
+   that can import YAML against each changed or newly installed skill.
+
+Eve and PromptScript were previously observed not to support the global
+installer. Their absence is expected and must not be reported as a broken-link
+failure.
+
 ## Acceptance checks
 
 - `agenix.service` completes successfully and the expected runtime secret exists with restrictive permissions.

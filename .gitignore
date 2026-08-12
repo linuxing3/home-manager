@@ -4,3 +4,4 @@
 .direnv/
 .superpowers/
 url-to-markdown/
+__pycache__/

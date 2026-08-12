@@ -6,6 +6,7 @@ readonly default_manifest="${XDG_CONFIG_HOME:-$HOME/.config}/secretspec/home-con
 
 manifest=${SECRETSPEC_BW_FILE:-$default_manifest}
 reason=${SECRETSPEC_REASON:-}
+profile=${SECRETSPEC_PROFILE:-}
 session=${BW_SESSION:-}
 master_password=""
 unlocked_here=0
@@ -23,10 +24,11 @@ usage() {
 Run a command with secrets resolved from Bitwarden.
 
 Usage:
-  secretspec-bw-run [--file FILE] [--reason TEXT] -- COMMAND [ARG...]
+  secretspec-bw-run [--file FILE] [--profile NAME] [--reason TEXT] -- COMMAND [ARG...]
 
 Options:
   -f, --file FILE    SecretSpec manifest to use
+  -P, --profile NAME Resolve a named SecretSpec profile
       --reason TEXT  Audit reason passed to SecretSpec
   -h, --help         Show this help
 
@@ -155,6 +157,11 @@ while (($# > 0)); do
       reason=$2
       shift 2
       ;;
+    -P | --profile)
+      (($# >= 2)) || die "$1 requires a profile name"
+      profile=$2
+      shift 2
+      ;;
     -h | --help)
       usage
       exit 0
@@ -187,9 +194,13 @@ secretspec_args=(--file "$manifest")
 if [[ -n "$reason" ]]; then
   secretspec_args+=(--reason "$reason")
 fi
+run_args=()
+if [[ -n "$profile" ]]; then
+  run_args+=(--profile "$profile")
+fi
 
 # SecretSpec 0.18 preserves its parent environment for COMMAND. Use env as a
 # minimal trusted trampoline so the resolved secrets remain available while
 # the Bitwarden session is removed before the requested program starts.
-BW_SESSION="$session" "$secretspec_bin" "${secretspec_args[@]}" run -- \
+BW_SESSION="$session" "$secretspec_bin" "${secretspec_args[@]}" run "${run_args[@]}" -- \
   "$env_bin" -u BW_SESSION -- "$@"
