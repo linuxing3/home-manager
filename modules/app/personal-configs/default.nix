@@ -60,6 +60,30 @@
     '';
   };
 
+  herdrAgentRename = pkgs.writeShellApplication {
+    name = "herdr-agent-rename";
+    text = ''
+      pane_id="''${HERDR_ACTIVE_PANE_ID:-''${HERDR_PANE_ID:-}}"
+      if [[ -z "$pane_id" ]]; then
+        echo "herdr-agent-rename: no active Herdr pane was provided" >&2
+        exit 1
+      fi
+
+      read -r -p "Agent name: " agent_name
+      if [[ ! "$agent_name" =~ ^[a-z][a-z0-9_-]{0,31}$ ]]; then
+        echo "Invalid name: use 1-32 lowercase letters, digits, _ or -, starting with a letter." >&2
+        read -r -p "Press Enter to close..." _
+        exit 2
+      fi
+
+      herdr_bin="''${HERDR_BIN_PATH:-${profileBin}/herdr}"
+      "$herdr_bin" agent rename "$pane_id" "$agent_name"
+      echo
+      echo "Agent renamed to $agent_name."
+      read -r -p "Press Enter to close..." _
+    '';
+  };
+
   claudeMarketplaceSync = pkgs.writeShellApplication {
     name = "claude-marketplace-sync";
     runtimeInputs = [pkgs.python3];
@@ -278,6 +302,7 @@ in {
   home.packages = [
     claudeMarketplaceSync
     hermesCronSync
+    herdrAgentRename
     herdrPluginSync
   ];
 

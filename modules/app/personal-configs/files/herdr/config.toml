@@ -56,6 +56,13 @@ description = "open scratch terminal"
 width = "80%"
 height = "80%"
 [[keys.command]]
+key = "prefix+shift+a"
+type = "popup"
+command = "herdr-agent-rename"
+description = "rename active agent"
+width = 56
+height = 9
+[[keys.command]]
 key = "prefix+shift+o"
 type = "plugin_action"
 command = "linuxing3.termscope.open"
