@@ -17,6 +17,7 @@ bw_item_explicit=0
 
 work_dir=""
 lock_file=""
+local_snapshot_partial=""
 unlocked_here=0
 item_json=""
 webdav_url=""
@@ -34,6 +35,7 @@ Usage:
   credential-vault backup
   credential-vault list
   credential-vault restore [latest|BACKUP_NAME] [--yes]
+  credential-vault restore-local ARCHIVE [--pre-restore-dir DIR] [--yes]
 
 Environment:
   CREDENTIAL_VAULT_BW_ITEM       Bitwarden item name or ID
@@ -157,6 +159,10 @@ cleanup() {
   fi
   if [[ -n "$work_dir" && -d "$work_dir" ]]; then
     rm -rf -- "$work_dir"
+  fi
+  if [[ -n "$local_snapshot_partial" && -f "$local_snapshot_partial" &&
+    ! -L "$local_snapshot_partial" ]]; then
+    rm -f -- "$local_snapshot_partial"
   fi
 
   return "$exit_status"
@@ -628,7 +634,34 @@ validate_remote_archive() {
   chmod 600 "$listing"
 
   rclone_vault cat "$remote_file" | tar -tf - >"$listing"
-  [[ -s "$listing" ]] || die "remote archive is empty: ${remote_file##*/}"
+  validate_archive_listing "$listing" "${remote_file##*/}"
+}
+
+validate_local_archive() {
+  local archive_file=$1 listing=$2 verbose_listing entry_type
+  [[ "$archive_file" == /* ]] || die "local archive path must be absolute"
+  [[ -f "$archive_file" && ! -L "$archive_file" && -r "$archive_file" ]] ||
+    die "local archive is not a readable regular file"
+  : >"$listing"
+  chmod 600 "$listing"
+  tar -tf "$archive_file" >"$listing"
+  validate_archive_listing "$listing" "${archive_file##*/}"
+
+  verbose_listing="${listing}.verbose"
+  : >"$verbose_listing"
+  chmod 600 "$verbose_listing"
+  tar -tvf "$archive_file" >"$verbose_listing"
+  while IFS= read -r entry_type; do
+    case "${entry_type:0:1}" in
+      - | d) ;;
+      *) die "local archive contains a non-regular entry" ;;
+    esac
+  done <"$verbose_listing"
+}
+
+validate_archive_listing() {
+  local listing=$1 archive_name=$2 entry
+  [[ -s "$listing" ]] || die "archive is empty: $archive_name"
 
   while IFS= read -r entry; do
     case "$entry" in
@@ -836,8 +869,67 @@ perform_restore() {
   printf '%s\n' "Restart affected agents and re-open a fresh login shell."
 }
 
+perform_local_snapshot() {
+  local destination_dir=$1 host timestamp archive_name partial_file archive_file
+  [[ "$destination_dir" == /* ]] || die "pre-restore directory must be absolute"
+  [[ -d "$destination_dir" && ! -L "$destination_dir" && -w "$destination_dir" ]] ||
+    die "pre-restore directory is not a writable real directory"
+
+  if ! build_manifest; then
+    printf '%s\n' "No existing credential files found; skipping the pre-restore backup." >&2
+    return
+  fi
+
+  host=$(safe_host_name)
+  timestamp=$(date -u +%Y%m%dT%H%M%S.%NZ)
+  archive_name="credential-pre-restore-${archive_version}-${host}-${timestamp}.tar"
+  archive_file="$destination_dir/$archive_name"
+  partial_file="$destination_dir/.partial-${archive_name}-${BASHPID}"
+  local_snapshot_partial=$partial_file
+  tar --create --format=pax --directory="$HOME" --null \
+    --files-from="$work_dir/files.nul" --file="$partial_file"
+  chmod 600 "$partial_file"
+  validate_local_archive "$partial_file" "$work_dir/local-snapshot-listing"
+  mv -- "$partial_file" "$archive_file"
+  local_snapshot_partial=""
+  printf 'Encrypted-volume pre-restore backup verified: %s\n' "$archive_name" >&2
+}
+
+perform_local_restore() {
+  local archive_file=$1 pre_restore_dir=$2 assume_yes=${3:-no}
+  local archive_name stage_dir answer
+
+  archive_name=${archive_file##*/}
+  [[ "$archive_name" == credential-backup-v1-*.tar ]] ||
+    die "local restore accepts only a regular v1 backup"
+  validate_local_archive "$archive_file" "$work_dir/local-restore-listing"
+
+  if [[ "$assume_yes" != yes ]]; then
+    [[ -t 0 ]] || die "restore needs an interactive confirmation or --yes"
+    printf 'Restore %s over live credential files? [y/N] ' "$archive_name" >&2
+    IFS= read -r answer
+    [[ "$answer" == y || "$answer" == Y ]] || die "restore cancelled"
+  fi
+
+  perform_local_snapshot "$pre_restore_dir"
+
+  stage_dir="$work_dir/restore"
+  mkdir -p "$stage_dir"
+  chmod 700 "$stage_dir"
+  tar --extract --file="$archive_file" --directory="$stage_dir" --no-same-owner
+
+  shopt -s dotglob nullglob
+  local -a staged_entries=("$stage_dir"/*)
+  ((${#staged_entries[@]} > 0)) || die "validated archive extracted no files"
+  cp -a --no-preserve=ownership "${staged_entries[@]}" "$HOME/"
+  harden_restored_files
+  printf 'Restore completed from encrypted USB archive: %s\n' "$archive_name"
+  printf '%s\n' "Restart affected agents and re-open a fresh login shell."
+}
+
 main() {
   local command=${1:-} requested=latest assume_yes=no argument
+  local archive_file="" pre_restore_dir=""
 
   if [[ -z "$command" ]]; then
     choose_action command
@@ -850,22 +942,24 @@ main() {
       ;;
   esac
 
-  require_executable "$rclone_bin"
   require_executable jq
   prepare_runtime
 
   case "$command" in
     backup)
       [[ $# == 1 ]] || die "backup takes no arguments"
+      require_executable "$rclone_bin"
       load_credentials
       perform_backup backup yes
       ;;
     list)
       [[ $# == 1 ]] || die "list takes no arguments"
+      require_executable "$rclone_bin"
       load_credentials
       list_backups
       ;;
     restore)
+      require_executable "$rclone_bin"
       shift
       for argument in "$@"; do
         case "$argument" in
@@ -880,6 +974,29 @@ main() {
       done
       load_credentials
       perform_restore "$requested" "$assume_yes"
+      ;;
+    restore-local)
+      shift
+      while (($#)); do
+        argument=$1
+        shift
+        case "$argument" in
+          --yes) assume_yes=yes ;;
+          --pre-restore-dir)
+            (($#)) || die "--pre-restore-dir requires a directory"
+            pre_restore_dir=$1
+            shift
+            ;;
+          -*) die "unknown restore-local option: $argument" ;;
+          *)
+            [[ -z "$archive_file" ]] || die "only one local archive is allowed"
+            archive_file=$argument
+            ;;
+        esac
+      done
+      [[ -n "$archive_file" ]] || die "restore-local requires an archive path"
+      [[ -n "$pre_restore_dir" ]] || die "restore-local requires --pre-restore-dir"
+      perform_local_restore "$archive_file" "$pre_restore_dir" "$assume_yes"
       ;;
     *)
       usage >&2

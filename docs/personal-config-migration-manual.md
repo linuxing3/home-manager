@@ -403,6 +403,35 @@ credential-vault restore latest --yes
 credential-vault restore credential-backup-v1-HOST-UTC_TIMESTAMP.tar
 ```
 
+### Recover from an encrypted USB backup
+
+Home Manager also installs `credential-usb-recovery` for offline recovery from
+a removable LUKS volume. It accepts only a removable LUKS partition, delegates
+the passphrase prompt to the host `udisksctl`, and closes devices that it
+unlocks or mounts. The USB should contain one or more regular
+`credential-backup-v1-*.tar` archives no deeper than five directories from the
+volume root.
+
+```sh
+# Unlock locally, list recognized archives, then unmount and relock.
+credential-usb-recovery list
+
+# Select a device explicitly when more than one removable LUKS volume exists.
+credential-usb-recovery list --device /dev/sdb1
+
+# Validate and restore the latest archive after an interactive confirmation.
+credential-usb-recovery restore latest --device /dev/sdb1
+```
+
+Before overwriting live credentials, restore creates a verified
+`credential-pre-restore-v1-*.tar` snapshot under `credential-pre-restore/` on
+the encrypted USB. Local restore rejects absolute or parent-traversal paths,
+entries outside the credential allowlist, symlinks, hard links, device nodes,
+and FIFOs. It stages extraction in a private runtime directory and reapplies
+restrictive SSH, GPG, token, browser-login, and keyring permissions. The helper
+does not stop applications; close agents and browsers that may rewrite their
+credential databases before recovery.
+
 `restore` accepts only regular version-1 backup names. It will not restore a
 pre-restore snapshot directly. It rejects absolute paths, parent traversal,
 and archive entries outside the credential allowlist. Restore extracts into a

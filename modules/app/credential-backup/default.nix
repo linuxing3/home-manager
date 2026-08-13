@@ -12,6 +12,20 @@
     ];
     text = builtins.readFile ./credential-vault.sh;
   };
+  credentialUsbRecovery = pkgs.writeShellApplication {
+    name = "credential-usb-recovery";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.findutils
+      pkgs.gawk
+      pkgs.gnused
+      credentialVault
+    ];
+    text = builtins.readFile ./credential-usb-recovery.sh;
+  };
 in {
-  home.packages = [credentialVault];
+  home.packages = [
+    credentialVault
+    credentialUsbRecovery
+  ];
 }
