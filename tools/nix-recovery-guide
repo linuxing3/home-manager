@@ -1,0 +1,550 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+umask 077
+
+readonly program_name="nix-recovery-guide"
+readonly package_name="nix-system-recovery"
+readonly default_repo="/share/data/sources/home-config"
+readonly default_cache="/share/recovery/nix-cache"
+
+script_dir=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+keyvault_mount="${KEYVAULT_MOUNT:-}"
+repo_dir="${HOME_CONFIG_REPO:-$default_repo}"
+cache_dir="${NIX_RECOVERY_CACHE:-$default_cache}"
+package_dir=""
+manifest_dir=""
+secret_dir=""
+repo_backup_dir=""
+signing_key_path=""
+
+if [[ -t 1 && "${NO_COLOR:-}" != 1 ]]; then
+  readonly reset=$'\033[0m' bold=$'\033[1m' dim=$'\033[2m'
+  readonly cyan=$'\033[36m' green=$'\033[32m' yellow=$'\033[33m'
+  readonly red=$'\033[31m' blue=$'\033[34m'
+else
+  readonly reset="" bold="" dim="" cyan="" green="" yellow="" red="" blue=""
+fi
+
+die() {
+  printf '%s%sError:%s %s\n' "$bold" "$red" "$reset" "$*" >&2
+  exit 1
+}
+
+warn() {
+  printf '%s!%s %s\n' "$yellow" "$reset" "$*" >&2
+}
+
+ok() {
+  printf '%s✓%s %s\n' "$green" "$reset" "$*"
+}
+
+info() {
+  printf '%s•%s %s\n' "$cyan" "$reset" "$*"
+}
+
+rule() {
+  printf '%s────────────────────────────────────────────────────────────%s\n' "$dim" "$reset"
+}
+
+header() {
+  clear 2>/dev/null || true
+  printf '%s%s╭──────────────────────────────────────────────────────────╮%s\n' "$bold" "$blue" "$reset"
+  printf '%s%s│       UOS + Home Manager Recovery Guide                 │%s\n' "$bold" "$blue" "$reset"
+  printf '%s%s╰──────────────────────────────────────────────────────────╯%s\n' "$bold" "$blue" "$reset"
+}
+
+pause() {
+  [[ -t 0 ]] || return 0
+  printf '\n%sPress Enter to continue...%s' "$dim" "$reset"
+  IFS= read -r _
+}
+
+confirm() {
+  local prompt=$1 answer
+  [[ -t 0 ]] || return 1
+  printf '%s [y/N] ' "$prompt"
+  IFS= read -r answer
+  [[ "$answer" == y || "$answer" == Y || "$answer" == yes || "$answer" == YES ]]
+}
+
+confirm_phrase() {
+  local prompt=$1 phrase=$2 answer
+  [[ -t 0 ]] || return 1
+  printf '%s\n%sType %s%s%s to continue:%s ' \
+    "$prompt" "$yellow" "$bold" "$phrase" "$reset" "$reset"
+  IFS= read -r answer
+  [[ "$answer" == "$phrase" ]]
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || die "Required command is missing: $1"
+}
+
+discover_keyvault() {
+  local device candidate
+  if [[ -n "$keyvault_mount" ]]; then
+    [[ -d "$keyvault_mount" ]] || die "KEYVAULT_MOUNT is not a directory: $keyvault_mount"
+  else
+    require_command lsblk
+    require_command findmnt
+    while IFS= read -r device; do
+      [[ -n "$device" ]] || continue
+      candidate=$(findmnt -rn -S "$device" -o TARGET | head -n 1 || true)
+      if [[ -n "$candidate" ]]; then
+        keyvault_mount=$candidate
+        break
+      fi
+    done < <(lsblk -nrpo NAME,LABEL,TYPE | awk '$2 == "KEYVAULT" && ($3 == "crypt" || $3 == "part") {print $1}')
+  fi
+
+  [[ -n "$keyvault_mount" && -d "$keyvault_mount" ]] ||
+    die "Mounted filesystem labelled KEYVAULT was not found. Unlock and mount it first."
+  [[ "$keyvault_mount" != / && "$keyvault_mount" != /home && "$keyvault_mount" != /share ]] ||
+    die "Refusing unsafe KeyVault mount path: $keyvault_mount"
+  [[ -w "$keyvault_mount" ]] || die "KeyVault is not writable: $keyvault_mount"
+
+  package_dir="$keyvault_mount/recovery/$package_name"
+  manifest_dir="$package_dir/manifest"
+  secret_dir="$package_dir/secrets"
+  repo_backup_dir="$package_dir/repository"
+}
+
+ensure_package_dirs() {
+  discover_keyvault
+  mkdir -p -- "$package_dir" "$manifest_dir" "$secret_dir" "$repo_backup_dir"
+  chmod 700 "$package_dir" "$manifest_dir" "$secret_dir" "$repo_backup_dir"
+}
+
+nix_path() {
+  if command -v nix >/dev/null 2>&1; then
+    command -v nix
+  elif [[ -x /nix/var/nix/profiles/default/bin/nix ]]; then
+    printf '%s\n' /nix/var/nix/profiles/default/bin/nix
+  else
+    return 1
+  fi
+}
+
+current_roots() {
+  local hm_link="$HOME/.local/state/nix/profiles/home-manager"
+  local profile_link="$HOME/.nix-profile"
+  [[ -L "$hm_link" ]] && readlink -f -- "$hm_link"
+  [[ -L "$profile_link" ]] && readlink -f -- "$profile_link"
+}
+
+show_status() {
+  local nix_bin="" roots=()
+  header
+  printf '%sStep 1 — Read-only preflight%s\n\n' "$bold" "$reset"
+  printf 'Host:       %s (%s)\n' "$(hostname 2>/dev/null || printf unknown)" "$(uname -m)"
+  printf 'Kernel:     %s\n' "$(uname -r)"
+  if nix_bin=$(nix_path); then
+    printf 'Nix:        %s\n' "$($nix_bin --version)"
+  else
+    warn "Nix is not installed or not discoverable."
+  fi
+
+  if discover_keyvault 2>/dev/null; then
+    printf 'KeyVault:   %s\n' "$keyvault_mount"
+    df -h -- "$keyvault_mount" | tail -n 1
+  else
+    warn "KeyVault is not currently mounted."
+  fi
+  printf 'Repository: %s\n' "$repo_dir"
+  printf 'Nix cache:  %s\n' "$cache_dir"
+
+  mapfile -t roots < <(current_roots)
+  if [[ ${#roots[@]} -gt 0 && -n "$nix_bin" ]]; then
+    printf '\n%sCurrent recovery roots%s\n' "$bold" "$reset"
+    "$nix_bin" path-info -Sh "${roots[@]}" 2>/dev/null || true
+  fi
+  rule
+  info "No files were changed by this preflight."
+}
+
+copy_manual_and_script() {
+  local manual_source="$script_dir/../docs/nix-store-backup-and-recovery-manual.md"
+  ensure_package_dirs
+  [[ -f "$manual_source" ]] || die "Manual is missing beside the repository: $manual_source"
+  install -m 600 -- "$manual_source" "$package_dir/MANUAL.md"
+  install -m 700 -- "${BASH_SOURCE[0]}" "$package_dir/nix-recovery-guide"
+  ok "Manual and guide installed in $package_dir"
+}
+
+write_host_manifest() {
+  local target="$manifest_dir/host-facts.txt"
+  {
+    printf 'captured_at=%s\n' "$(date --iso-8601=seconds)"
+    printf 'hostname=%s\n' "$(hostname 2>/dev/null || printf unknown)"
+    printf 'architecture=%s\n' "$(uname -m)"
+    printf 'kernel=%s\n' "$(uname -r)"
+    printf '\n[os-release]\n'
+    sed -n '1,40p' /etc/os-release 2>/dev/null || true
+    printf '\n[block-devices]\n'
+    lsblk -f 2>/dev/null || true
+    printf '\n[mounts]\n'
+    findmnt -rn -o SOURCE,TARGET,FSTYPE,OPTIONS 2>/dev/null || true
+    printf '\n[filesystem-space]\n'
+    df -hT / /nix /home /share "$keyvault_mount" 2>/dev/null || true
+    printf '\n[nix-config-non-secret]\n'
+    if [[ -r /etc/nix/nix.conf ]]; then
+      grep -E '^(experimental-features|substituters|extra-substituters|trusted-public-keys|extra-trusted-public-keys|trusted-users|build-users-group)[[:space:]]*=' /etc/nix/nix.conf || true
+    fi
+  } >"$target"
+  chmod 600 "$target"
+}
+
+snapshot_repository() {
+  local status_file="$manifest_dir/repository-status.txt"
+  local bundle="$repo_backup_dir/home-config.bundle"
+  local patch="$repo_backup_dir/working-tree.patch"
+  local untracked_archive="$repo_backup_dir/untracked-files.tar.gz"
+  local -a untracked=()
+
+  [[ -d "$repo_dir/.git" ]] || die "Not a Git working tree: $repo_dir"
+  require_command git
+  require_command tar
+
+  (
+    cd "$repo_dir"
+    git status --short --branch >"$status_file"
+    git rev-parse HEAD >>"$status_file"
+    git remote -v | sed -E 's#(https?://)[^/@]+@#\1[REDACTED]@#' >>"$status_file"
+    git bundle create "$bundle.tmp" --all
+    mv -- "$bundle.tmp" "$bundle"
+    git diff --binary HEAD >"$patch.tmp"
+    mv -- "$patch.tmp" "$patch"
+
+    mapfile -d '' -t untracked < <(git ls-files --others --exclude-standard -z)
+    if [[ ${#untracked[@]} -gt 0 ]]; then
+      printf '\n%sUntracked files proposed for the encrypted snapshot:%s\n' "$bold" "$reset"
+      printf '  %s\n' "${untracked[@]}"
+      if confirm "Include these untracked files? Review the list for secrets first."; then
+        printf '%s\0' "${untracked[@]}" |
+          tar --null --no-recursion -czf "$untracked_archive.tmp" --files-from=-
+        mv -- "$untracked_archive.tmp" "$untracked_archive"
+      else
+        warn "Untracked files were not included."
+      fi
+    fi
+  )
+  chmod 600 "$status_file" "$bundle" "$patch"
+  [[ -f "$untracked_archive" ]] && chmod 600 "$untracked_archive"
+  ok "Repository bundle and working-tree patch saved."
+}
+
+prepare_signing_key() {
+  local nix_bin=$1
+  local secret_key="$secret_dir/nix-cache-secret-key"
+  local public_key="$secret_dir/nix-cache-public-key"
+  if [[ ! -s "$secret_key" ]]; then
+    warn "No cache signing key exists in this recovery package."
+    confirm_phrase "Generate a new signing key inside the encrypted KeyVault?" "GENERATE KEY" ||
+      die "Signing key generation cancelled."
+    "$nix_bin" key generate-secret --key-name "$(hostname)-recovery-cache-1" >"$secret_key.tmp"
+    chmod 600 "$secret_key.tmp"
+    mv -- "$secret_key.tmp" "$secret_key"
+  fi
+  "$nix_bin" key convert-secret-to-public <"$secret_key" >"$public_key.tmp"
+  chmod 600 "$public_key.tmp"
+  mv -- "$public_key.tmp" "$public_key"
+  signing_key_path=$secret_key
+}
+
+refresh_nix_cache() {
+  local nix_bin secret_key cache_uri
+  local -a roots=()
+  nix_bin=$(nix_path) || die "Nix is required to create a binary cache."
+  mapfile -t roots < <(current_roots)
+  [[ ${#roots[@]} -gt 0 ]] || die "No current Home Manager or user profile root was found."
+
+  printf '\n%sThe following top-level closures will be cached:%s\n' "$bold" "$reset"
+  "$nix_bin" path-info -Sh "${roots[@]}"
+  printf '\nCache destination: %s\n' "$cache_dir"
+  confirm_phrase "This writes a large binary cache but does not activate Home Manager." "WRITE CACHE" || {
+    warn "Cache creation skipped."
+    return
+  }
+
+  mkdir -p -- "$cache_dir"
+  prepare_signing_key "$nix_bin"
+  secret_key=$signing_key_path
+  printf '%s\n' "${roots[@]}" >"$manifest_dir/top-level-paths.txt"
+  printf '%s\n' "$cache_dir" >"$manifest_dir/cache-location.txt"
+  chmod 600 "$manifest_dir/top-level-paths.txt" "$manifest_dir/cache-location.txt"
+
+  cache_uri="file://$cache_dir?compression=zstd&parallel-compression=true&secret-key=$secret_key"
+  "$nix_bin" copy --to "$cache_uri" "${roots[@]}"
+  ok "Signed Nix cache refreshed at $cache_dir"
+}
+
+write_checksums() {
+  local sums="$package_dir/SHA256SUMS"
+  (
+    cd "$package_dir"
+    find . -type f ! -name SHA256SUMS ! -name SHA256SUMS.tmp -print0 |
+      sort -z |
+      xargs -0 -r sha256sum
+  ) >"$sums.tmp"
+  chmod 600 "$sums.tmp"
+  mv -- "$sums.tmp" "$sums"
+  ok "Checksums written to $sums. The checksum does not reveal signing-key contents."
+}
+
+create_recovery_material() {
+  header
+  printf '%sStep 2 — Create or refresh recovery material%s\n\n' "$bold" "$reset"
+  ensure_package_dirs
+  copy_manual_and_script
+  write_host_manifest
+  info "Host and disk metadata saved without credential contents."
+
+  if confirm "Create a Git bundle and snapshot current tracked changes?"; then
+    snapshot_repository
+  else
+    warn "Repository snapshot skipped."
+  fi
+
+  if confirm "Create or refresh the signed Nix closure cache now?"; then
+    refresh_nix_cache
+  else
+    warn "Nix cache refresh skipped."
+  fi
+  write_checksums
+  sync
+  ok "Recovery material is ready. Safely unmount KeyVault before removing it."
+}
+
+verify_material() {
+  local nix_bin="" public_key="" public_value="" cache_location=""
+  local -a roots=()
+  header
+  printf '%sStep 3 — Verify recovery material%s\n\n' "$bold" "$reset"
+  discover_keyvault
+  package_dir="$keyvault_mount/recovery/$package_name"
+  manifest_dir="$package_dir/manifest"
+  secret_dir="$package_dir/secrets"
+  [[ -f "$package_dir/SHA256SUMS" ]] || die "SHA256SUMS is missing: $package_dir"
+  (cd "$package_dir" && sha256sum -c SHA256SUMS)
+  ok "Portable recovery package checksums passed."
+
+  if [[ -s "$manifest_dir/cache-location.txt" && -s "$manifest_dir/top-level-paths.txt" ]]; then
+    cache_location=${NIX_RECOVERY_CACHE:-$(head -n 1 "$manifest_dir/cache-location.txt")}
+    [[ -d "$cache_location" ]] || {
+      warn "Nix cache is not locally available at $cache_location"
+      return
+    }
+    nix_bin=$(nix_path) || {
+      warn "Nix is unavailable; cache metadata could not be queried."
+      return
+    }
+    mapfile -t roots <"$manifest_dir/top-level-paths.txt"
+    public_key="$secret_dir/nix-cache-public-key"
+    [[ -s "$public_key" ]] || die "Cache public key is missing."
+    public_value=$(<"$public_key")
+    "$nix_bin" path-info --store "file://$cache_location" "${roots[@]}" >/dev/null
+    "$nix_bin" store verify \
+      --store "file://$cache_location" \
+      --recursive \
+      --option trusted-public-keys "$public_value" \
+      "${roots[@]}"
+    ok "Nix cache contains and verifies the recorded top-level closures."
+  else
+    warn "Nix cache metadata is not present; only the portable package was verified."
+  fi
+}
+
+restore_repository_guide() {
+  local destination bundle patch archive
+  bundle="$repo_backup_dir/home-config.bundle"
+  patch="$repo_backup_dir/working-tree.patch"
+  archive="$repo_backup_dir/untracked-files.tar.gz"
+  [[ -f "$bundle" ]] || die "Repository bundle is missing."
+  printf 'Restore destination [%s]: ' "$HOME/home-config-restored"
+  IFS= read -r destination
+  destination=${destination:-$HOME/home-config-restored}
+  [[ "$destination" == /* && "$destination" != / && ! -e "$destination" ]] ||
+    die "Destination must be a new absolute path."
+  confirm_phrase "Clone the saved repository into $destination?" "RESTORE REPO" || return
+  git clone "$bundle" "$destination"
+  if [[ -s "$patch" ]]; then
+    info "Tracked working changes are in: $patch"
+    warn "Review before applying: git -C '$destination' apply --check '$patch'"
+  fi
+  if [[ -s "$archive" ]]; then
+    info "Reviewed untracked snapshot is in: $archive"
+    warn "List it before extraction: tar -tzf '$archive'"
+  fi
+}
+
+import_nix_cache() {
+  local nix_bin cache_location public_value
+  local -a roots=()
+  nix_bin=$(nix_path) || die "Install Nix before importing the cache."
+  [[ -s "$manifest_dir/cache-location.txt" && -s "$manifest_dir/top-level-paths.txt" ]] ||
+    die "Cache metadata is incomplete."
+  cache_location=${NIX_RECOVERY_CACHE:-$(head -n 1 "$manifest_dir/cache-location.txt")}
+  if [[ ! -d "$cache_location" ]]; then
+    printf 'Recorded cache is unavailable: %s\n' "$cache_location"
+    printf 'Local cache directory: '
+    IFS= read -r cache_location
+  fi
+  [[ "$cache_location" == /* && -d "$cache_location" ]] ||
+    die "Cache must be an existing absolute directory."
+  [[ -s "$secret_dir/nix-cache-public-key" ]] || die "Cache public key is missing."
+  public_value=$(<"$secret_dir/nix-cache-public-key")
+  mapfile -t roots <"$manifest_dir/top-level-paths.txt"
+  confirm_phrase "Import the recorded closures into /nix/store? This does not activate them." "IMPORT STORE" || return
+  "$nix_bin" copy \
+    --from "file://$cache_location" \
+    --option trusted-public-keys "$public_value" \
+    "${roots[@]}"
+  "$nix_bin" store verify \
+    --recursive \
+    --option trusted-public-keys "$public_value" \
+    "${roots[@]}"
+  ok "Closures imported and content verified. No activation was performed."
+}
+
+build_without_activation() {
+  local nix_bin target_repo
+  nix_bin=$(nix_path) || die "Nix is required."
+  printf 'Home-config repository [%s]: ' "$repo_dir"
+  IFS= read -r target_repo
+  target_repo=${target_repo:-$repo_dir}
+  [[ -f "$target_repo/flake.nix" && -f "$target_repo/flake.lock" ]] ||
+    die "flake.nix or flake.lock is missing: $target_repo"
+  confirm_phrase "Build the activation package without activating Home Manager?" "BUILD ONLY" || return
+  (
+    cd "$target_repo"
+    "$nix_bin" build \
+      'path:.#homeConfigurations.Designers.activationPackage' \
+      --no-link \
+      --no-update-lock-file
+  )
+  ok "Non-activation build completed. Home Manager is still unchanged."
+}
+
+activate_home_manager() {
+  local nix_bin target_repo
+  nix_bin=$(nix_path) || die "Nix is required."
+  printf 'Home-config repository [%s]: ' "$repo_dir"
+  IFS= read -r target_repo
+  target_repo=${target_repo:-$repo_dir}
+  [[ -f "$target_repo/flake.nix" && -f "$target_repo/flake.lock" ]] ||
+    die "flake.nix or flake.lock is missing: $target_repo"
+  warn "Activation changes the live user environment. Run the non-activation build first."
+  confirm_phrase "Activate only after reviewing the build and current Git diff." "ACTIVATE HOME" || return
+  (
+    cd "$target_repo"
+    "$nix_bin" run '.#home-manager-switch' --no-update-lock-file
+  )
+}
+
+restore_menu() {
+  local choice
+  discover_keyvault
+  package_dir="$keyvault_mount/recovery/$package_name"
+  manifest_dir="$package_dir/manifest"
+  secret_dir="$package_dir/secrets"
+  repo_backup_dir="$package_dir/repository"
+  while true; do
+    header
+    printf '%sRecovery workflow — perform in order%s\n\n' "$bold" "$reset"
+    printf '  1) Verify KeyVault package and Nix cache\n'
+    printf '  2) Show credential recovery guidance\n'
+    printf '  3) Restore repository into a new directory\n'
+    printf '  4) Import signed Nix closures (no activation)\n'
+    printf '  5) Build Home Manager activation package only\n'
+    printf '  6) Activate Home Manager (strong confirmation)\n'
+    printf '  7) Show whole-disk recovery guidance\n'
+    printf '  b) Back\n\n'
+    printf 'Choose: '
+    IFS= read -r choice
+    case "$choice" in
+      1) verify_material; pause ;;
+      2)
+        rule
+        printf '%sCredential recovery%s\n' "$bold" "$reset"
+        printf 'Prefer the existing helper after installing/restoring it:\n'
+        printf '  credential-usb-recovery list\n'
+        printf '  credential-usb-recovery restore latest\n\n'
+        warn "It validates archives, snapshots existing credentials, and asks before overwrite."
+        warn "Never print SSH, rclone, Bitwarden, OAuth, or Agenix secret contents."
+        pause
+        ;;
+      3) restore_repository_guide; pause ;;
+      4) import_nix_cache; pause ;;
+      5) build_without_activation; pause ;;
+      6) activate_home_manager; pause ;;
+      7)
+        rule
+        warn "Whole-disk restore overwrites the selected disk."
+        printf 'Boot trusted Clonezilla/Rescuezilla media, inspect disk model/size,\n'
+        printf 'then restore the image of the entire NVMe device. This guide never\n'
+        printf 'runs dd, partitioning, formatting, or disk-image restore commands.\n'
+        pause
+        ;;
+      b | B) return ;;
+      *) warn "Unknown choice."; pause ;;
+    esac
+  done
+}
+
+show_manual() {
+  local manual=""
+  if [[ -f "$script_dir/MANUAL.md" ]]; then
+    manual="$script_dir/MANUAL.md"
+  elif [[ -f "$script_dir/../docs/nix-store-backup-and-recovery-manual.md" ]]; then
+    manual="$script_dir/../docs/nix-store-backup-and-recovery-manual.md"
+  fi
+  [[ -n "$manual" ]] || die "Manual was not found."
+  if command -v less >/dev/null 2>&1 && [[ -t 1 ]]; then
+    less -R "$manual"
+  else
+    sed -n '1,320p' "$manual"
+  fi
+}
+
+self_test() {
+  [[ "$default_repo" == /* && "$default_cache" == /* ]]
+  [[ "$package_name" =~ ^[a-z0-9-]+$ ]]
+  command -v sha256sum >/dev/null
+  printf 'self-test: ok\n'
+}
+
+main_menu() {
+  local choice
+  [[ -t 0 ]] || die "Interactive terminal required. Use --status or --self-test for automation."
+  while true; do
+    header
+    printf '\n  %s1)%s Read-only preflight\n' "$cyan" "$reset"
+    printf '  %s2)%s Create or refresh recovery material\n' "$cyan" "$reset"
+    printf '  %s3)%s Verify recovery material\n' "$cyan" "$reset"
+    printf '  %s4)%s Guided restore workflow\n' "$cyan" "$reset"
+    printf '  %s5)%s Read the complete manual\n' "$cyan" "$reset"
+    printf '  %sq)%s Quit\n\n' "$cyan" "$reset"
+    printf 'Choose: '
+    IFS= read -r choice
+    case "$choice" in
+      1) show_status; pause ;;
+      2) create_recovery_material; pause ;;
+      3) verify_material; pause ;;
+      4) restore_menu ;;
+      5) show_manual ;;
+      q | Q) break ;;
+      *) warn "Unknown choice."; pause ;;
+    esac
+  done
+}
+
+case "${1:-}" in
+  --status) show_status ;;
+  --self-test) self_test ;;
+  --help | -h)
+    printf 'Usage: %s [--status|--self-test|--help]\n' "$program_name"
+    ;;
+  "") main_menu ;;
+  *) die "Unknown argument: $1" ;;
+esac
