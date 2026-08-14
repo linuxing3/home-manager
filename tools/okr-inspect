@@ -1,0 +1,487 @@
+#!/usr/bin/env python3
+"""Read-only inspector for the observed Lenovo/UOS OKR 0x09000812 format."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import stat
+import struct
+import sys
+from pathlib import Path
+
+
+SECTOR_SIZE = 512
+BLOCK_SECTORS = 64
+ALIGNMENT = 4096
+EXPECTED_VERSION = 0x09000812
+BASE_HEADER_SIZE = 0x6024
+PARTITION_SIZE = 0x130
+MAX_PARTITIONS = 64
+COMPRESSED_MAGICS = {b"czae", bytes.fromhex("63676a67")}
+UNCOMPRESSED_MAGICS = {b"nxps", bytes.fromhex("62676a67")}
+POPCOUNT = tuple(bin(value).count("1") for value in range(256))
+
+
+class FormatError(Exception):
+    pass
+
+
+def checked_add(left: int, right: int, limit: int, context: str) -> int:
+    if left < 0 or right < 0 or left > limit - right:
+        raise FormatError(f"{context}: integer overflow or value exceeds {limit}")
+    return left + right
+
+
+def align_up(value: int, alignment: int = ALIGNMENT) -> int:
+    if value < 0:
+        raise FormatError("cannot align a negative value")
+    return ((value + alignment - 1) // alignment) * alignment
+
+
+def u16(data: bytes, offset: int) -> int:
+    return struct.unpack_from("<H", data, offset)[0]
+
+
+def u32(data: bytes, offset: int) -> int:
+    return struct.unpack_from("<I", data, offset)[0]
+
+
+def u64(data: bytes, offset: int) -> int:
+    return struct.unpack_from("<Q", data, offset)[0]
+
+
+def utf16z(data: bytes) -> str:
+    end = len(data)
+    for offset in range(0, len(data) - 1, 2):
+        if data[offset : offset + 2] == b"\0\0":
+            end = offset
+            break
+    try:
+        value = data[:end].decode("utf-16-le")
+    except UnicodeDecodeError as error:
+        raise FormatError(f"invalid UTF-16LE string: {error}") from error
+    # The production EFI sometimes widened already UTF-8-encoded label bytes
+    # into CHAR16 values. Repair that representation only when lossless.
+    if value and all(ord(character) <= 0xFF for character in value):
+        try:
+            repaired = value.encode("latin-1").decode("utf-8")
+        except UnicodeDecodeError:
+            pass
+        else:
+            if any(ord(character) > 0x7F for character in repaired):
+                value = repaired
+    return value
+
+
+def guid(data: bytes) -> str:
+    if len(data) != 16:
+        raise FormatError("invalid GUID length")
+    first, second, third = struct.unpack_from("<IHH", data)
+    tail = data[8:]
+    return f"{first:08x}-{second:04x}-{third:04x}-{tail[:2].hex()}-{tail[2:].hex()}"
+
+
+def open_regular_readonly(path: Path):
+    if str(path).startswith("/dev/"):
+        raise FormatError(f"refusing device path: {path}")
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as error:
+        raise FormatError(f"cannot open {path}: {error.strerror}") from error
+    info = os.fstat(descriptor)
+    if not stat.S_ISREG(info.st_mode):
+        os.close(descriptor)
+        raise FormatError(f"not a regular file: {path}")
+    return os.fdopen(descriptor, "rb", buffering=0), info.st_size
+
+
+class SegmentedReader:
+    def __init__(self, paths: list[Path]):
+        self.paths = paths
+        self.files = []
+        self.sizes = []
+        self.starts = []
+        total = 0
+        try:
+            for path in paths:
+                handle, size = open_regular_readonly(path)
+                self.starts.append(total)
+                self.files.append(handle)
+                self.sizes.append(size)
+                total = checked_add(total, size, (1 << 63) - 1, "segment sizes")
+        except Exception:
+            self.close()
+            raise
+        self.total_size = total
+
+    def close(self) -> None:
+        for handle in self.files:
+            handle.close()
+        self.files = []
+
+    def read_at(self, offset: int, size: int) -> bytes:
+        end = checked_add(offset, size, self.total_size, "read range")
+        if end > self.total_size:
+            raise FormatError(
+                f"short segmented input: need [{offset:#x}, {end:#x}), "
+                f"have {self.total_size:#x} bytes"
+            )
+        output = bytearray()
+        remaining = size
+        position = offset
+        for index, start in enumerate(self.starts):
+            segment_end = start + self.sizes[index]
+            if position >= segment_end:
+                continue
+            local = max(position - start, 0)
+            take = min(remaining, self.sizes[index] - local)
+            self.files[index].seek(local)
+            chunk = self.files[index].read(take)
+            if len(chunk) != take:
+                raise FormatError(f"short read from {self.paths[index]}")
+            output.extend(chunk)
+            position += take
+            remaining -= take
+            if remaining == 0:
+                return bytes(output)
+        raise FormatError("segmented read did not reach the requested size")
+
+
+def discover_segments(main: Path, expected: int) -> list[Path]:
+    if expected < 1 or expected > 1024:
+        raise FormatError(f"invalid FileNumber: {expected}")
+    paths = [main]
+    for index in range(1, expected):
+        candidate = Path(f"{main}.{index}")
+        if not candidate.exists():
+            raise FormatError(f"missing segment {index}: {candidate}")
+        paths.append(candidate)
+    return paths
+
+
+def parse_partition(data: bytes, index: int) -> dict:
+    if len(data) != PARTITION_SIZE:
+        raise FormatError(f"partition {index}: invalid record length")
+    boot_begin = u64(data, 0x00)
+    total_sectors = u64(data, 0x10)
+    end_sector = checked_add(
+        boot_begin, total_sectors, (1 << 64) - 1, f"partition {index}"
+    )
+    return {
+        "index": index,
+        "boot_begin_sector": boot_begin,
+        "total_sectors": total_sectors,
+        "end_sector_exclusive": end_sector,
+        "size_bytes": total_sectors * SECTOR_SIZE,
+        "partition_id": data[0x25],
+        "partition_type": data[0x28],
+        "boot_partition": bool(data[0x29]),
+        "selected_for_backup": bool(data[0x2A]),
+        "disk_number": data[0x2B],
+        "free_sectors": u64(data, 0x30),
+        "backup_data_size": u64(data, 0x38),
+        "type_guid": guid(data[0x40:0x50]),
+        "unique_guid": guid(data[0x50:0x60]),
+        "label": utf16z(data[0x60:0xA2]).rstrip(),
+        "last_mounted": utf16z(data[0xA2:0x122]),
+        "gpt": bool(data[0x122]),
+        "bitmap_valid": data[0x123],
+        "has_windows": bool(data[0x124]),
+        "partition_index": data[0x125],
+        "runtime_handle_raw": f"0x{u64(data, 0x128):016x}",
+    }
+
+
+def inspect(main: Path, scan_blocks: bool) -> dict:
+    first, first_size = open_regular_readonly(main)
+    try:
+        prefix = first.read(0x600)
+    finally:
+        first.close()
+    if len(prefix) != 0x600:
+        raise FormatError("main segment is too short for the OKR header")
+    if prefix[:4] != b"okr9":
+        raise FormatError(f"invalid magic {prefix[:4]!r}; expected b'okr9'")
+
+    version = u32(prefix, 0x04)
+    struct_size = u32(prefix, 0x08)
+    partition_count = u16(prefix, 0x53A)
+    gpt_size = u32(prefix, 0x53C)
+    compress_block_size = u32(prefix, 0x544)
+    original_size = u64(prefix, 0x548)
+    data_offset = u32(prefix, 0x550)
+    file_number = u32(prefix, 0x554)
+    disk_sectors = u64(prefix, 0x110)
+    declared_file_size = u64(prefix, 0x108)
+
+    if version != EXPECTED_VERSION:
+        raise FormatError(
+            f"unsupported version {version:#010x}; this inspector accepts only "
+            f"the observed {EXPECTED_VERSION:#010x} layout"
+        )
+    if partition_count > MAX_PARTITIONS:
+        raise FormatError(f"PartitionCount {partition_count} exceeds {MAX_PARTITIONS}")
+    records_end = checked_add(
+        BASE_HEADER_SIZE,
+        partition_count * PARTITION_SIZE,
+        struct_size,
+        "partition records",
+    )
+    expected_struct_size = align_up(records_end, SECTOR_SIZE)
+    if struct_size != expected_struct_size:
+        raise FormatError(
+            f"StructSize {struct_size:#x} does not match the observed layout "
+            f"{expected_struct_size:#x}"
+        )
+    if gpt_size == 0 or gpt_size % SECTOR_SIZE:
+        raise FormatError("GptSize is zero or not sector-aligned")
+    expected_data_offset = align_up(struct_size + gpt_size)
+    if data_offset != expected_data_offset:
+        raise FormatError(
+            f"DataOffset {data_offset:#x} does not match aligned header+GPT "
+            f"{expected_data_offset:#x}"
+        )
+    if compress_block_size == 0 or compress_block_size % (BLOCK_SECTORS * SECTOR_SIZE):
+        raise FormatError("CompressBlockSize is invalid")
+    if not prefix[0x541]:
+        raise FormatError("backup completion flag is not set")
+
+    paths = discover_segments(main, file_number)
+    reader = SegmentedReader(paths)
+    try:
+        if reader.sizes[0] != first_size:
+            raise FormatError("main segment size changed during inspection")
+        header = reader.read_at(0, struct_size)
+        if header[: len(prefix)] != prefix:
+            raise FormatError("main segment header changed during inspection")
+        partitions = []
+        for index in range(partition_count):
+            start = BASE_HEADER_SIZE + index * PARTITION_SIZE
+            partitions.append(
+                parse_partition(header[start : start + PARTITION_SIZE], index)
+            )
+
+        selected = [part for part in partitions if part["selected_for_backup"]]
+        selected_disks = {part["disk_number"] for part in selected}
+        if len(selected_disks) != 1:
+            raise FormatError(
+                f"selected partitions span {len(selected_disks)} disks; expected exactly one"
+            )
+        source_disk = next(iter(selected_disks))
+        for part in partitions:
+            if (
+                part["disk_number"] == source_disk
+                and part["end_sector_exclusive"] > disk_sectors
+            ):
+                raise FormatError(
+                    f"partition {part['index']}: end sector exceeds source disk"
+                )
+
+        if declared_file_size != reader.total_size:
+            raise FormatError(
+                f"FileSize mismatch: header={declared_file_size}, segments={reader.total_size}"
+            )
+        gpt = reader.read_at(struct_size, gpt_size)
+        if gpt[SECTOR_SIZE : SECTOR_SIZE + 8] != b"EFI PART":
+            raise FormatError("embedded GPT header signature is missing at LBA 1")
+
+        cursor = data_offset
+        block_summary = []
+        compressed_payload = 0
+        uncompressed_payload = 0
+        decompressed_upper_bound = 0
+        bitmap_data_bytes = 0
+        for part in selected:
+            total_blocks = (part["total_sectors"] + BLOCK_SECTORS - 1) // BLOCK_SECTORS
+            bitmap_size = (total_blocks + 7) // 8
+            bitmap_aligned = align_up(bitmap_size)
+            if part["backup_data_size"] < bitmap_aligned:
+                raise FormatError(
+                    f"partition {part['index']}: BackupDataSize smaller than bitmap"
+                )
+            data_size = part["backup_data_size"] - bitmap_aligned
+            bitmap = reader.read_at(cursor, bitmap_aligned)
+            set_bits = sum(POPCOUNT[byte] for byte in bitmap[:bitmap_size])
+            if total_blocks % 8:
+                set_bits -= POPCOUNT[bitmap[bitmap_size - 1] >> (total_blocks % 8)]
+            last_block_sectors = part["total_sectors"] % BLOCK_SECTORS
+            selected_bytes = set_bits * BLOCK_SECTORS * SECTOR_SIZE
+            if last_block_sectors and bitmap[bitmap_size - 1] & (
+                1 << ((total_blocks - 1) % 8)
+            ):
+                selected_bytes -= (BLOCK_SECTORS - last_block_sectors) * SECTOR_SIZE
+            bitmap_data_bytes += selected_bytes
+            cursor = checked_add(
+                cursor, bitmap_aligned, reader.total_size, "bitmap cursor"
+            )
+            partition_end = checked_add(
+                cursor, data_size, reader.total_size, "partition data"
+            )
+            blocks = 0
+            if scan_blocks:
+                while cursor < partition_end:
+                    block_head = reader.read_at(cursor, 16)
+                    magic = block_head[:4]
+                    lz4_size, aligned_size = struct.unpack_from("<II", block_head, 4)
+                    if magic not in COMPRESSED_MAGICS | UNCOMPRESSED_MAGICS:
+                        raise FormatError(
+                            f"partition {part['index']}: invalid block magic {magic!r} at {cursor:#x}"
+                        )
+                    if aligned_size < 16 or aligned_size % ALIGNMENT:
+                        raise FormatError(
+                            f"partition {part['index']}: invalid aligned block size at {cursor:#x}"
+                        )
+                    if lz4_size > aligned_size - 16 or lz4_size > compress_block_size:
+                        raise FormatError(
+                            f"partition {part['index']}: invalid LZ4 size at {cursor:#x}"
+                        )
+                    next_cursor = checked_add(
+                        cursor, aligned_size, partition_end, "block cursor"
+                    )
+                    if next_cursor > partition_end:
+                        raise FormatError(
+                            f"partition {part['index']}: block crosses data boundary"
+                        )
+                    if magic in COMPRESSED_MAGICS:
+                        compressed_payload += lz4_size
+                    else:
+                        uncompressed_payload += lz4_size
+                    decompressed_upper_bound += compress_block_size
+                    blocks += 1
+                    cursor = next_cursor
+                if cursor != partition_end:
+                    raise FormatError(
+                        f"partition {part['index']}: data size is not block-exact"
+                    )
+            else:
+                cursor = partition_end
+            block_summary.append(
+                {
+                    "partition_index": part["index"],
+                    "bitmap_offset": partition_end - data_size - bitmap_aligned,
+                    "bitmap_bytes": bitmap_size,
+                    "bitmap_aligned_bytes": bitmap_aligned,
+                    "set_blocks": set_bits,
+                    "stored_data_bytes": data_size,
+                    "container_blocks": blocks if scan_blocks else None,
+                }
+            )
+        if cursor != reader.total_size:
+            raise FormatError(
+                f"container traversal ended at {cursor:#x}, expected {reader.total_size:#x}"
+            )
+        if bitmap_data_bytes != original_size:
+            raise FormatError(
+                f"bitmap data size {bitmap_data_bytes} does not match OriginalSize "
+                f"{original_size}"
+            )
+    finally:
+        reader.close()
+
+    return {
+        "format": "Lenovo/UOS OKR9 observed production layout",
+        "read_only": True,
+        "main_file": str(main.resolve()),
+        "segments": [
+            {"path": str(path.resolve()), "size_bytes": size}
+            for path, size in zip(paths, reader.sizes)
+        ],
+        "header": {
+            "magic": "okr9",
+            "version": f"0x{version:08x}",
+            "struct_size": struct_size,
+            "partition_count": partition_count,
+            "gpt_size": gpt_size,
+            "data_offset": data_offset,
+            "file_number": file_number,
+            "file_size": declared_file_size,
+            "disk_sectors": disk_sectors,
+            "disk_size_bytes": disk_sectors * SECTOR_SIZE,
+            "source_disk_number": source_disk,
+            "original_size": original_size,
+            "compress_block_size": compress_block_size,
+            "flags": {
+                "gpt": bool(prefix[0x540]),
+                "complete": bool(prefix[0x541]),
+                "compress": bool(prefix[0x542]),
+                "factory_backup": bool(prefix[0x543]),
+            },
+        },
+        "layout": {
+            "partition_records_offset": BASE_HEADER_SIZE,
+            "partition_record_size": PARTITION_SIZE,
+            "known_prefix_bytes": 0xA2,
+            "last_mounted_bytes": 0x80,
+            "first_partition_bitmap_offset": data_offset,
+        },
+        "partitions": partitions,
+        "backup_stream": {
+            "scanned_block_headers": scan_blocks,
+            "partitions": block_summary,
+            "compressed_payload_bytes": compressed_payload if scan_blocks else None,
+            "uncompressed_payload_bytes": uncompressed_payload if scan_blocks else None,
+            "decompressed_upper_bound_bytes": decompressed_upper_bound
+            if scan_blocks
+            else None,
+            "bitmap_data_bytes": bitmap_data_bytes,
+        },
+        "warnings": [
+            "The 0x09000812 extension was inferred from this production sample and public 0x09000811 source.",
+            "Runtime handle values are opaque and must never be used for restoration.",
+            "This tool validates container structure only; it does not authenticate backup provenance or decompress data.",
+        ],
+    }
+
+
+def human_report(report: dict) -> str:
+    header = report["header"]
+    lines = [
+        "OKR 只读检查报告",
+        f"文件: {report['main_file']}",
+        f"版本: {header['version']}  分卷: {header['file_number']}  完整标志: {header['flags']['complete']}",
+        f"容器: {header['file_size']} 字节  原盘: {header['disk_size_bytes']} 字节 ({header['disk_sectors']} 扇区)",
+        f"头/GPT/数据偏移: {header['struct_size']:#x} / {header['gpt_size']:#x} / {header['data_offset']:#x}",
+        "",
+        "索引  备份  起始LBA       扇区数         标签          挂载点",
+    ]
+    for part in report["partitions"]:
+        lines.append(
+            f"{part['index']:>4}  {'是' if part['selected_for_backup'] else '否':>4}  "
+            f"{part['boot_begin_sector']:>12}  {part['total_sectors']:>13}  "
+            f"{part['label'][:12]:<12}  {part['last_mounted']}"
+        )
+    lines.extend(["", "结果: 已通过只读边界与结构一致性检查；未解压、未写盘。"])
+    return "\n".join(lines)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("okrfile", type=Path, help="path to the main okrfile")
+    parser.add_argument(
+        "--json", action="store_true", help="print JSON instead of Chinese text"
+    )
+    parser.add_argument(
+        "--no-block-scan",
+        action="store_true",
+        help="skip the full segmented block-header scan",
+    )
+    args = parser.parse_args()
+    try:
+        main_path = Path(os.path.abspath(os.fspath(args.okrfile)))
+        report = inspect(main_path, not args.no_block_scan)
+    except (FormatError, OSError) as error:
+        print(f"okr-inspect: error: {error}", file=sys.stderr)
+        return 2
+    if args.json:
+        json.dump(report, sys.stdout, ensure_ascii=False, indent=2)
+        print()
+    else:
+        print(human_report(report))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

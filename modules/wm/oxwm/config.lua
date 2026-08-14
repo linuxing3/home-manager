@@ -141,6 +141,7 @@ oxwm.rule.add({ instance = "gimp", floating = true })
 -- oxwm.rule.add({ class = "firefox", tag = 2 })
 oxwm.rule.add({ instance = "mpv", floating = true })
 oxwm.rule.add({ class = "st", title = "hx", floating = true })
+oxwm.rule.add({ class = "st", title = "hx-anywhere", floating = true })
 oxwm.rule.add({ class = "st", title = "nnn", floating = true })
 
 -- To find window properties, use xprop and click on the window
@@ -192,6 +193,8 @@ oxwm.key.bind({ modkey }, "D", oxwm.spawn({ "sh", "-c", "dmenu_run -l 10" }))
 oxwm.key.bind({ modkey }, "G", oxwm.spawn({ "sh", "-c", "brave-browser" }))
 oxwm.key.bind({ modkey }, "E", oxwm.spawn({ "sh", "-c", "st -t hx -e hx" }))
 oxwm.key.bind({ modkey }, "A", oxwm.spawn({ "sh", "-c", "st -t nnn -e nnn" }))
+-- Helix anywhere (vim-anywhere equivalent): edit temp buffer, copy on close
+oxwm.key.bind({ "Control", "Mod1" }, "V", oxwm.spawn({ "hx-anywhere" }))
 -- Copy screenshot to clipboard
 oxwm.key.bind({ modkey }, "S", oxwm.spawn({ "screenshot-to-clipboard" }))
 oxwm.key.bind({ modkey }, "Q", oxwm.client.kill())

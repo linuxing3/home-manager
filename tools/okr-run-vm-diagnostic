@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: okr-run-vm-diagnostic [--qemu QEMU] [--vnc DISPLAY] IMAGE KERNEL INITRD
+
+Boots an AArch64 UOS OKR QCOW2 image with its extracted kernel and initrd.
+The disk is always opened with snapshot=on, networking is disabled, and no
+host block device is accepted. The VNC default is 127.0.0.1:9 (TCP 5909).
+EOF
+}
+
+qemu_bin="${QEMU_SYSTEM_AARCH64:-}"
+vnc_display="127.0.0.1:9"
+
+while (($#)); do
+  case "$1" in
+    --qemu)
+      (($# >= 2)) || { usage >&2; exit 2; }
+      qemu_bin=$2
+      shift 2
+      ;;
+    --vnc)
+      (($# >= 2)) || { usage >&2; exit 2; }
+      vnc_display=$2
+      shift 2
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "error: unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+(($# == 3)) || { usage >&2; exit 2; }
+image=$1
+kernel=$2
+initrd=$3
+
+for path in "$image" "$kernel" "$initrd"; do
+  case "$path" in
+    /dev/*)
+      echo "error: refusing device path: $path" >&2
+      exit 1
+      ;;
+  esac
+  [[ -f "$path" && ! -L "$path" ]] || {
+    echo "error: input must be a regular non-symlink file: $path" >&2
+    exit 1
+  }
+done
+
+if [[ -z "$qemu_bin" ]]; then
+  qemu_bin=$(command -v qemu-system-aarch64 || true)
+fi
+[[ -n "$qemu_bin" && -x "$qemu_bin" ]] || {
+  echo "error: qemu-system-aarch64 not found; use --qemu PATH" >&2
+  exit 1
+}
+
+qemu_img=$(dirname "$qemu_bin")/qemu-img
+[[ -x "$qemu_img" ]] || qemu_img=$(command -v qemu-img || true)
+[[ -n "$qemu_img" && -x "$qemu_img" ]] || {
+  echo "error: qemu-img not found next to QEMU or in PATH" >&2
+  exit 1
+}
+
+image_format=$("$qemu_img" info --output=json "$image" | /usr/bin/python3 -c \
+  'import json,sys; print(json.load(sys.stdin).get("format", ""))')
+[[ "$image_format" == qcow2 ]] || {
+  echo "error: diagnostic runner accepts QCOW2 only, got: $image_format" >&2
+  exit 1
+}
+$qemu_img check "$image"
+
+exec "$qemu_bin" \
+  -name uos-okr-diagnostic \
+  -machine virt,accel=kvm,gic-version=3,its=on \
+  -cpu host -smp 4 -m 4096 \
+  -kernel "$kernel" \
+  -initrd "$initrd" \
+  -append 'root=UUID=8a00eaad-49bd-4f97-9fbe-48529c4d41a1 ro console=ttyAMA0,115200 earlycon=pl011,0x9000000 loglevel=6 systemd.log_level=info systemd.log_target=console plymouth.enable=0 rd.plymouth=0 checkreqprot=1 useclinux=1 ima_appraise=off luks.crypttab=n libahci.ignore_sss=1' \
+  -drive "if=none,id=system,format=qcow2,snapshot=on,file=$image" \
+  -device virtio-blk-pci,drive=system \
+  -device virtio-gpu-pci \
+  -device qemu-xhci \
+  -device usb-kbd \
+  -device usb-tablet \
+  -nic none \
+  -vnc "$vnc_display" \
+  -serial stdio \
+  -monitor none

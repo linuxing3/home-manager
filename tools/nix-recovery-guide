@@ -4,6 +4,7 @@ set -Eeuo pipefail
 umask 077
 
 readonly program_name="nix-recovery-guide"
+readonly package_root="uos-system-recovery"
 readonly package_name="nix-system-recovery"
 readonly default_repo="/share/data/sources/home-config"
 readonly default_cache="/share/recovery/nix-cache"
@@ -104,7 +105,7 @@ discover_keyvault() {
     die "Refusing unsafe KeyVault mount path: $keyvault_mount"
   [[ -w "$keyvault_mount" ]] || die "KeyVault is not writable: $keyvault_mount"
 
-  package_dir="$keyvault_mount/recovery/$package_name"
+  package_dir="$keyvault_mount/$package_root/$package_name"
   manifest_dir="$package_dir/manifest"
   secret_dir="$package_dir/secrets"
   repo_backup_dir="$package_dir/repository"
@@ -112,8 +113,8 @@ discover_keyvault() {
 
 ensure_package_dirs() {
   discover_keyvault
-  mkdir -p -- "$package_dir" "$manifest_dir" "$secret_dir" "$repo_backup_dir"
-  chmod 700 "$package_dir" "$manifest_dir" "$secret_dir" "$repo_backup_dir"
+  mkdir -p -- "$keyvault_mount/$package_root" "$package_dir" "$manifest_dir" "$secret_dir" "$repo_backup_dir"
+  chmod 700 "$keyvault_mount/$package_root" "$package_dir" "$manifest_dir" "$secret_dir" "$repo_backup_dir"
 }
 
 nix_path() {
@@ -322,7 +323,7 @@ verify_material() {
   header
   printf '%sStep 3 — Verify recovery material%s\n\n' "$bold" "$reset"
   discover_keyvault
-  package_dir="$keyvault_mount/recovery/$package_name"
+  package_dir="$keyvault_mount/$package_root/$package_name"
   manifest_dir="$package_dir/manifest"
   secret_dir="$package_dir/secrets"
   [[ -f "$package_dir/SHA256SUMS" ]] || die "SHA256SUMS is missing: $package_dir"
@@ -445,7 +446,7 @@ activate_home_manager() {
 restore_menu() {
   local choice
   discover_keyvault
-  package_dir="$keyvault_mount/recovery/$package_name"
+  package_dir="$keyvault_mount/$package_root/$package_name"
   manifest_dir="$package_dir/manifest"
   secret_dir="$package_dir/secrets"
   repo_backup_dir="$package_dir/repository"

@@ -1,4 +1,4 @@
 interface:
-  display_name: "UOS Nix Store Backup"
-  short_description: "Backup and verify UOS Home Manager Nix closures"
-  default_prompt: "Use $uos-nix-store-backup to refresh or verify KeyVault, local signed cache, OneDrive GPG, and Cachix recovery backups for this UOS Home Manager host without printing secrets or activating Home Manager."
+  display_name: "UOS KeyVault Recovery"
+  short_description: "KeyVault identity + Nix closure backup/restore"
+  default_prompt: "Use $uos-nix-store-backup with KeyVault packs uos-Designers and uos-system-recovery to backup or restore SSH/GPG/Agenix identity and Nix closures without printing secrets or activating Home Manager."

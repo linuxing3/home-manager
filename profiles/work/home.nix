@@ -26,7 +26,9 @@
 
     # ------------- app -------------------
     ../../modules/app/cli-proxy-api/default.nix
+    ../../modules/app/hx-anywhere/default.nix
     ../../modules/app/rclone/default.nix
+    ../../modules/app/virtualization/default.nix
 
     # ------------- wm/gui -------------------
     ../../modules/wm/oxwm/oxwm.nix

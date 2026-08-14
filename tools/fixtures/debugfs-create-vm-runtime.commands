@@ -1,0 +1,49 @@
+mkdir /var/log
+mkdir /var/log/lightdm
+mkdir /var/lib/lightdm
+mkdir /var/lib/lightdm/lightdm-deepin-greeter
+mkdir /var/lib/upower
+mkdir /var/lib/fprint
+mkdir /var/lib/AccountsService
+mkdir /var/lib/AccountsService/users
+mkdir /var/lib/AccountsService/icons
+mkdir /var/lib/systemd
+mkdir /var/lib/systemd/coredump
+mkdir /var/lib/private
+mkdir /var/cache/lightdm
+mkdir /var/cache/private
+mkdir /var/log/private
+mkdir /var/log/journal
+mkdir /var/tmp
+mkdir /var/spool
+mkdir /home/Designers
+
+set_inode_field /var mode 040755
+set_inode_field /var/log mode 040755
+set_inode_field /var/log/lightdm mode 040711
+set_inode_field /var/lib mode 040755
+set_inode_field /var/lib/lightdm mode 040750
+set_inode_field /var/lib/lightdm uid 117
+set_inode_field /var/lib/lightdm gid 124
+set_inode_field /var/lib/lightdm/lightdm-deepin-greeter mode 040755
+set_inode_field /var/lib/lightdm/lightdm-deepin-greeter uid 117
+set_inode_field /var/lib/lightdm/lightdm-deepin-greeter gid 124
+set_inode_field /var/lib/upower mode 040755
+set_inode_field /var/lib/fprint mode 040755
+set_inode_field /var/lib/AccountsService mode 040755
+set_inode_field /var/lib/AccountsService/users mode 040755
+set_inode_field /var/lib/AccountsService/icons mode 040755
+set_inode_field /var/lib/systemd mode 040755
+set_inode_field /var/lib/systemd/coredump mode 040755
+set_inode_field /var/lib/private mode 040700
+set_inode_field /var/cache mode 040755
+set_inode_field /var/cache/lightdm mode 040711
+set_inode_field /var/cache/private mode 040700
+set_inode_field /var/log/private mode 040700
+set_inode_field /var/log/journal mode 042755
+set_inode_field /var/log/journal gid 101
+set_inode_field /var/tmp mode 041777
+set_inode_field /var/spool mode 040755
+set_inode_field /home/Designers mode 040700
+set_inode_field /home/Designers uid 1000
+set_inode_field /home/Designers gid 1000

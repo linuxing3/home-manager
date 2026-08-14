@@ -1,0 +1,660 @@
+#!/usr/bin/env python3
+"""Restore the observed Lenovo/UOS OKR image into a new sparse RAW file."""
+
+from __future__ import annotations
+
+import argparse
+import ctypes
+import importlib.machinery
+import importlib.util
+import json
+import os
+import subprocess
+import stat
+import struct
+import sys
+import zlib
+from pathlib import Path
+
+
+def load_inspector():
+    path = Path(__file__).with_name("okr-inspect")
+    loader = importlib.machinery.SourceFileLoader("okr_inspect", str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    if spec is None:
+        raise RuntimeError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+okr = load_inspector()
+
+
+class RestoreError(Exception):
+    pass
+
+
+class Lz4Decoder:
+    def __init__(self, capacity: int):
+        if capacity <= 0 or capacity > 0x7FFFFFFF:
+            raise RestoreError(f"unsupported LZ4 output capacity: {capacity}")
+        self.capacity = capacity
+        system_python = Path("/usr/bin/python3")
+        if not system_python.is_file():
+            raise RestoreError(
+                "system Python is unavailable for the isolated LZ4 worker"
+            )
+        self.worker = subprocess.Popen(
+            [
+                str(system_python),
+                os.path.abspath(__file__),
+                "--lz4-worker",
+                str(capacity),
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if self.worker.stdin is None or self.worker.stdout is None:
+            self.close()
+            raise RestoreError("failed to create LZ4 worker pipes")
+
+    @staticmethod
+    def read_exact(stream, size: int) -> bytes:
+        output = bytearray()
+        while len(output) < size:
+            chunk = stream.read(size - len(output))
+            if not chunk:
+                raise RestoreError("LZ4 worker closed its output unexpectedly")
+            output.extend(chunk)
+        return bytes(output)
+
+    def worker_error(self) -> str:
+        if self.worker.poll() is None:
+            return ""
+        if self.worker.stderr is None:
+            return f"exit status {self.worker.returncode}"
+        return self.worker.stderr.read().decode("utf-8", "replace").strip()
+
+    def close(self) -> None:
+        worker = getattr(self, "worker", None)
+        if worker is None:
+            return
+        if worker.poll() is None:
+            try:
+                if worker.stdin is not None:
+                    worker.stdin.write(struct.pack("<Q", 0))
+                    worker.stdin.flush()
+                    worker.stdin.close()
+                worker.wait(timeout=5)
+            except (BrokenPipeError, subprocess.TimeoutExpired):
+                worker.terminate()
+                try:
+                    worker.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    worker.kill()
+                    worker.wait()
+        if worker.stdout is not None:
+            worker.stdout.close()
+        if worker.stderr is not None:
+            worker.stderr.close()
+        self.worker = None
+
+    def decode(self, magic: bytes, payload: bytes) -> memoryview:
+        if magic in okr.UNCOMPRESSED_MAGICS:
+            return memoryview(payload)
+        if magic not in okr.COMPRESSED_MAGICS:
+            raise RestoreError(f"unsupported block magic: {magic!r}")
+        if not payload:
+            raise RestoreError("compressed block has an empty payload")
+        error = self.worker_error()
+        if error:
+            raise RestoreError(f"LZ4 worker failed: {error}")
+        try:
+            self.worker.stdin.write(struct.pack("<Q", len(payload)))
+            self.worker.stdin.write(payload)
+            self.worker.stdin.flush()
+        except BrokenPipeError as broken:
+            raise RestoreError(
+                f"LZ4 worker pipe failed: {self.worker_error()}"
+            ) from broken
+        output_size = struct.unpack("<q", self.read_exact(self.worker.stdout, 8))[0]
+        if output_size < 0 or output_size > self.capacity:
+            raise RestoreError(f"LZ4 decompression failed with result {output_size}")
+        return memoryview(self.read_exact(self.worker.stdout, output_size))
+
+
+def lz4_worker(capacity: int) -> int:
+    candidates = [
+        "/lib/aarch64-linux-gnu/liblz4.so.1",
+        "/usr/lib/aarch64-linux-gnu/liblz4.so.1",
+        "/lib/x86_64-linux-gnu/liblz4.so.1",
+        "/usr/lib/x86_64-linux-gnu/liblz4.so.1",
+        "liblz4.so.1",
+    ]
+    library = None
+    errors = []
+    for candidate in candidates:
+        try:
+            library = ctypes.CDLL(candidate)
+            break
+        except OSError as error:
+            errors.append(f"{candidate}: {error}")
+    if library is None:
+        print("; ".join(errors), file=sys.stderr)
+        return 2
+    decompress = library.LZ4_decompress_safe
+    decompress.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_int]
+    decompress.restype = ctypes.c_int
+    output = ctypes.create_string_buffer(capacity)
+    source_stream = sys.stdin.buffer
+    output_stream = sys.stdout.buffer
+    while True:
+        raw_size = source_stream.read(8)
+        if not raw_size:
+            return 0
+        if len(raw_size) != 8:
+            print("truncated worker request size", file=sys.stderr)
+            return 2
+        payload_size = struct.unpack("<Q", raw_size)[0]
+        if payload_size == 0:
+            return 0
+        if payload_size > capacity:
+            print("worker request exceeds capacity", file=sys.stderr)
+            return 2
+        payload = Lz4Decoder.read_exact(source_stream, payload_size)
+        source = ctypes.create_string_buffer(payload)
+        size = decompress(source, output, payload_size, capacity)
+        output_stream.write(struct.pack("<q", size))
+        if size >= 0:
+            output_stream.write(output.raw[:size])
+        output_stream.flush()
+
+
+def fingerprints(reader) -> list[tuple[int, int, int, int]]:
+    result = []
+    for handle in reader.files:
+        info = os.fstat(handle.fileno())
+        result.append((info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns))
+    return result
+
+
+def validate_gpt(gpt: bytes, disk_sectors: int) -> dict:
+    if len(gpt) < 34 * okr.SECTOR_SIZE:
+        raise RestoreError("embedded GPT area is smaller than 34 sectors")
+    if gpt[510:512] != b"\x55\xaa":
+        raise RestoreError("protective MBR signature is invalid")
+    header = bytearray(gpt[okr.SECTOR_SIZE : 2 * okr.SECTOR_SIZE])
+    if header[:8] != b"EFI PART":
+        raise RestoreError("primary GPT signature is invalid")
+    header_size = struct.unpack_from("<I", header, 12)[0]
+    if header_size < 92 or header_size > okr.SECTOR_SIZE:
+        raise RestoreError(f"invalid GPT header size: {header_size}")
+    stored_header_crc = struct.unpack_from("<I", header, 16)[0]
+    struct.pack_into("<I", header, 16, 0)
+    calculated_header_crc = zlib.crc32(header[:header_size]) & 0xFFFFFFFF
+    if stored_header_crc != calculated_header_crc:
+        raise RestoreError(
+            f"primary GPT header CRC mismatch: {stored_header_crc:#x} != "
+            f"{calculated_header_crc:#x}"
+        )
+
+    my_lba, alternate_lba, first_usable, last_usable = struct.unpack_from(
+        "<QQQQ", header, 24
+    )
+    entries_lba = struct.unpack_from("<Q", header, 72)[0]
+    entry_count, entry_size, stored_entries_crc = struct.unpack_from("<III", header, 80)
+    if my_lba != 1 or alternate_lba != disk_sectors - 1:
+        raise RestoreError(
+            "GPT primary/alternate LBA does not match the image disk size"
+        )
+    if first_usable > last_usable or last_usable >= alternate_lba:
+        raise RestoreError("GPT usable LBA range is invalid")
+    if entry_count == 0 or entry_count > 4096 or entry_size < 128 or entry_size % 8:
+        raise RestoreError("GPT partition-entry geometry is invalid")
+    entries_size = entry_count * entry_size
+    entries_offset = entries_lba * okr.SECTOR_SIZE
+    entries_end = entries_offset + entries_size
+    if entries_lba < 2 or entries_end > len(gpt):
+        raise RestoreError("GPT partition array is outside the embedded GPT area")
+    entries = gpt[entries_offset:entries_end]
+    calculated_entries_crc = zlib.crc32(entries) & 0xFFFFFFFF
+    if stored_entries_crc != calculated_entries_crc:
+        raise RestoreError(
+            f"GPT partition array CRC mismatch: {stored_entries_crc:#x} != "
+            f"{calculated_entries_crc:#x}"
+        )
+    entries_sectors = (entries_size + okr.SECTOR_SIZE - 1) // okr.SECTOR_SIZE
+    backup_entries_lba = alternate_lba - entries_sectors
+    if backup_entries_lba <= last_usable:
+        raise RestoreError("backup GPT partition array overlaps usable sectors")
+    return {
+        "header_size": header_size,
+        "my_lba": my_lba,
+        "alternate_lba": alternate_lba,
+        "first_usable_lba": first_usable,
+        "last_usable_lba": last_usable,
+        "entries_lba": entries_lba,
+        "entry_count": entry_count,
+        "entry_size": entry_size,
+        "entries_size": entries_size,
+        "backup_entries_lba": backup_entries_lba,
+        "entries": entries,
+    }
+
+
+def make_backup_gpt_header(gpt: bytes, geometry: dict) -> bytes:
+    header = bytearray(gpt[okr.SECTOR_SIZE : 2 * okr.SECTOR_SIZE])
+    struct.pack_into("<Q", header, 24, geometry["alternate_lba"])
+    struct.pack_into("<Q", header, 32, geometry["my_lba"])
+    struct.pack_into("<Q", header, 72, geometry["backup_entries_lba"])
+    struct.pack_into("<I", header, 16, 0)
+    crc = zlib.crc32(header[: geometry["header_size"]]) & 0xFFFFFFFF
+    struct.pack_into("<I", header, 16, crc)
+    return bytes(header)
+
+
+def selected_bytes(bitmap: bytes, total_sectors: int) -> tuple[int, int]:
+    total_blocks = (total_sectors + okr.BLOCK_SECTORS - 1) // okr.BLOCK_SECTORS
+    set_bits = 0
+    result = 0
+    for block in range(total_blocks):
+        if bitmap[block // 8] & (1 << (block % 8)):
+            sectors = min(okr.BLOCK_SECTORS, total_sectors - block * okr.BLOCK_SECTORS)
+            result += sectors * okr.SECTOR_SIZE
+            set_bits += 1
+    return set_bits, result
+
+
+def build_plan(reader, report: dict) -> tuple[bytes, dict, list[dict]]:
+    header = report["header"]
+    gpt = reader.read_at(header["struct_size"], header["gpt_size"])
+    gpt_geometry = validate_gpt(gpt, header["disk_sectors"])
+    cursor = header["data_offset"]
+    plans = []
+    selected = [part for part in report["partitions"] if part["selected_for_backup"]]
+    for part in selected:
+        total_blocks = (
+            part["total_sectors"] + okr.BLOCK_SECTORS - 1
+        ) // okr.BLOCK_SECTORS
+        bitmap_size = (total_blocks + 7) // 8
+        bitmap_aligned = okr.align_up(bitmap_size)
+        bitmap = reader.read_at(cursor, bitmap_aligned)[:bitmap_size]
+        cursor += bitmap_aligned
+        set_bits, expected_bytes = selected_bytes(bitmap, part["total_sectors"])
+        stored_data_size = part["backup_data_size"] - bitmap_aligned
+        partition_end = cursor + stored_data_size
+        blocks = []
+        while cursor < partition_end:
+            raw_header = reader.read_at(cursor, 16)
+            magic = raw_header[:4]
+            payload_size, aligned_size = struct.unpack_from("<II", raw_header, 4)
+            if magic not in okr.COMPRESSED_MAGICS | okr.UNCOMPRESSED_MAGICS:
+                raise RestoreError(
+                    f"partition {part['index']}: invalid block magic at {cursor:#x}"
+                )
+            if aligned_size < 16 or aligned_size % okr.ALIGNMENT:
+                raise RestoreError(
+                    f"partition {part['index']}: invalid aligned block size at {cursor:#x}"
+                )
+            if (
+                payload_size > aligned_size - 16
+                or payload_size > header["compress_block_size"]
+            ):
+                raise RestoreError(
+                    f"partition {part['index']}: invalid payload size at {cursor:#x}"
+                )
+            if cursor + aligned_size > partition_end:
+                raise RestoreError(
+                    f"partition {part['index']}: block crosses its boundary"
+                )
+            blocks.append(
+                {
+                    "offset": cursor,
+                    "magic": magic,
+                    "payload_size": payload_size,
+                    "aligned_size": aligned_size,
+                }
+            )
+            cursor += aligned_size
+        if cursor != partition_end:
+            raise RestoreError(
+                f"partition {part['index']}: stored data is not block-exact"
+            )
+        plans.append(
+            {
+                "partition": part,
+                "bitmap": bitmap,
+                "set_blocks": set_bits,
+                "expected_bytes": expected_bytes,
+                "blocks": blocks,
+            }
+        )
+    if cursor != reader.total_size:
+        raise RestoreError(
+            f"container plan ended at {cursor:#x}, expected {reader.total_size:#x}"
+        )
+    if sum(plan["expected_bytes"] for plan in plans) != header["original_size"]:
+        raise RestoreError("planned bitmap bytes do not match OriginalSize")
+    return gpt, gpt_geometry, plans
+
+
+def decode_block(reader, decoder: Lz4Decoder, block: dict) -> memoryview:
+    payload = reader.read_at(block["offset"] + 16, block["payload_size"])
+    return decoder.decode(block["magic"], payload)
+
+
+def preflight(reader, decoder: Lz4Decoder, plans: list[dict]) -> list[dict]:
+    results = []
+    for plan in plans:
+        produced = 0
+        for block in plan["blocks"]:
+            data = decode_block(reader, decoder, block)
+            produced += len(data)
+            if produced > plan["expected_bytes"]:
+                raise RestoreError(
+                    f"partition {plan['partition']['index']}: decompressed data exceeds bitmap"
+                )
+        if produced != plan["expected_bytes"]:
+            raise RestoreError(
+                f"partition {plan['partition']['index']}: decompressed {produced} bytes, "
+                f"bitmap requires {plan['expected_bytes']}"
+            )
+        results.append(
+            {
+                "partition_index": plan["partition"]["index"],
+                "label": plan["partition"]["label"],
+                "container_blocks": len(plan["blocks"]),
+                "bitmap_blocks": plan["set_blocks"],
+                "decompressed_bytes": produced,
+            }
+        )
+    return results
+
+
+def target_runs(plan: dict):
+    part = plan["partition"]
+    total_blocks = (part["total_sectors"] + okr.BLOCK_SECTORS - 1) // okr.BLOCK_SECTORS
+    run_offset = None
+    run_length = 0
+    for block in range(total_blocks):
+        selected = plan["bitmap"][block // 8] & (1 << (block % 8))
+        if selected:
+            sectors = min(
+                okr.BLOCK_SECTORS,
+                part["total_sectors"] - block * okr.BLOCK_SECTORS,
+            )
+            offset = (
+                part["boot_begin_sector"] + block * okr.BLOCK_SECTORS
+            ) * okr.SECTOR_SIZE
+            length = sectors * okr.SECTOR_SIZE
+            if run_offset is not None and run_offset + run_length == offset:
+                run_length += length
+            else:
+                if run_offset is not None:
+                    yield run_offset, run_length
+                run_offset, run_length = offset, length
+        elif run_offset is not None:
+            yield run_offset, run_length
+            run_offset, run_length = None, 0
+    if run_offset is not None:
+        yield run_offset, run_length
+
+
+def pwrite_all(descriptor: int, data: memoryview, offset: int) -> None:
+    position = 0
+    while position < len(data):
+        written = os.pwrite(descriptor, data[position:], offset + position)
+        if written <= 0:
+            raise RestoreError(f"short write at RAW offset {offset + position:#x}")
+        position += written
+
+
+def restore_partition(descriptor: int, reader, decoder: Lz4Decoder, plan: dict) -> int:
+    runs = iter(target_runs(plan))
+    try:
+        run_offset, run_remaining = next(runs)
+    except StopIteration as error:
+        if plan["expected_bytes"]:
+            raise RestoreError(
+                "bitmap has data but produced no output ranges"
+            ) from error
+        return 0
+    written_total = 0
+    for block in plan["blocks"]:
+        data = decode_block(reader, decoder, block)
+        position = 0
+        while position < len(data):
+            take = min(len(data) - position, run_remaining)
+            pwrite_all(descriptor, data[position : position + take], run_offset)
+            position += take
+            written_total += take
+            run_offset += take
+            run_remaining -= take
+            if run_remaining == 0:
+                try:
+                    run_offset, run_remaining = next(runs)
+                except StopIteration:
+                    if position != len(data) or written_total != plan["expected_bytes"]:
+                        raise RestoreError(
+                            "decompressed stream exceeds bitmap output ranges"
+                        )
+                    run_offset, run_remaining = 0, 0
+    if written_total != plan["expected_bytes"] or run_remaining:
+        raise RestoreError(
+            f"partition {plan['partition']['index']}: wrote {written_total}, "
+            f"expected {plan['expected_bytes']}"
+        )
+    try:
+        next(runs)
+    except StopIteration:
+        pass
+    else:
+        raise RestoreError("bitmap output ranges remain after decompressed stream")
+    return written_total
+
+
+def open_new_raw(path: Path, expected_allocation: int):
+    absolute = Path(os.path.abspath(os.fspath(path)))
+    parent = absolute.parent.resolve(strict=True)
+    if str(parent) == "/dev" or str(parent).startswith("/dev/"):
+        raise RestoreError(f"refusing output directory under /dev: {parent}")
+    if not parent.is_dir():
+        raise RestoreError(f"output parent is not a directory: {parent}")
+    available = os.statvfs(parent).f_bavail * os.statvfs(parent).f_frsize
+    if available < expected_allocation:
+        raise RestoreError(
+            f"insufficient free space: need at least {expected_allocation} bytes, "
+            f"have {available}"
+        )
+    directory_flags = (
+        os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_CLOEXEC", 0)
+    )
+    directory = os.open(parent, directory_flags)
+    flags = (
+        os.O_WRONLY
+        | os.O_CREAT
+        | os.O_EXCL
+        | getattr(os, "O_NOFOLLOW", 0)
+        | getattr(os, "O_CLOEXEC", 0)
+    )
+    try:
+        descriptor = os.open(absolute.name, flags, 0o600, dir_fd=directory)
+    except Exception:
+        os.close(directory)
+        raise
+    info = os.fstat(descriptor)
+    if not stat.S_ISREG(info.st_mode):
+        os.close(descriptor)
+        os.unlink(absolute.name, dir_fd=directory)
+        os.close(directory)
+        raise RestoreError("new RAW output is not a regular file")
+    return descriptor, directory, absolute.name, parent / absolute.name
+
+
+def write_raw(
+    output: Path,
+    reader,
+    decoder: Lz4Decoder,
+    report: dict,
+    gpt: bytes,
+    gpt_geometry: dict,
+    plans: list[dict],
+    expected_fingerprints: list[tuple[int, int, int, int]],
+) -> dict:
+    disk_size = report["header"]["disk_size_bytes"]
+    expected_allocation = (
+        report["header"]["original_size"] + len(gpt) * 2 + 256 * 1024 * 1024
+    )
+    descriptor = directory = None
+    name = None
+    created_path = None
+    try:
+        if fingerprints(reader) != expected_fingerprints:
+            raise RestoreError("an input segment changed after preflight")
+        descriptor, directory, name, created_path = open_new_raw(
+            output, expected_allocation
+        )
+        os.ftruncate(descriptor, disk_size)
+        pwrite_all(descriptor, memoryview(gpt), 0)
+        entries_offset = gpt_geometry["backup_entries_lba"] * okr.SECTOR_SIZE
+        pwrite_all(descriptor, memoryview(gpt_geometry["entries"]), entries_offset)
+        backup_header = make_backup_gpt_header(gpt, gpt_geometry)
+        backup_header_offset = gpt_geometry["alternate_lba"] * okr.SECTOR_SIZE
+        pwrite_all(descriptor, memoryview(backup_header), backup_header_offset)
+
+        restored = []
+        for plan in plans:
+            restored.append(
+                {
+                    "partition_index": plan["partition"]["index"],
+                    "label": plan["partition"]["label"],
+                    "written_bytes": restore_partition(
+                        descriptor, reader, decoder, plan
+                    ),
+                }
+            )
+        if fingerprints(reader) != expected_fingerprints:
+            raise RestoreError("an input segment changed during restoration")
+        os.fsync(descriptor)
+        final = os.fstat(descriptor)
+        if final.st_size != disk_size:
+            raise RestoreError("RAW logical size changed unexpectedly")
+        return {
+            "path": str(created_path),
+            "logical_size_bytes": final.st_size,
+            "allocated_size_bytes": final.st_blocks * 512,
+            "restored_partitions": restored,
+            "backup_gpt_lba": gpt_geometry["alternate_lba"],
+        }
+    except Exception:
+        if descriptor is not None:
+            os.close(descriptor)
+            descriptor = None
+        if directory is not None and name is not None:
+            try:
+                os.unlink(name, dir_fd=directory)
+            except FileNotFoundError:
+                pass
+        raise
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        if directory is not None:
+            os.close(directory)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "okrfile", nargs="?", type=Path, help="path to the main okrfile"
+    )
+    parser.add_argument(
+        "output", nargs="?", type=Path, help="new sparse RAW output path"
+    )
+    parser.add_argument(
+        "--preflight-only",
+        action="store_true",
+        help="fully decompress and validate without creating an output",
+    )
+    parser.add_argument("--json", action="store_true", help="print a JSON report")
+    parser.add_argument("--lz4-worker", type=int, help=argparse.SUPPRESS)
+    args = parser.parse_args()
+    if args.lz4_worker is not None:
+        return lz4_worker(args.lz4_worker)
+    if args.okrfile is None:
+        parser.error("okrfile is required")
+    if args.preflight_only == (args.output is not None):
+        parser.error(
+            "choose exactly one: --preflight-only, or provide a new output path"
+        )
+
+    reader = None
+    decoder = None
+    try:
+        main_path = Path(os.path.abspath(os.fspath(args.okrfile)))
+        report = okr.inspect(main_path, True)
+        paths = [Path(item["path"]) for item in report["segments"]]
+        reader = okr.SegmentedReader(paths)
+        before = fingerprints(reader)
+        gpt, gpt_geometry, plans = build_plan(reader, report)
+        decoder = Lz4Decoder(report["header"]["compress_block_size"])
+        preflight_results = preflight(reader, decoder, plans)
+        if fingerprints(reader) != before:
+            raise RestoreError("an input segment changed during preflight")
+
+        result = {
+            "status": "preflight-passed" if args.preflight_only else "restored",
+            "input": str(main_path),
+            "input_size_bytes": report["header"]["file_size"],
+            "raw_logical_size_bytes": report["header"]["disk_size_bytes"],
+            "gpt": {
+                key: value for key, value in gpt_geometry.items() if key != "entries"
+            },
+            "preflight": preflight_results,
+        }
+        if args.output is not None:
+            result["output"] = write_raw(
+                args.output,
+                reader,
+                decoder,
+                report,
+                gpt,
+                gpt_geometry,
+                plans,
+                before,
+            )
+        if args.json:
+            json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
+            print()
+        else:
+            print("OKR RAW 恢复预检通过")
+            for item in preflight_results:
+                print(
+                    f"分区 {item['partition_index']} {item['label']}: "
+                    f"{item['container_blocks']} 个容器块，"
+                    f"解压 {item['decompressed_bytes']} 字节"
+                )
+            if args.output is None:
+                print("未创建输出文件。")
+            else:
+                output = result["output"]
+                print(
+                    f"RAW 已生成: {output['path']}\n"
+                    f"逻辑大小: {output['logical_size_bytes']} 字节；"
+                    f"实际分配: {output['allocated_size_bytes']} 字节"
+                )
+        return 0
+    except (okr.FormatError, RestoreError, OSError, ValueError) as error:
+        print(f"okr-restore-raw: error: {error}", file=sys.stderr)
+        return 2
+    finally:
+        if reader is not None:
+            reader.close()
+        if decoder is not None:
+            decoder.close()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

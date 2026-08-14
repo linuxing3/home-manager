@@ -1,0 +1,5 @@
+rm /etc/fstab
+rm /etc/fstab.okr-original
+cd /etc
+write /tmp/uos-okr-fstab-original fstab.okr-original
+write tools/fixtures/fstab.uos-okr-vm fstab

@@ -5,6 +5,9 @@
       "flake/devshells.nix"
       "flake/packages.nix"
       "flake/checks.nix"
+      "profiles/work/home.nix"
+      "modules/app/virtualization/default.nix"
+      "modules/app/hx-anywhere/default.nix"
     ];
     qualityPathArgs = builtins.concatStringsSep " " qualityPaths;
   in {

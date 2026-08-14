@@ -32,9 +32,12 @@ for decryption. Never upload or print that private key.
    gpg --decrypt nix-store-current-Designers-PC-*.tar.gpg | tar -xvf -
    ```
 
-4. Use `metadata/top-level-paths.txt` and
-   `metadata/nix-cache-public-key` with `nix copy --from file:///...`.
-   The KeyVault `nix-recovery-guide` provides the prompted workflow.
+4. Use KeyVault `uos-system-recovery/nix-system-recovery/manifest/` top-level
+   paths and `secrets/nix-cache-public-key` with `nix copy --from file:///...`.
+   The KeyVault `nix-recovery-guide` in that same directory (or the repo
+   `tools/nix-recovery-guide`) provides the prompted workflow. Restore SSH /
+   GPG identity first from `uos-Designers/` before Agenix or Home Manager
+   secret activation.
 5. Build the Home Manager activation package without activation first. Only
    activate after reviewing the build and current repository state.
 

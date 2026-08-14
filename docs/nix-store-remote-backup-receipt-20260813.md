@@ -93,7 +93,8 @@ public key may safely be copied to a restored machine as a trusted public key.
 
 Agent runbook capturing this session’s pitfalls (signing-key Base64 format,
 same-name Cachix recreate hazard, bulk missing-API false negatives, OneDrive
-small-file hangs, QuickXorHash verification) lives at:
+small-file hangs, QuickXorHash verification) and the current KeyVault packs
+`uos-Designers/` + `uos-system-recovery/` lives at:
 
 `.codex/skills/uos-nix-store-backup/SKILL.md`
 

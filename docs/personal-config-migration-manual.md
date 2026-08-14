@@ -511,19 +511,31 @@ The current recovery material is small:
 
 ### Intended encrypted layout
 
+Current KeyVault layout (post-reorganization). Identity packs and system
+recovery are separate top-level directories:
+
 ```text
 LUKS2 partition
 └── ext4 label KEYVAULT
-    ├── ssh/
-    ├── gpg/
-    ├── age/
-    ├── recovery/
-    └── checksums/
+    ├── uos-Designers/              # this host's Designers user identity
+    │   ├── ssh/
+    │   ├── gpg/
+    │   ├── age/
+    │   └── checksums/
+    ├── uos-system-recovery/        # UOS + Home Manager recovery package
+    │   ├── README.txt
+    │   ├── luks-uuid.txt
+    │   ├── ext4-uuid.txt
+    │   └── nix-system-recovery/    # guide, manifests, repo bundle, cache keys
+    ├── alpine-efwmc/               # optional other-host identity pack
+    └── sources/                    # optional non-secret source snapshots
 ```
 
-Use `/mnt/keyvault` only while the mapper is open. The mount root and the
-`ssh`, `gpg`, `age`, and `recovery` directories must be mode `0700`.
-
+Use `/media/Designers/KEYVAULT` or `/mnt/keyvault` only while the mapper is
+open. The mount root should be mode `0700`. Require mode `0700` on
+`uos-Designers/{ssh,gpg,age,checksums}` and on `uos-system-recovery/` (and its
+`nix-system-recovery/{manifest,repository,secrets}` children). Do not place
+live SSH/GPG material at the KeyVault root anymore.
 ### Initialization sequence
 
 Run this phase only after the destructive gate is approved. Enter LUKS
@@ -544,8 +556,9 @@ shell argument, environment file, documentation, or chat.
 5. Open it as mapper `keyvault`, format `/dev/mapper/keyvault` as ext4 label
    `KEYVAULT`, mount it at `/mnt/keyvault`, assign the mount root to the active
    user, and set mode `0700`.
-6. Create the standard directory layout and verify that the filesystem source
-   is `/dev/mapper/keyvault`, not an internal disk.
+6. Create the standard directory layout under `uos-Designers/` and
+   `uos-system-recovery/`, and verify that the filesystem source is
+   `/dev/mapper/keyvault`, not an internal disk.
 
 Do not add the volume to `/etc/fstab` or auto-unlock configuration. Its safety
 model requires deliberate insertion, local passphrase entry, and offline
@@ -555,8 +568,8 @@ storage.
 
 #### SSH and Agenix
 
-Copy these files without following unrelated repositories or Home
-Manager-managed configuration:
+Copy these files into `uos-Designers/ssh/` without following unrelated
+repositories or Home Manager-managed configuration:
 
 ```text
 ~/.ssh/id_ed25519
@@ -568,16 +581,16 @@ Manager-managed configuration:
 ```
 
 Do not copy `~/.ssh/config`; its policy belongs in Home Manager. Set private
-keys to `0600`, public keys to `0644`, `known_hosts` to `0644`, and
-`authorized_keys` to `0600`. Add `age/README.txt` stating that the active
-Agenix identity is the backed-up Ed25519 SSH key. Do not print or copy public
-identity details into this repository.
+keys to `0600` or `0400`, public keys to `0644`, `known_hosts` to `0644`, and
+`authorized_keys` to `0600`. Add `uos-Designers/age/README.txt` stating that
+the active Agenix identity is the backed-up Ed25519 SSH key. Do not print or
+copy public identity details into this repository.
 
 #### GPG
 
 Resolve the sole master fingerprint into a shell variable without printing it,
 and abort unless exactly one master secret key is present. Export directly to
-the mounted vault:
+`uos-Designers/gpg/`:
 
 - armored public key as `gpg/public.asc`, mode `0644`;
 - complete armored secret keys as `gpg/master-secret.asc`, mode `0600`;
@@ -586,50 +599,51 @@ the mounted vault:
 - the existing revocation file under `gpg/revocation/`, mode `0600`.
 
 Use local GPG pinentry for protected-key export. Never pass a GPG passphrase on
-the command line. Preserve the existing revocation certificate instead of
-generating an unnecessary replacement during an automated run.
+the command line. Prefer `--pinentry-mode loopback` with a desktop pinentry
+dialog when the agent environment has no TTY. Preserve the existing revocation
+certificate instead of generating an unnecessary replacement during an
+automated run.
 
 #### Recovery documentation
 
-Create a plaintext `recovery/README.txt` inside the encrypted filesystem with
-commands for:
+Keep open/close/restore commands in
+`uos-system-recovery/README.txt`, with identity paths pointing at
+`../uos-Designers/` (or absolute `$KV/uos-Designers/...`). Record LUKS and
+ext4 UUIDs in `uos-system-recovery/luks-uuid.txt` and
+`uos-system-recovery/ext4-uuid.txt`. UUIDs are identifiers, not unlock
+credentials, but do not use UUID alone as proof that a destructive target is
+correct.
 
-- locating the LUKS partition by UUID and opening mapper `keyvault`;
-- mounting and safely closing the vault;
-- restoring SSH files and their modes;
-- importing GPG public, complete secret, and ownertrust exports;
-- restoring the Agenix SSH identity before attempting Home Manager secret
-  activation;
-- running all verification checks before trusting restored keys.
-
-Record the LUKS UUID and ext4 UUID in `recovery/` after formatting. UUIDs are
-identifiers, not unlock credentials, but do not use UUID alone as proof that a
-destructive target is correct.
+Nix closure recovery materials belong under
+`uos-system-recovery/nix-system-recovery/` and are driven by
+`tools/nix-recovery-guide`.
 
 ### Integrity and recovery tests
 
-Generate `checksums/SHA256SUMS` over files under `ssh`, `gpg`, `age`, and
-`recovery`, using null-delimited sorted paths. Run `sha256sum -c` immediately
-and again whenever the vault is opened.
+Generate `uos-Designers/checksums/SHA256SUMS` over files under
+`uos-Designers/{ssh,gpg,age}`, using null-delimited sorted paths. Keep a
+separate `uos-system-recovery/nix-system-recovery/SHA256SUMS` for the Nix
+recovery package. Run `sha256sum -c` immediately and again whenever the vault
+is opened.
 
 Verification is required before the USB is accepted:
 
-1. For each SSH private key, derive its public key into a protected temporary
-   file and compare it with the backed-up `.pub` key. Remove only the exact
-   temporary file afterward.
-2. Create a mode-`0700` temporary `GNUPGHOME`, import `public.asc`,
-   `master-secret.asc`, and `ownertrust.txt`, then verify that both `sec` and
-   `ssb` records exist. Do not print user IDs or secret packets in logs.
+1. For each SSH private key under `uos-Designers/ssh/`, derive its public key
+   into a protected temporary file and compare it with the backed-up `.pub`
+   key. Remove only the exact temporary file afterward.
+2. Create a mode-`0700` temporary `GNUPGHOME`, import
+   `uos-Designers/gpg/{public.asc,master-secret.asc,ownertrust.txt}`, then
+   verify that both `sec` and `ssb` records exist. Do not print user IDs or
+   secret packets in logs.
 3. Test Agenix decryption with the restored SSH identity against a disposable
    copy or a command that emits no secret content.
-4. Re-run the checksum manifest after all tests.
+4. Re-run both checksum manifests after all tests.
 
 ### Close and physical recovery
 
-Run `sync`, unmount `/mnt/keyvault`, close mapper `keyvault`, confirm both the
-mount and mapper are absent, and power off the exact whole USB disk with
+Run `sync`, unmount the KeyVault mount, close mapper `keyvault`, confirm both
+the mount and mapper are absent, and power off the exact whole USB disk with
 `udisksctl` before unplugging it.
-
 After USB A passes recovery tests:
 
 - initialize USB B independently and keep it at another physical location;

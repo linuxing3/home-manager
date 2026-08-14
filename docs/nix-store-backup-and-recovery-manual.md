@@ -63,35 +63,82 @@ GC root 和顶层闭包；完整电脑还依赖 EFI、`/boot`、根分区、`/et
 离线镜像。必须包含分区表、EFI、`/boot`、根分区和数据分区。不要在正在
 运行的系统里用普通文件复制冒充一致的整盘镜像。
 
-## 4. KeyVault 的安全角色
+## 4. KeyVault 的安全角色与当前目录结构
 
-KeyVault 是可移动 LUKS 加密盘。建议至少保存：
+KeyVault 是可移动 LUKS 加密盘（ext4 标签 `KEYVAULT`）。当前顶层按**身份包**
+与**系统恢复包**分开存放，不要再使用已废弃的根级 `ssh/`、`gpg/` 或
+`recovery/nix-system-recovery/` 路径。
 
 ```text
-recovery/nix-system-recovery/
-├── MANUAL.md
-├── nix-recovery-guide
-├── manifest/
-│   ├── top-level-paths.txt
-│   ├── host-facts.txt
-│   ├── repository-status.txt
-│   └── cache-location.txt
-├── repository/
-│   ├── home-config.bundle
-│   ├── working-tree.patch
-│   └── untracked-files.tar.gz
-└── secrets/
-    ├── nix-cache-secret-key
-    └── nix-cache-public-key
+KEYVAULT/
+├── uos-Designers/                 # Designers 用户身份（SSH/GPG/Agenix）
+│   ├── ssh/
+│   ├── gpg/
+│   │   ├── public.asc
+│   │   ├── master-secret.asc
+│   │   ├── subkeys-secret.asc
+│   │   ├── ownertrust.txt
+│   │   └── revocation/
+│   ├── age/
+│   │   └── README.txt             # 说明 Agenix 使用 ../ssh/id_ed25519
+│   └── checksums/
+│       └── SHA256SUMS
+├── uos-system-recovery/           # UOS + Home Manager 系统恢复
+│   ├── README.txt
+│   ├── luks-uuid.txt
+│   ├── ext4-uuid.txt
+│   └── nix-system-recovery/
+│       ├── MANUAL.md
+│       ├── nix-recovery-guide
+│       ├── REMOTE-RESTORE.md
+│       ├── REMOTE-BACKUP-RECEIPT.md
+│       ├── SHA256SUMS
+│       ├── manifest/
+│       ├── repository/
+│       └── secrets/               # Nix/Cachix 签名密钥等
+├── alpine-efwmc/                  # 其他主机/用户的独立身份包（示例）
+└── sources/                       # 可选：源码快照，非密钥材料
 ```
 
 安全规则：
 
-- `secrets/`、`manifest/`、`repository/` 使用 `0700`；私钥使用 `0600`。
+- `uos-Designers/{ssh,gpg,age,checksums}` 与 `uos-system-recovery/` 使用
+  `0700`；私钥与 armored secret 使用 `0600`（或 SSH 私钥 `0400`）。
 - 终端只显示密钥路径，不显示密钥内容。
-- KeyVault 拔出前执行 `sync`，然后通过桌面或 `udisksctl unmount` 正常卸载。
+- KeyVault 拔出前执行 `sync`，然后正常卸载并 `cryptsetup close`。
 - 保留第二份离线加密凭据副本，避免 KeyVault 自身成为单点故障。
+- 大型 Nix cache 仍在 `/share/recovery/nix-cache`，不放进 15 GiB USB。
 
+### 4.1 从 `uos-Designers` 恢复 SSH / GPG / Agenix
+
+解锁并挂载 KeyVault 后（挂载点记为 `$KV`，常见为
+`/media/Designers/KEYVAULT` 或 `/mnt/keyvault`）：
+
+```bash
+KV=/media/Designers/KEYVAULT   # 或实际挂载点
+cd "$KV/uos-Designers"
+sha256sum -c checksums/SHA256SUMS
+
+mkdir -m 700 -p ~/.ssh
+install -m 0400 ssh/id_ed25519 ~/.ssh/id_ed25519
+install -m 0644 ssh/id_ed25519.pub ~/.ssh/id_ed25519.pub
+install -m 0400 ssh/id_rsa ~/.ssh/id_rsa
+install -m 0644 ssh/id_rsa.pub ~/.ssh/id_rsa.pub
+install -m 0644 ssh/known_hosts ~/.ssh/known_hosts
+install -m 0600 ssh/authorized_keys ~/.ssh/authorized_keys
+
+gpg --import gpg/public.asc
+gpg --import gpg/master-secret.asc
+gpg --import-ownertrust gpg/ownertrust.txt
+# 可选：gpg --import gpg/subkeys-secret.asc
+```
+
+必须先恢复 `id_ed25519`，再运行 Agenix 或激活 Home Manager secrets。不要从
+KeyVault 恢复 `~/.ssh/config`；SSH 策略由 Home Manager 管理。
+
+校验：用 `ssh-keygen -y` 从私钥导出公钥并与 `.pub` 比对；在临时
+`GNUPGHOME` 中导入 armored 材料并确认存在 `sec`/`ssb`；对 Agenix 做一次不
+输出秘密内容的解密冒烟测试。
 ## 5. 推荐恢复顺序
 
 ### A. 直接恢复整机
@@ -112,11 +159,14 @@ recovery/nix-system-recovery/
 1. 安装与当前架构匹配的 UOS，并先恢复基础网络与系统时间。
 2. 安装 multi-user Nix，确认版本和 daemon 状态。
 3. 解锁 KeyVault。
-4. 优先恢复 SSH/Agenix 身份。现有 `credential-usb-recovery` 会在覆盖前
-   建立快照并要求确认。
-5. 从 `home-config.bundle` 或远端 Git 恢复仓库，再应用工作区补丁和经人工
-   审阅的未跟踪文件。
-6. 按 `top-level-paths.txt` 从签名 cache 导入当前闭包。
+4. 优先从 `uos-Designers/` 恢复 SSH/Agenix 身份（见第 4.1 节）。现有
+   `credential-usb-recovery` 也可用于 InfinityCloud/USB 归档，覆盖前会建立
+   快照并要求确认。
+5. 从 `uos-system-recovery/nix-system-recovery/repository/home-config.bundle`
+   或远端 Git 恢复仓库，再应用工作区补丁和经人工审阅的未跟踪文件。
+6. 按同目录 `manifest/top-level-paths.txt` 从签名 cache 导入当前闭包。
+   `nix-recovery-guide` 默认读写
+   `$KEYVAULT/uos-system-recovery/nix-system-recovery/`。
 7. 在仓库中执行非激活构建：
 
    ```bash
@@ -141,7 +191,8 @@ recovery/nix-system-recovery/
 file:///share/recovery/nix-cache
 ```
 
-导入时，脚本把 KeyVault 中的公钥作为本次命令的
+导入时，脚本把 KeyVault
+`uos-system-recovery/nix-system-recovery/secrets/` 中的公钥作为本次命令的
 `trusted-public-keys` 传给 Nix，并按记录的顶层路径复制完整闭包。导入只把
 对象放回 `/nix/store`，不会自动激活 Home Manager。
 
@@ -198,7 +249,9 @@ Agent 操作细则见 `.codex/skills/uos-nix-store-backup/SKILL.md`。
 
 恢复完成必须逐项确认：
 
-- KeyVault 中的 `SHA256SUMS` 校验通过；私钥文件权限保持 `0600`。
+- KeyVault 中 `uos-Designers/checksums/SHA256SUMS` 与
+  `uos-system-recovery/nix-system-recovery/SHA256SUMS` 校验通过；私钥文件
+  权限保持 `0600`/`0400`。
 - Nix cache 能查询所有记录的顶层路径。
 - 本地：`nix store verify --recursive` 对恢复闭包没有内容损坏。
 - 远端 Cachix：闭包内每一个公开 narinfo URL 均为 HTTP 200，且签名键名与

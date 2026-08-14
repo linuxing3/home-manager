@@ -1,0 +1,25 @@
+# UOS OKR virtualization fstab
+#
+# The original file is preserved in the restored filesystem as
+# /etc/fstab.okr-original. This VM image contains only EFI, Boot, and Roota;
+# _dde_data, swap, the host /share disk, and their bind mounts were not backed
+# up and must not block local-fs.target.
+
+# Roota
+UUID=8a00eaad-49bd-4f97-9fbe-48529c4d41a1 / ext4 rw,relatime 0 1
+
+# Boot
+UUID=9982a489-d939-4230-b0bd-131e7d20f24f /boot ext4 rw,relatime 0 2
+
+# EFI
+UUID=196D-D2E1 /boot/efi vfat rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,utf8,errors=remount-ro 0 2
+
+# Not present in this system-only OKR backup:
+# UUID=7d4b6f4a-c864-4cf4-9e82-5d6a87c2d87e /data ext4 rw,relatime 0 2
+# UUID=7dc5be43-fb98-48e2-a893-4d84a216d0e3 none swap defaults 0 0
+# UUID=f072add5-d6e7-4ef7-8d9d-dbbad066fe5a /share ext4 rw,relatime 0 2
+# /data/Home /home none defaults,bind 0 0
+# /data/opt /opt none defaults,bind 0 0
+# /data/root /root none defaults,bind 0 0
+# /data/var /var none defaults,bind 0 0
+# /data/nix /nix none defaults,bind 0 0
