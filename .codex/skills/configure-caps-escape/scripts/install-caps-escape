@@ -19,6 +19,12 @@ install_system() {
   install -d -m 0755 /etc/keyd
   install -m 0644 "$root/keyd-default.conf" /etc/keyd/default.conf
 
+  install -d -m 0755 /usr/local/lib/keyd
+  install -m 0755 "$root/keyd-grant-rt" /usr/local/lib/keyd/grant-rt
+
+  install -d -m 0755 /etc/systemd/system/keyd.service.d
+  install -m 0644 "$root/keyd-realtime.conf" /etc/systemd/system/keyd.service.d/realtime.conf
+
   keyd check /etc/keyd/default.conf >/dev/null
   systemctl daemon-reload
   systemctl enable --now keyd.service

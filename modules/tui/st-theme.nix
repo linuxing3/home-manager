@@ -95,7 +95,12 @@
     echo "st theme: $mode"
   '';
 in {
-  home.packages = [stTheme];
+  fonts.fontconfig.enable = true;
+
+  home.packages = [
+    stTheme
+    pkgs.nerd-fonts.jetbrains-mono
+  ];
 
   home.file.".Xdefaults".text = ''
     st.font: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true

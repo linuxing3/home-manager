@@ -1,0 +1,4 @@
+interface:
+  display_name: "Install Xdefaults Fonts"
+  short_description: "Install JetBrainsMono Nerd Font for st and Xdefaults"
+  default_prompt: "Use $install-xdefaults-fonts when ~/.Xdefaults names JetBrainsMono Nerd Font but fc-match falls back to another family."

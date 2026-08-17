@@ -1,0 +1,45 @@
+#!/bin/sh
+set -eu
+
+# keyd 2.6+ calls pthread_setschedparam(SCHED_FIFO). Kernels built with
+# CONFIG_RT_GROUP_SCHED deny that in slices whose cpu.rt_runtime_us is 0,
+# even for root. Give system.slice leftover root bandwidth, then this unit
+# a slice of that leftover, before keyd starts.
+
+cpu_root=/sys/fs/cgroup/cpu
+rt_file=cpu.rt_runtime_us
+
+[ -e "$cpu_root/$rt_file" ] || exit 0
+
+root_rt=$(cat "$cpu_root/$rt_file")
+# -1 disables the global RT throttle; the group scheduler is not blocking us.
+if [ "$root_rt" -lt 0 ]; then
+  exit 0
+fi
+
+slice="$cpu_root/system.slice"
+unit="$cpu_root/system.slice/keyd.service"
+slice_need=200000
+unit_need=50000
+
+write_rt() {
+  printf '%s\n' "$2" >"$1"
+}
+
+if [ -e "$slice/$rt_file" ]; then
+  slice_rt=$(cat "$slice/$rt_file")
+  if [ "$slice_rt" -lt "$slice_need" ]; then
+    delta=$((slice_need - slice_rt))
+    new_root=$((root_rt - delta))
+    if [ "$new_root" -lt 0 ]; then
+      echo "keyd-grant-rt: not enough root RT bandwidth ($root_rt)" >&2
+      exit 1
+    fi
+    write_rt "$cpu_root/$rt_file" "$new_root"
+    write_rt "$slice/$rt_file" "$slice_need"
+  fi
+fi
+
+if [ -e "$unit/$rt_file" ]; then
+  write_rt "$unit/$rt_file" "$unit_need"
+fi

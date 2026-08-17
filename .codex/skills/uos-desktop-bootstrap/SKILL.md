@@ -1,11 +1,24 @@
 ---
 name: uos-desktop-bootstrap
-description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm, Agenix, keyboard or terminal configuration, automation access, or Hermes Gateway service failures. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
+description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, or Hermes Gateway service failures. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
 ---
 
 # UOS Desktop Bootstrap
 
-Apply changes in this order and verify each boundary before continuing.
+Apply changes in this order and verify each boundary before continuing. Focused Codex skills hold the detailed repair for later sessions; use this file as the host checklist.
+
+## Related Codex skills
+
+| Skill | Use when |
+| --- | --- |
+| `configure-caps-escape` | Caps/Escape mapping or `keyd.service` `pthread_setschedparam` |
+| `import-atuin-env` | Atuin dotenv import and secret stripping |
+| `repair-ft-hda-analog` | No sound, PulseAudio `auto_null`, ALC897/`ft-hda` profile off |
+| `install-xdefaults-fonts` | `st`/`.Xdefaults` JetBrainsMono Nerd Font missing |
+| `repair-devenv-herdr` | devenv `attribute 'herdr' missing` |
+| `uos-nix-store-backup` | KeyVault packs, SSH/GPG restore, or Nix store remote backup |
+
+Keyboard mapping is **REQUIRED SUB-SKILL:** `configure-caps-escape`. Analog audio is **REQUIRED SUB-SKILL:** `repair-ft-hda-analog`.
 
 ## 1. Inspect and protect prerequisites
 
@@ -17,8 +30,8 @@ Apply changes in this order and verify each boundary before continuing.
 ## 2. Apply system-level UOS settings
 
 - Configure `st-256color` with `tic -x` using the pinned `st.info` source from the project’s `st` package.
-- Install the project-local `configure-caps-escape` skill’s system mapping: TTY `loadkeys` plus action-based XKB for X11/DDE/oxwm. Do not use `xmodmap`; it cannot implement Shift-sensitive Caps behavior correctly. Wayland compositors must use their native XKB option.
-- Verify `infocmp st-256color`, the console map, and the X11 keymap after authentication.
+- Install Caps/Escape with **REQUIRED SUB-SKILL:** `configure-caps-escape` (`keyd`, not `xmodmap` or XKB).
+- Verify `infocmp st-256color` and `scripts/install-caps-escape verify`.
 
 ## 3. Repair oxwm screenshot capture
 
@@ -414,3 +427,7 @@ failure.
 - No stale Cachix Deploy outputs or user unit remain, while the focused Home Manager activation package still builds.
 - `cli-proxy-api.service` is enabled and active with zero restarts, owns port `8317`, uses the existing config without exposing it, and survives the manual-to-systemd handoff.
 - Alejandra and focused Home Manager evaluation pass; report full flake-check blockers separately from bootstrap failures.
+- `keyd.service` is enabled/active with no `pthread_setschedparam` error when Caps/Escape was requested.
+- PulseAudio default sink is analog `alsa_output.platform-PHYT0006_00.stereo-fallback` when audio was requested, not `auto_null`.
+- `fc-match 'JetBrainsMono Nerd Font'` returns the Nerd Font file when `.Xdefaults` names that family.
+- devenv evaluation finds `packages.<system>.herdr`, not `inputs.llm-agents.herdr`.

@@ -4,6 +4,7 @@
   lib,
   ...
 }: let
+  # settings = import ../../nix/nix-config.nix;
   baseImports = [
     # ------------- security -------------------
     ../../security/security.nix
@@ -32,6 +33,9 @@
 
     # ------------- wm/gui -------------------
     ../../modules/wm/oxwm/oxwm.nix
+
+    # ------------- hardware -------------------
+    ../../modules/hardware/ft-hda-audio.nix
   ];
   crabboxPackage = pkgs.buildGoModule {
     pname = "crabbox";
@@ -127,16 +131,10 @@ in {
 
   news.display = "silent";
 
-  nix = {
-    package = pkgs.nix;
-    settings = {
-      trusted-users = [userSettings.username];
-      extra-substituters = ["https://cache.numtide.com"];
-      extra-trusted-public-keys = [
-        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
-      ];
-    };
-  };
+  # nix = {
+  #   package = pkgs.nix;
+  #   settings = settings;
+  # };
 
   programs.home-manager.enable = true;
 }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repair ft-hda Analog"
+  short_description: "Restore Phytium ALC897 analog line-out in PulseAudio"
+  default_prompt: "Use $repair-ft-hda-analog when this UOS desktop has no sound, PulseAudio auto_null, or ft-hda analog profile off."

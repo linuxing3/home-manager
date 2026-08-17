@@ -1,5 +1,6 @@
 {
   # files in current directory
+  # nixConfig = import ./nix/nix-config.nix;
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     home-manager = {
@@ -8,6 +9,7 @@
     };
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-utils.url = "github:numtide/flake-utils";
+    devenv.url = "github:cachix/devenv";
     nix-index-database = {
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -53,25 +55,17 @@
         };
         overlays = projectOverlays;
       };
-      patchedInputs = inputs // {
-        hermes-agent = inputs.hermes-agent // {
-          packages = inputs.hermes-agent.packages // {
-            "${systemSettings.system}" = inputs.hermes-agent.packages.${systemSettings.system} // {
-              default = pkgs.hermes-agent;
-            };
-          };
-        };
-      };
       args = {
         inherit userSettings;
         inherit systemSettings;
-        inputs = patchedInputs;
+        inherit inputs;
       };
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./flake/devshells.nix
         ./flake/packages.nix
+        inputs.devenv.flakeModule
       ];
 
       systems = supportedSystems;

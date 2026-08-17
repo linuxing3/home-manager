@@ -1,7 +1,20 @@
 .worktrees/
 .baoyu-skills/
-.codex/
+.codex/**
+!.codex/skills/
+!.codex/skills/**
 .direnv/
 .superpowers/
 url-to-markdown/
 __pycache__/
+
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml

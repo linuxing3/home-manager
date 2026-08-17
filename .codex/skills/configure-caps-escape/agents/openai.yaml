@@ -1,4 +1,4 @@
 interface:
   display_name: "Configure Caps/Escape"
   short_description: "Configure Caps/Escape and left Ctrl remapping"
-  default_prompt: "Use $configure-caps-escape to map Caps Lock to Escape on tap, Control on hold, and left Control to Control+B system-wide."
+  default_prompt: "Use $configure-caps-escape to map Caps Lock to Escape on tap, Control on hold, and left Control to Control+B system-wide, or to repair keyd.service pthread_setschedparam failures."
