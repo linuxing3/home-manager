@@ -96,7 +96,7 @@ description = "open nnn file explorer in tab"
 key = "prefix+m"
 type = "plugin_action"
 command = "linuxing3.herdr-hx.toggle"
-description = "toggle hx sidebar"
+description = "toggle Helix sidebar (linuxing3/herdr-nvim herdr-hx)"
 [[keys.command]]
 key = "prefix+space"
 type = "plugin_action"

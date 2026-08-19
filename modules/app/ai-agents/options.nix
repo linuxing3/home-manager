@@ -19,9 +19,11 @@ in {
         description = "Herdr package from llm-agents.nix.";
       };
       plugins = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
+        type = lib.types.listOf (
+          lib.types.either lib.types.str (lib.types.attrsOf lib.types.str)
+        );
         default = herdrManifest.github;
-        description = "GitHub sources passed to `herdr plugin install`.";
+        description = "GitHub sources for `herdr plugin install`. Use `{ source = \"owner/repo\"; ref = \"branch\"; }` for a non-default branch.";
       };
       localPlugins = lib.mkOption {
         type = lib.types.listOf lib.types.str;

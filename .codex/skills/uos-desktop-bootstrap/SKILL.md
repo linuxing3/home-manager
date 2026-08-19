@@ -18,6 +18,7 @@ Apply changes in this order and verify each boundary before continuing. Focused 
 | `repair-st-theme-auto` | `st` Gruvbox light/dark stuck; `st-theme-auto.timer` enabled but dead |
 | `repair-devenv-herdr` | `herdr` missing from `use flake` / `packages.<system>.herdr` |
 | `repair-herdr-clipboard` | herdr copy logs success but X11 clipboard empty; `xclip` missing |
+| `repair-herdr-hx` | Herdr `prefix+m` does not open Helix; need `linuxing3/herdr-nvim --ref herdr-hx` |
 | `install-nixos-beside-uos` | NixOS on sda4 beside UOS; nixos-install/GRUB; nspawn `--boot` EUNATCH |
 | `uos-nix-store-backup` | KeyVault packs, SSH/GPG restore, or Nix store remote backup |
 

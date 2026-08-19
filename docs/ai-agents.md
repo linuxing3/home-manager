@@ -19,7 +19,7 @@ All agent configuration for the `work` profile is imported from `modules/app/ai-
 
 Plugin and service defaults live in `modules/app/ai-agents/options.nix`:
 
-- `my.ai.herdr.plugins` — GitHub sources installed on activation
+- `my.ai.herdr.plugins` — GitHub sources installed on activation (`linuxing3/herdr-nvim` uses `ref = herdr-hx`)
 - `my.ai.herdr.installPlugins` — toggle activation install
 - `my.ai.collie.enable` / `my.ai.cliProxyApi.enable` — user units
 

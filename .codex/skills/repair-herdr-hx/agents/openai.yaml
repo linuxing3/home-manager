@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repair herdr Helix sidebar"
+  short_description: "Install linuxing3/herdr-nvim herdr-hx so prefix+m toggles Helix"
+  default_prompt: "Use $repair-herdr-hx when Herdr prefix+m does not open Helix, linuxing3.herdr-hx.toggle is missing, or herdr-nvim was installed from the default Neovim branch."

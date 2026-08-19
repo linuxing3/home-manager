@@ -57,10 +57,15 @@ in {
       cfg.package
       herdrAgentRename
       herdrPluginSync
+      pkgs.helix
       pkgs.xclip
     ];
 
     xdg.configFile."herdr/config.toml".source = files/config.toml;
+    xdg.configFile."herdr-hx/config.toml".text = ''
+      [sidebar]
+      hx_bin = "${lib.getExe pkgs.helix}"
+    '';
 
     home.activation.installHerdrPlugins = lib.mkIf cfg.installPlugins (
       lib.hm.dag.entryAfter ["installPackages"] ''
