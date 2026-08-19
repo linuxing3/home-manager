@@ -17,7 +17,7 @@ buildNpmPackage rec {
 
   npmDepsHash = "sha256-UkxTZVpYUVpR9GJLHGpELxEVCCYzo/kJOYdIF7ZTh7E=";
 
-  nativeBuildInputs = [ nodejs_20 ];
+  nativeBuildInputs = [nodejs_20];
 
   postPatch = ''
     substituteInPlace daemon/server.js \
@@ -34,7 +34,7 @@ buildNpmPackage rec {
   '';
 
   meta = with lib; {
-    description = "Open-source local-first alternative to Claude Design";
+    description = "Open-source local-first design application";
     homepage = "https://github.com/nexu-io/open-design";
     license = licenses.asl20;
     platforms = platforms.unix;

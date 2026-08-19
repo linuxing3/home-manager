@@ -518,14 +518,10 @@ build_manifest() {
     "$HOME/.gnupg/trustdb.gpg"
     "$HOME/.gnupg/sshcontrol"
     "$HOME/.codex/auth.json"
-    "$HOME/.claude.json"
     "$HOME/.config/cursor/auth.json"
     "$HOME/.grok/auth.json"
-    "$HOME/.hermes/auth.json"
-    "$HOME/.hermes/shared/nous_auth.json"
     "$HOME/.pi/agent/auth.json"
     "$HOME/.cli-proxy-api/"*.json
-    "$HOME/.hermes/.env"
     "$HOME/.config/bash/extra/private.bash"
     "$HOME/.config/cursor-to-openai.env"
     "$HOME/.cnb/token"
@@ -568,13 +564,13 @@ archive_entry_allowed() {
     .ssh | .ssh/* | .gnupg | .gnupg/*)
       return 0
       ;;
-    .codex/auth.json | .claude.json | .config/cursor/auth.json)
+    .codex/auth.json | .config/cursor/auth.json)
       return 0
       ;;
-    .grok/auth.json | .hermes/auth.json | .hermes/shared/nous_auth.json)
+    .grok/auth.json)
       return 0
       ;;
-    .pi/agent/auth.json | .cli-proxy-api/*.json | .hermes/.env)
+    .pi/agent/auth.json | .cli-proxy-api/*.json)
       return 0
       ;;
     .config/bash/extra/private.bash | .config/cursor-to-openai.env)
@@ -766,13 +762,9 @@ harden_restored_files() {
 
   local -a mode_600=(
     "$HOME/.codex/auth.json"
-    "$HOME/.claude.json"
     "$HOME/.config/cursor/auth.json"
     "$HOME/.grok/auth.json"
-    "$HOME/.hermes/auth.json"
-    "$HOME/.hermes/shared/nous_auth.json"
     "$HOME/.pi/agent/auth.json"
-    "$HOME/.hermes/.env"
     "$HOME/.config/bash/extra/private.bash"
     "$HOME/.config/cursor-to-openai.env"
     "$HOME/.cnb/token"

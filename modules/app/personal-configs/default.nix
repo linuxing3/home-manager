@@ -8,6 +8,48 @@
   configHome = config.xdg.configHome;
   profileBin = "${homeDir}/.nix-profile/bin";
   files = ./files;
+  gdriveCredsDir = "${configHome}/gdrive-mcp";
+  gdriveMcpEnv = {
+    GDRIVE_CREDS_DIR = gdriveCredsDir;
+    GDRIVE_OAUTH_PATH = "${gdriveCredsDir}/gcp-oauth.keys.json";
+    GDRIVE_CREDENTIALS_PATH = "${gdriveCredsDir}/.gdrive-server-credentials.json";
+  };
+  gdriveMcp = pkgs.writeShellApplication {
+    name = "gdrive-mcp";
+    runtimeInputs = [pkgs.nodejs];
+    text = ''
+      export GDRIVE_CREDS_DIR=${lib.escapeShellArg gdriveCredsDir}
+      export GDRIVE_OAUTH_PATH=${lib.escapeShellArg "${gdriveCredsDir}/gcp-oauth.keys.json"}
+      export GDRIVE_CREDENTIALS_PATH=${lib.escapeShellArg "${gdriveCredsDir}/.gdrive-server-credentials.json"}
+      exec npx -y @modelcontextprotocol/server-gdrive "$@"
+    '';
+  };
+  gdriveMcpServer = {
+    command = "${gdriveMcp}/bin/gdrive-mcp";
+    args = [];
+    env = gdriveMcpEnv;
+  };
+  canvaConfigDir = "${configHome}/canva-mcp";
+  canvaMcp = pkgs.writeShellApplication {
+    name = "canva-mcp";
+    runtimeInputs = [pkgs.nodejs];
+    text = ''
+      env_file=${lib.escapeShellArg "${canvaConfigDir}/env"}
+      if [[ -f "$env_file" ]]; then
+        set -a
+        # shellcheck disable=SC1090
+        source "$env_file"
+        set +a
+      fi
+      export CANVA_BASE_URL="''${CANVA_BASE_URL:-https://api.canva.com/rest/v1}"
+      exec npx -y @mcp_factory/canva-mcp-server "$@"
+    '';
+  };
+  canvaMcpServer = {
+    command = "${canvaMcp}/bin/canva-mcp";
+    args = [];
+    env.CANVA_CONFIG_DIR = canvaConfigDir;
+  };
 
   cursorShim = pkgs.writeShellApplication {
     name = "cursor";
@@ -38,16 +80,6 @@
       echo "cursor: no Cursor IDE executable was found in PATH" >&2
       echo "Use 'cursor agent' to start Cursor Agent." >&2
       exit 127
-    '';
-  };
-
-  hermesCronSync = pkgs.writeShellApplication {
-    name = "hermes-cron-sync";
-    runtimeInputs = [pkgs.python3];
-    text = ''
-      exec ${pkgs.python3}/bin/python3 ${./hermes-cron-sync.py} \
-        ${files/hermes/cron-jobs.json} ${lib.escapeShellArg "${profileBin}/hermes"} \
-        ${lib.escapeShellArg "${homeDir}/.hermes/cron/jobs.json"}
     '';
   };
 
@@ -84,31 +116,7 @@
     '';
   };
 
-  claudeMarketplaceSync = pkgs.writeShellApplication {
-    name = "claude-marketplace-sync";
-    runtimeInputs = [pkgs.python3];
-    text = ''
-      exec ${pkgs.python3}/bin/python3 ${./claude-marketplace-sync.py} \
-        ${lib.escapeShellArg "${profileBin}/claude"}
-    '';
-  };
-
   jsonDefaults = pkgs.writeText "personal-json-defaults.json" (builtins.toJSON {
-    claude = {
-      skipDangerousModePermissionPrompt = true;
-      hooks.SessionStart = [
-        {
-          matcher = "*";
-          hooks = [
-            {
-              command = "bash '${homeDir}/.claude/hooks/herdr-agent-state.sh' session";
-              timeout = 10;
-              type = "command";
-            }
-          ];
-        }
-      ];
-    };
     cursor = {
       permissions.allow = [
         "Shell(ls)"
@@ -148,10 +156,8 @@
       commonConfigConfirmed = true;
       usageConfirmed = true;
       visibleApps = {
-        claude = true;
         codex = true;
         opencode = true;
-        hermes = true;
         openclaw = true;
       };
       visibleAppsSettings = {
@@ -183,52 +189,8 @@
     tui.vim_mode_default = true;
     mcp_servers = {
       fff.command = "${homeDir}/.nix-profile/bin/fff-mcp";
-      obscura = {
-        command = "obscura";
-        args = ["mcp"];
-      };
-    };
-  });
-
-  hermesDefaults = pkgs.writeText "hermes-defaults.json" (builtins.toJSON {
-    model = {
-      provider = "custom";
-      base_url = "http://127.0.0.1:8317/v1";
-      default = "gpt-5.6-sol";
-      api_key = "\${HERMES_CUSTOM_127_0_0_1_8317_API_KEY}";
-    };
-    agent.max_turns = 150;
-    web = {
-      backend = "ddgs";
-      use_gateway = false;
-    };
-    browser = {
-      cloud_provider = "local";
-      use_gateway = false;
-    };
-    display.tool_progress = "all";
-    dashboard = {
-      theme = "midnight";
-      font = "ibm-plex-sans";
-    };
-    tts.use_gateway = false;
-    approvals.mcp_reload_confirm = false;
-    session_reset.mode = "none";
-    image_gen = {
-      provider = "fal";
-      use_gateway = false;
-      model = "fal-ai/gpt-image-2";
-    };
-    video_gen = {
-      provider = "fal";
-      use_gateway = false;
-      model = "pixverse-v6";
-    };
-    mcp_servers = {
-      fff = {
-        command = "${homeDir}/.nix-profile/bin/fff-mcp";
-        enabled = true;
-      };
+      gdrive = gdriveMcpServer;
+      canva = canvaMcpServer;
       obscura = {
         command = "obscura";
         args = ["mcp"];
@@ -262,7 +224,6 @@
     disable-cooling = false;
     save-cooldown-status = false;
     transient-error-cooldown-seconds = 0;
-    disable-claude-cloak-mode = false;
     disable-image-generation = false;
     quota-exceeded = {
       switch-project = true;
@@ -300,8 +261,6 @@
   });
 in {
   home.packages = [
-    claudeMarketplaceSync
-    hermesCronSync
     herdrAgentRename
     herdrPluginSync
     pkgs.xclip
@@ -339,16 +298,48 @@ in {
       source = files/codex/herdr-agent-state.sh;
       executable = true;
     };
-    ".claude/hooks/herdr-agent-state.sh" = {
-      source = files/claude/herdr-agent-state.sh;
-      executable = true;
-    };
     ".cursor/hooks.json".source = files/cursor/hooks.json;
     ".cursor/herdr-agent-state.sh" = {
       source = files/cursor/herdr-agent-state.sh;
       executable = true;
     };
+    ".local/bin/gdrive-mcp-auth" = {
+      executable = true;
+      text = ''
+        #!${pkgs.bash}/bin/bash
+        set -euo pipefail
+        mkdir -p ${lib.escapeShellArg gdriveCredsDir}
+        echo "Put your Google OAuth desktop-client JSON at: ${gdriveCredsDir}/gcp-oauth.keys.json"
+        echo "Then this command will open/print the Google auth flow for the Drive MCP server."
+        exec ${gdriveMcp}/bin/gdrive-mcp auth
+      '';
+    };
+    ".local/bin/canva-mcp".source = "${canvaMcp}/bin/canva-mcp";
+    ".local/bin/canva-mcp-token-help" = {
+      executable = true;
+      text = ''
+                #!${pkgs.bash}/bin/bash
+                set -euo pipefail
+                mkdir -p ${lib.escapeShellArg canvaConfigDir}
+                chmod 700 ${lib.escapeShellArg canvaConfigDir}
+                env_file=${lib.escapeShellArg "${canvaConfigDir}/env"}
+                if [[ ! -f "$env_file" ]]; then
+                  umask 077
+                  cat >"$env_file" <<'EOF'
+        # Put a Canva Connect API access token here.
+        # Create a Canva Developer integration at https://www.canva.dev/ and generate/obtain an OAuth access token with the scopes you need.
+        CANVA_ACCESS_TOKEN=
+        # Optional:
+        # CANVA_BASE_URL=https://api.canva.com/rest/v1
+        EOF
+                fi
+                echo "Canva MCP is configured. Add your token to: $env_file"
+                echo "Then restart your MCP client and test a Canva tool such as canva_list_me_profile."
+      '';
+    };
     ".cursor/mcp.json".text = builtins.toJSON {
+      mcpServers.gdrive = gdriveMcpServer;
+      mcpServers.canva = canvaMcpServer;
       mcpServers.aws-mcp = {
         command = "uvx";
         args = [
@@ -360,6 +351,8 @@ in {
       };
     };
     ".codeium/mcp_config.json".text = builtins.toJSON {
+      mcpServers.gdrive = gdriveMcpServer;
+      mcpServers.canva = canvaMcpServer;
       mcpServers.aws-mcp = {
         command = "uvx";
         args = [
@@ -371,6 +364,18 @@ in {
       };
     };
     ".kiro/settings/mcp.json".text = builtins.toJSON {
+      mcpServers.gdrive =
+        gdriveMcpServer
+        // {
+          timeout = 100000;
+          transport = "stdio";
+        };
+      mcpServers.canva =
+        canvaMcpServer
+        // {
+          timeout = 100000;
+          transport = "stdio";
+        };
       mcpServers.aws-mcp = {
         command = "uvx";
         args = [
@@ -383,7 +388,6 @@ in {
         transport = "stdio";
       };
     };
-    ".hermes/SOUL.md".source = files/hermes/SOUL.md;
     ".local/bin/cursor".source = "${cursorShim}/bin/cursor";
   };
 
@@ -413,7 +417,6 @@ in {
       ${pkgs.coreutils}/bin/mv "$destination.hm-new" "$destination"
     }
 
-    merge_json ${lib.escapeShellArg "${homeDir}/.claude/settings.json"} claude
     merge_json ${lib.escapeShellArg "${homeDir}/.cursor/cli-config.json"} cursor
     merge_json ${lib.escapeShellArg "${homeDir}/.pi/agent/settings.json"} pi
     merge_json ${lib.escapeShellArg "${homeDir}/.cc-switch/settings.json"} ccSwitch
@@ -424,14 +427,6 @@ in {
       ${pkgs.yq}/bin/tomlq --toml-output --in-place --slurpfile defaults ${codexDefaults} \
         '. * $defaults[0]' "$codex_config"
       ${pkgs.coreutils}/bin/chmod --reference="$codex_config.hm-bak" "$codex_config"
-    fi
-
-    hermes_config=${lib.escapeShellArg "${homeDir}/.hermes/config.yaml"}
-    if [[ -f "$hermes_config" ]]; then
-      preserve_once "$hermes_config"
-      ${pkgs.yq}/bin/yq --yaml-output --in-place --slurpfile defaults ${hermesDefaults} \
-        '. * $defaults[0]' "$hermes_config"
-      ${pkgs.coreutils}/bin/chmod --reference="$hermes_config.hm-bak" "$hermes_config"
     fi
 
     cli_proxy_config=${lib.escapeShellArg "${homeDir}/.cli-proxy-api/config.yaml"}

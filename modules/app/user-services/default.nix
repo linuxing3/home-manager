@@ -61,8 +61,6 @@ in {
     "systemd/user/default.target.wants/cloudflared-cursor-openai.service".force = true;
     "systemd/user/default.target.wants/collie.service".force = true;
     "systemd/user/default.target.wants/cursor-to-openai.service".force = true;
-    "systemd/user/default.target.wants/hermes-dashboard.service".force = true;
-    "systemd/user/default.target.wants/hermes-gateway.service".force = true;
   };
 
   systemd.user.services = {
@@ -131,74 +129,6 @@ in {
           ExecStart = "${profileBin}/node --require ${nodeLoopbackListen} src/app.js";
           Restart = "on-failure";
           RestartSec = 5;
-        };
-      Install.WantedBy = ["default.target"];
-    };
-
-    hermes-dashboard = {
-      Unit = {
-        Description = "Hermes Agent dashboard on loopback";
-        After = ["network-online.target"];
-        Wants = ["network-online.target"];
-        ConditionPathExists = "${profileBin}/hermes";
-      };
-      Service =
-        serviceHardening
-        // {
-          Type = "simple";
-          WorkingDirectory = "${homeDir}/.hermes";
-          Environment = "PATH=${profileBin}:/usr/local/bin:/usr/bin:/bin";
-          ExecStart = "${profileBin}/hermes dashboard --host 127.0.0.1 --port 9119 --no-open --skip-build";
-          Restart = "on-failure";
-          RestartSec = 5;
-        };
-      Install.WantedBy = ["default.target"];
-    };
-
-    hermes-gateway = {
-      Unit = {
-        Description = "Hermes Agent Gateway";
-        After = ["network-online.target"];
-        Wants = ["network-online.target"];
-        StartLimitIntervalSec = 0;
-        ConditionPathExists = "${profileBin}/hermes";
-      };
-      Service =
-        serviceHardening
-        // {
-          Type = "simple";
-          WorkingDirectory = "${homeDir}/.hermes";
-          Environment = [
-            "PATH=${profileBin}:${homeDir}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-            "HERMES_HOME=${homeDir}/.hermes"
-          ];
-          EnvironmentFile = "-${homeDir}/.hermes/.env";
-          UnsetEnvironment = [
-            "http_proxy"
-            "https_proxy"
-            "all_proxy"
-            "auto_proxy"
-            "ftp_proxy"
-            "no_proxy"
-            "HTTP_PROXY"
-            "HTTPS_PROXY"
-            "ALL_PROXY"
-            "FTP_PROXY"
-            "NO_PROXY"
-            "SOCKS_SERVER"
-            "SOCKS5_SERVER"
-          ];
-          ExecStart = "${profileBin}/hermes gateway run";
-          Restart = "always";
-          RestartSec = 5;
-          RestartForceExitStatus = 75;
-          RestartPreventExitStatus = 78;
-          KillMode = "mixed";
-          KillSignal = "SIGTERM";
-          ExecReload = "${pkgs.coreutils}/bin/kill -USR1 $MAINPID";
-          TimeoutStopSec = 60;
-          StandardOutput = "journal";
-          StandardError = "journal";
         };
       Install.WantedBy = ["default.target"];
     };

@@ -60,7 +60,7 @@
       shift
       command_name=$(basename -- "$1")
       case "$command_name" in
-        git|gh|curl|wget|ssh|scp|rsync|codex|claude|opencode|hermes|jcode)
+        git|gh|curl|wget|ssh|scp|rsync|codex|opencode|jcode)
           exec ${agenixEnv}/bin/agenix-env -- "$@"
           ;;
         *)
@@ -89,6 +89,8 @@ in {
     enableZshIntegration = true;
     enableBashIntegration = true;
     enableFishIntegration = true;
+    silent = true;
+    config.global.hide_env_diff = true;
     nix-direnv.enable = true;
   };
 
@@ -118,7 +120,7 @@ in {
       autoload -U compinit
       compinit -C
 
-      # Guard: when spawned from hermes runtime under /nix/store/.../site-packages,
+      # Guard: when spawned from package runtimes under /nix/store/.../site-packages,
       # reset interactive shells to HOME so startup is usable.
       if [[ -o interactive && "$PWD" == /nix/store/*/site-packages* ]]; then
         builtin cd "$HOME" 2>/dev/null || builtin cd /

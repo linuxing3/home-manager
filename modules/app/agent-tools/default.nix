@@ -76,32 +76,26 @@ in {
 
     rtk_bin=${lib.escapeShellArg "${pkgs.rtk}/bin/rtk"}
     codex_bin=${lib.escapeShellArg "${profileBin}/codex"}
-    hermes_bin=${lib.escapeShellArg "${profileBin}/hermes"}
     fff_bin=${lib.escapeShellArg fffBin}
 
-    for executable in "$rtk_bin" "$codex_bin" "$hermes_bin" "$fff_bin"; do
+    for executable in "$rtk_bin" "$fff_bin"; do
       if [[ ! -x "$executable" ]]; then
         echo "agent-tools activation: required executable is missing: $executable" >&2
         exit 1
       fi
     done
 
-    "$rtk_bin" init -g --codex
-    "$rtk_bin" init --agent hermes
+    if [[ -x "$codex_bin" ]]; then
+      "$rtk_bin" init -g --codex
 
-    if ! "$codex_bin" mcp get fff --json 2>/dev/null |
-      ${pkgs.jq}/bin/jq -e --arg command "$fff_bin" '.transport.command == $command' >/dev/null; then
-      "$codex_bin" mcp remove fff >/dev/null 2>&1 || true
-      "$codex_bin" mcp add fff -- "$fff_bin"
+      if ! "$codex_bin" mcp get fff --json 2>/dev/null |
+        ${pkgs.jq}/bin/jq -e --arg command "$fff_bin" '.transport.command == $command' >/dev/null; then
+        "$codex_bin" mcp remove fff >/dev/null 2>&1 || true
+        "$codex_bin" mcp add fff -- "$fff_bin"
+      fi
+    else
+      echo "agent-tools activation: skipping Codex integration; missing $codex_bin" >&2
     fi
 
-    if ! "$hermes_bin" config get mcp_servers.fff.command 2>/dev/null |
-        ${pkgs.gnugrep}/bin/grep -Fxq "$fff_bin" ||
-      ! "$hermes_bin" config get mcp_servers.fff.enabled 2>/dev/null |
-        ${pkgs.gnugrep}/bin/grep -Fxq true; then
-      "$hermes_bin" mcp remove fff >/dev/null 2>&1 || true
-      printf 'y\n' | "$hermes_bin" mcp add fff --command "$fff_bin"
-      "$hermes_bin" config set mcp_servers.fff.enabled true
-    fi
   '';
 }

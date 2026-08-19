@@ -37,6 +37,18 @@
     # ------------- hardware -------------------
     ../../modules/hardware/ft-hda-audio.nix
   ];
+  gnirehtetCompatWrapper = pkgs.writeShellApplication {
+    name = "gnirehtet";
+    runtimeInputs = with pkgs; [coreutils gnugrep gnused];
+    text = ''
+      nix_gnirehtet=${lib.escapeShellArg "${pkgs.gnirehtet}/bin/gnirehtet"}
+      wrapped=$(grep -o '"/nix/store/[^"]*/bin/\.gnirehtet-wrapped"' "$nix_gnirehtet" | head -1 | tr -d '"')
+      apk=$(grep '^export GNIREHTET_APK=' "$nix_gnirehtet" | sed "s/export GNIREHTET_APK='//; s/'$//")
+      export ADB=${lib.escapeShellArg "${pkgs.android-tools}/bin/adb"}
+      export GNIREHTET_APK="$apk"
+      exec -a "$0" "$wrapped" "$@"
+    '';
+  };
   crabboxPackage = pkgs.buildGoModule {
     pname = "crabbox";
     version = "0.22.1-e73b02f";
@@ -76,6 +88,8 @@
     comma
     cachix
     crabboxPackage
+    android-tools
+    gnirehtet
   ];
   networkPackages = with pkgs; [
     cloudflared
@@ -119,6 +133,20 @@ in {
     ++ browserRuntimePackages
     ++ desktopMediaPackages
     ++ termscopeRuntimePackages;
+
+  home.file = {
+    ".local/bin/gnirehtet".source = "${gnirehtetCompatWrapper}/bin/gnirehtet";
+    ".local/bin/gnirehtet-connect" = {
+      executable = true;
+      text = ''
+        #!${pkgs.bash}/bin/bash
+        set -euo pipefail
+        ${pkgs.android-tools}/bin/adb start-server >/dev/null
+        ${pkgs.android-tools}/bin/adb devices -l
+        exec ${gnirehtetCompatWrapper}/bin/gnirehtet run "$@"
+      '';
+    };
+  };
 
   home.sessionVariables = {
     EDITOR = userSettings.editor;
