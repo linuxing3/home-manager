@@ -23,7 +23,7 @@ KEYVAULT/
 │   ├── ssh/
 │   ├── gpg/                       # armored exports + revocation/
 │   ├── age/README.txt             # Agenix uses ../ssh/id_ed25519
-│   ├── age/cloudflared-office-token.age
+│   ├── age/api-keys-new.age
 │   └── checksums/SHA256SUMS
 ├── uos-system-recovery/
 │   ├── README.txt
@@ -110,8 +110,10 @@ Rules:
 2. Export GPG armored files into `uos-Designers/gpg/` via pinentry (loopback +
    desktop pinentry when headless). Require `master-secret.asc`.
 3. Keep revocation under `gpg/revocation/`.
-4. Copy encrypted Agenix files such as `cloudflared-office-token.age` into
+4. Copy encrypted Agenix files such as `api-keys-new.age` into
    `uos-Designers/age/` (ciphertext only; identity remains `../ssh/id_ed25519`).
+   The office tunnel token (`CLOUDFLARED_TUNNEL_TOKEN`) lives in
+   `api-keys-new.age`. See `repair-cloudflared-office`.
 5. Regenerate `uos-Designers/checksums/SHA256SUMS` and verify immediately.
 
 ## Nix recovery package (`uos-system-recovery`)

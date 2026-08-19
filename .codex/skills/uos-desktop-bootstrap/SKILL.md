@@ -19,6 +19,7 @@ Apply changes in this order and verify each boundary before continuing. Focused 
 | `repair-devenv-herdr` | `herdr` missing from `use flake` / `packages.<system>.herdr` |
 | `repair-herdr-clipboard` | herdr copy logs success but X11 clipboard empty; `xclip` missing |
 | `repair-herdr-hx` | Herdr `prefix+m` does not open Helix; need `linuxing3/herdr-nvim --ref herdr-hx` |
+| `repair-cloudflared-office` | `cloudflared-office.service` token/ExecStart/agenix on systemd 241 |
 | `install-nixos-beside-uos` | NixOS on sda4 beside UOS; nixos-install/GRUB; nspawn `--boot` EUNATCH |
 | `uos-nix-store-backup` | KeyVault packs, SSH/GPG restore, or Nix store remote backup |
 
@@ -129,10 +130,11 @@ install. Never ask for, receive, or handle the user's password.
 Treat the three Cloudflare tools as separate products:
 
 - `cloudflared`: verify `cloudflared --version`, tunnel inventory, and its
-  system service. A user configuration may reference a stale tunnel UUID that
-  differs from the live named tunnel; do not redirect a hostname or origin
-  without the missing routing details. Never print tunnel credential contents
-  or tokens.
+  system service. The office **user** tunnel is **REQUIRED SUB-SKILL:**
+  `repair-cloudflared-office` (`api-keys-new.age`, wrapper, systemd 241).
+  A user configuration may reference a stale tunnel UUID that differs from the
+  live named tunnel; do not redirect a hostname or origin without the missing
+  routing details. Never print tunnel credential contents or tokens.
 - `wrangler`: manage the official developer CLI in the profile's
   `networkPackages`. Run `wrangler login`, complete browser OAuth, then verify
   with `wrangler whoami`.
