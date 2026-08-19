@@ -1,6 +1,6 @@
 ---
 name: uos-desktop-bootstrap
-description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, Hermes Gateway service failures, or NixOS-beside-UOS on /dev/sda. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
+description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, or NixOS-beside-UOS on /dev/sda. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
 ---
 
 # UOS Desktop Bootstrap
@@ -74,55 +74,11 @@ The profile provides the `bat` alias, Atuin Bash/Zsh integration, `secretspec`, 
 - Use `agenix-env -- command` only for an explicitly authorized arbitrary command.
 - Never place secret values in prompts, command arguments, logs, shell startup files, or temporary files.
 
-## 8. Repair Hermes Gateway
+## 8. Hermes is retired
 
-Use this procedure when `hermes-gateway.service` loops in `activating
-(auto-restart)` with `ModuleNotFoundError: No module named 'hermes_cli'` or
-`No module named 'gateway'`.
-
-1. Confirm the Nix package contains `hermes_cli` and `gateway`. Do not add
-   `PYTHONPATH` manually: the Hermes wrapper carries the full transitive Python
-   dependency set.
-2. Confirm `agenix.service` is `Type=oneshot`, `Result=success`, and
-   `ExecMainStatus=0`. It is normally `inactive (dead)` after success.
-3. Confirm the materialized file without reading it:
-
-   ```sh
-   stat -Lc '%a %U:%G %n' \
-     "$XDG_RUNTIME_DIR/agenix/api-keys-new.age"
-   /home/Designers/.nix-profile/bin/agenix-env -- /usr/bin/true
-   ```
-
-   Require mode `600`, owner `Designers`, and a successful smoke test.
-4. Create
-   `~/.config/systemd/user/hermes-gateway.service.d/nix-wrapper.conf`:
-
-   ```ini
-   [Service]
-   ExecStart=
-   ExecStart=/home/Designers/.nix-profile/bin/agenix-env -- /usr/bin/env -u API_SERVER_CORS_ORIGINS -u API_SERVER_ENABLED -u API_SERVER_HOST -u API_SERVER_KEY -u API_SERVER_MODEL_NAME -u API_SERVER_PORT -u FEISHU_ALLOWED_USERS -u FEISHU_ALLOW_ALL_USERS -u FEISHU_ALLOW_BOTS -u FEISHU_APP_ID -u FEISHU_APP_SECRET -u FEISHU_CONNECTION_MODE -u FEISHU_DOMAIN -u FEISHU_ENCRYPT_KEY -u FEISHU_HOME_CHANNEL -u FEISHU_HOME_CHANNEL_NAME -u FEISHU_HOME_CHANNEL_THREAD_ID -u FEISHU_VERIFICATION_TOKEN /home/Designers/.nix-profile/bin/hermes gateway run
-   ExecStopPost=
-   ```
-
-   The empty assignments replace the generated bare-Python commands. Stable
-   Home Manager profile paths survive Nix store upgrades. `agenix-env` injects
-   secrets only into the child process. The `env -u` list prevents global
-   Agenix values from unintentionally enabling the API Server or Feishu.
-5. Reload, restart, and verify:
-
-   ```sh
-   systemctl --user daemon-reload
-   systemctl --user restart hermes-gateway.service
-   systemctl --user is-enabled hermes-gateway.service
-   systemctl --user is-active hermes-gateway.service
-   systemctl --user show hermes-gateway.service \
-     -p ExecStart -p Result -p ExecMainStatus -p NRestarts -p MainPID
-   /home/Designers/.nix-profile/bin/hermes gateway status
-   ```
-
-   Require `enabled`, `active`, `Result=success`, `ExecMainStatus=0`, and no
-   new restarts. Inspect only post-restart logs. Never print `/proc/*/environ`
-   values; compare variable names if environment propagation must be checked.
+Hermes packages, user units, and skills are not part of this flake. Do not
+reinstall `hermes-gateway.service` or `hermes-dashboard.service`. Remove any
+leftover `~/.hermes` files if they appear after an old generation.
 
 ## 9. Configure passwordless sudo
 
@@ -297,41 +253,15 @@ package build to succeed.
 
 ## 16. Run CLIProxyAPI as a user service
 
-On this host, `cli-proxy-api` is installed separately through `nix profile`
-from `numtide/llm-agents.nix`; it is not present in this flake's pinned
-Nixpkgs. Do not add a flake input or production dependency only to create the
-unit. Use the stable profile executable and the existing configuration:
+`cli-proxy-api` is provided by `overlays/packages/cli-proxy-api.nix` and
+enabled through `my.ai.cliProxyApi`. Home Manager seeds
+`~/.cli-proxy-api/config.yaml` from module defaults when the file is missing,
+then starts `cli-proxy-api.service`. Do not install the binary with a separate
+`nix profile` command.
 
-```nix
-{config, ...}: let
-  cliProxyApiDir = "${config.home.homeDirectory}/.cli-proxy-api";
-  cliProxyApiConfig = "${cliProxyApiDir}/config.yaml";
-in {
-  systemd.user.services.cli-proxy-api = {
-    Unit = {
-      Description = "CLIProxyAPI server";
-      After = ["network-online.target"];
-      Wants = ["network-online.target"];
-      ConditionPathExists = cliProxyApiConfig;
-    };
-    Service = {
-      Type = "simple";
-      WorkingDirectory = cliProxyApiDir;
-      ExecStart = "${config.home.homeDirectory}/.nix-profile/bin/cli-proxy-api -config ${cliProxyApiConfig}";
-      Restart = "on-failure";
-      RestartSec = 5;
-      UMask = "0077";
-    };
-    Install.WantedBy = ["default.target"];
-  };
-}
-```
-
-Place the module at `modules/app/cli-proxy-api/default.nix` and import it from
-the work profile. If the module is still untracked, build with the `path:.`
-flake reference so Nix includes it. Inspect the generated unit and compare the
-new and active Home Manager generations before activation; the expected delta
-is the unit plus its `default.target.wants` symlink.
+Inspect the generated unit and compare the new and active Home Manager
+generations before activation; the expected delta is the package, the unit,
+and its `default.target.wants` symlink.
 
 For a running manual instance, resolve the exact user-owned `cli-proxy-api`
 PID and port first, terminate only that PID with `SIGTERM`, then activate with
@@ -389,12 +319,6 @@ copying the checkout:
   -g --agent '*' -y
 ```
 
-Hermes-curated skills belong to Hermes. Use `hermes skills search`, inspect the
-exact upstream identifier, and then `hermes skills install IDENTIFIER --yes`.
-The official `yuanbao` skill is tracked by Hermes' hub lock; bundled skills
-should be restored with `hermes skills repair-official`, not copied into the
-global root.
-
 After installation, require all of the following:
 
 1. `~/.agents/.skill-lock.json` parses and contains the expected upstream
@@ -420,7 +344,6 @@ failure.
 - Atuin contains only reviewed non-secret variables.
 - `secretspec --version`, `infocmp st-256color`, and keyboard mapping checks pass.
 - The oxwm screenshot helper contains resolved `maim` and `xclip` runtime dependencies, and `Mod+S` copies a selected PNG to the X11 clipboard.
-- `hermes-gateway.service` uses `agenix-env` plus the Nix Hermes wrapper, omits API Server and Feishu variables, remains active, and records no new error-level logs.
 - Any requested passwordless-sudo rule passes `visudo` and `sudo -n true`; otherwise no sudoers file is installed.
 - Cloudflare APT updates without an `eagle` repository error, and WARP has an ARM64 `buster` candidate.
 - Each requested Cloudflare client passes its own verification; package-only WARP installs are not reported as daemon setup.

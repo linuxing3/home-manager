@@ -71,6 +71,8 @@
     '';
   };
 in {
+  imports = [../tui/nnn-plugins.nix];
+
   home.sessionPath = sessionPath;
 
   home.sessionVariables = {
@@ -81,7 +83,7 @@ in {
     NNN_FIFO = "/tmp/nnn.fifo";
     NNN_TERMINAL = "${pkgs.st-xyz}/bin/st";
     NNN_TMPFILE = "~/.config/nnn/.lastd";
-    NNN_PLUG = "p:preview-tabbed;c:-!printf '%s/%s' \\\"\\$PWD\\\" \\\"\\$nnn\\\" | ${pkgs.xclip}/bin/xclip -selection clipboard*;v:imgview;l:launch;n:xnuke;z:fzcd;s:-!sudo ${pkgs.helix}/bin/hx \\\"\\$nnn\\\"*;r:gitroot;e:gpge;d:gpgd;S:gpgs;i:gpgv;g:-!git diff;";
+    NNN_PLUG = "p:preview-tabbed;c:-!printf '%s/%s' \\\"\\$PWD\\\" \\\"\\$nnn\\\" | ${pkgs.xclip}/bin/xclip -selection clipboard*;v:imgview;l:launch;z:fzcd;s:-!sudo ${pkgs.helix}/bin/hx \\\"\\$nnn\\\"*;r:gitroot;e:gpge;d:gpgd;S:gpgs;i:gpgv;g:-!git diff;";
   };
 
   programs.direnv = {

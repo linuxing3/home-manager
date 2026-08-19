@@ -3,150 +3,34 @@
   userSettings,
   lib,
   ...
-}: let
-  # settings = import ../../nix/nix-config.nix;
-  baseImports = [
-    # ------------- security -------------------
+}: {
+  imports = [
     ../../security/security.nix
-
-    # ------------- cli -------------------
     ../../modules/shell/sh.nix
     ../../modules/shell/cli-collection.nix
     ../../modules/app/git/git.nix
     ../../modules/app/ranger/ranger.nix
-    ../../modules/app/agent-tools/default.nix
-    ../../modules/app/personal-configs/default.nix
-    ../../modules/app/credential-backup/default.nix
-    ../../modules/app/secretspec-bitwarden/default.nix
-    ../../modules/app/user-services/default.nix
-    ../../modules/tui/nnn-herdr-sync.nix
+    ../../modules/app/ai-agents
+    ../../modules/app/personal-configs
+    ../../modules/app/credential-backup
+    ../../modules/app/secretspec-bitwarden
     ../../modules/tui/st-theme.nix
-
-    # ------------- editor -------------------
     ../../modules/app/nvim/nvim.nix
-
-    # ------------- app -------------------
-    ../../modules/app/cli-proxy-api/default.nix
-    ../../modules/app/hx-anywhere/default.nix
-    ../../modules/app/rclone/default.nix
-    ../../modules/app/virtualization/default.nix
-
-    # ------------- wm/gui -------------------
+    ../../modules/app/hx-anywhere
+    ../../modules/app/rclone
+    ../../modules/app/virtualization
     ../../modules/wm/oxwm/oxwm.nix
-
-    # ------------- hardware -------------------
     ../../modules/hardware/ft-hda-audio.nix
+    ./packages.nix
   ];
-  gnirehtetCompatWrapper = pkgs.writeShellApplication {
-    name = "gnirehtet";
-    runtimeInputs = with pkgs; [coreutils gnugrep gnused];
-    text = ''
-      nix_gnirehtet=${lib.escapeShellArg "${pkgs.gnirehtet}/bin/gnirehtet"}
-      wrapped=$(grep -o '"/nix/store/[^"]*/bin/\.gnirehtet-wrapped"' "$nix_gnirehtet" | head -1 | tr -d '"')
-      apk=$(grep '^export GNIREHTET_APK=' "$nix_gnirehtet" | sed "s/export GNIREHTET_APK='//; s/'$//")
-      export ADB=${lib.escapeShellArg "${pkgs.android-tools}/bin/adb"}
-      export GNIREHTET_APK="$apk"
-      exec -a "$0" "$wrapped" "$@"
-    '';
-  };
-  crabboxPackage = pkgs.buildGoModule {
-    pname = "crabbox";
-    version = "0.22.1-e73b02f";
-    src = pkgs.fetchFromGitHub {
-      owner = "openclaw";
-      repo = "crabbox";
-      rev = "e73b02f6455f0e41c35c5a1b4f0dab3e65911005";
-      hash = "sha256-JErrI5TU3BlVsYyH1NELkO14ct5J5AjdKP2B1aghFFw=";
-    };
-    vendorHash = "sha256-963ZX9X5extYKc9KaKkiX/mI5u4F5uoZPcHPWXAO/Hk=";
-    subPackages = ["cmd/crabbox"];
-    env.CGO_ENABLED = 0;
-    ldflags = [
-      "-s"
-      "-w"
-      "-X github.com/openclaw/crabbox/internal/cli.version=0.22.1-e73b02f"
-    ];
-  };
-  fileManagerPackages = with pkgs; [
-    yazi
-    nnn
-  ];
-  terminalPackages = with pkgs; [
-    dwm
-    st-xyz
-    tabbed
-  ];
-  editorPackages = with pkgs; [helix];
-  collaborationPackages = with pkgs; [
-    git
-    gh
-    lazygit
-    zellij
-  ];
-  workflowPackages = with pkgs; [
-    just
-    comma
-    cachix
-    crabboxPackage
-    android-tools
-    gnirehtet
-  ];
-  networkPackages = with pkgs; [
-    cloudflared
-    cloudflare-warp
-    tailscale
-    wrangler
-  ];
-  browserRuntimePackages = with pkgs; [
-    bun
-    chromium
-  ];
-  termscopeRuntimePackages = with pkgs; [
-    python3
-    television
-  ];
-  desktopMediaPackages = with pkgs; [
-    zathura
-    imv
-    sxiv
-    nsxiv
-    vlc
-    mpv
-    viu
-  ];
-in {
-  imports = baseImports;
+
   home.username = userSettings.username;
   home.homeDirectory = "/home/" + userSettings.username;
   home.enableNixpkgsReleaseCheck = false;
 
   my.features.home.nvim = true;
 
-  home.stateVersion = "25.11"; # Please read the comment before changing.
-  home.packages =
-    fileManagerPackages
-    ++ terminalPackages
-    ++ editorPackages
-    ++ collaborationPackages
-    ++ workflowPackages
-    ++ networkPackages
-    ++ browserRuntimePackages
-    ++ desktopMediaPackages
-    ++ termscopeRuntimePackages;
-
-  home.file = {
-    ".local/bin/gnirehtet".source = "${gnirehtetCompatWrapper}/bin/gnirehtet";
-    ".local/bin/gnirehtet-connect" = {
-      executable = true;
-      text = ''
-        #!${pkgs.bash}/bin/bash
-        set -euo pipefail
-        ${pkgs.android-tools}/bin/adb start-server >/dev/null
-        ${pkgs.android-tools}/bin/adb devices -l
-        exec ${gnirehtetCompatWrapper}/bin/gnirehtet run "$@"
-      '';
-    };
-  };
+  home.stateVersion = "25.11";
 
   home.sessionVariables = {
     EDITOR = userSettings.editor;
@@ -158,11 +42,6 @@ in {
   };
 
   news.display = "silent";
-
-  # nix = {
-  #   package = pkgs.nix;
-  #   settings = settings;
-  # };
 
   programs.home-manager.enable = true;
 }

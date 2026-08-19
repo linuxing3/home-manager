@@ -38,7 +38,7 @@ The running server already includes `~/.nix-profile/bin` on PATH, so a new `xcli
 
 ## Persist
 
-Keep `pkgs.xclip` in `modules/app/personal-configs/default.nix` `home.packages` and in `flake/devshells.nix`. Keep `[ui] copy_on_select = true` in `modules/app/personal-configs/files/herdr/config.toml`. Keep Ctrl+Shift+C/V `clipcopy`/`clippaste` bindings in `overlays/packages/st.nix`.
+Keep `pkgs.xclip` in `modules/app/ai-agents/herdr/default.nix` `home.packages` and in `flake/devshells.nix`. Keep `[ui] copy_on_select = true` in `modules/app/ai-agents/herdr/files/config.toml`. Keep Ctrl+Shift+C/V `clipcopy`/`clippaste` bindings in `overlays/packages/st.nix`.
 
 Activate Home Manager for the config and `st` rebuild. New `st` windows pick up Ctrl+Shift+C/V. Existing terminals keep Alt+c/v until restarted.
 

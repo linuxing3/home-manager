@@ -6,6 +6,9 @@
       "flake/packages.nix"
       "flake/checks.nix"
       "profiles/work/home.nix"
+      "profiles/work/packages.nix"
+      "modules/tui/nnn-plugins.nix"
+      "modules/app/ai-agents"
       "modules/app/virtualization/default.nix"
       "modules/app/hx-anywhere/default.nix"
     ];
