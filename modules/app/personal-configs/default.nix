@@ -304,6 +304,7 @@ in {
     hermesCronSync
     herdrAgentRename
     herdrPluginSync
+    pkgs.xclip
   ];
 
   programs.atuin.settings = {

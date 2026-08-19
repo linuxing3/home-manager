@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  lib,
+  pkgs,
+  ...
+}: let
   lightTheme = pkgs.writeText "st-gruvbox-light.Xresources" ''
     st.foreground: #3c3836
     st.background: #fbf1c7
@@ -92,6 +96,15 @@
     ${pkgs.xrdb}/bin/xrdb -merge "$theme_file"
     ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$state_file")"
     printf '%s\n' "$mode" >"$state_file"
+
+    st_bin="$(${pkgs.coreutils}/bin/readlink -f ${pkgs.st}/bin/st)"
+    for pid in $(${pkgs.procps}/bin/pgrep -x st || true); do
+      exe="$(${pkgs.coreutils}/bin/readlink -f "/proc/$pid/exe" || true)"
+      if [[ "$exe" == "$st_bin" ]]; then
+        ${pkgs.procps}/bin/kill -USR1 "$pid" || true
+      fi
+    done
+
     echo "st theme: $mode"
   '';
 in {
@@ -116,10 +129,24 @@ in {
   xdg.configFile."st/gruvbox-light.Xresources".source = lightTheme;
   xdg.configFile."st/gruvbox-dark.Xresources".source = darkTheme;
 
+  xdg.configFile."autostart/st-theme-auto.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=st theme auto
+    Comment=Apply Gruvbox light/dark st colors by local hour
+    Exec=${stTheme}/bin/st-theme auto
+    X-GNOME-Autostart-enabled=true
+  '';
+
+  home.activation.startStThemeAuto = lib.hm.dag.entryAfter ["reloadSystemd"] ''
+    run ${pkgs.systemd}/bin/systemctl --user start --no-block st-theme-auto.timer || true
+    run ${stTheme}/bin/st-theme auto || true
+  '';
+
   systemd.user.services.st-theme-auto = {
     Unit = {
       Description = "Select the Gruvbox theme for st";
-      After = ["graphical-session.target"];
+      After = ["default.target"];
     };
 
     Service = {
@@ -127,6 +154,8 @@ in {
       ExecStart = "${stTheme}/bin/st-theme auto";
       Environment = ["DISPLAY=:0"];
     };
+
+    Install.WantedBy = ["default.target"];
   };
 
   systemd.user.timers.st-theme-auto = {
@@ -141,6 +170,6 @@ in {
       Unit = "st-theme-auto.service";
     };
 
-    Install.WantedBy = ["timers.target"];
+    Install.WantedBy = ["timers.target" "default.target"];
   };
 }

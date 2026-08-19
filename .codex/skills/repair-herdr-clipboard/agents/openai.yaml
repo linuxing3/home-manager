@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repair herdr clipboard"
+  short_description: "Fix herdr copy/paste when xclip is missing and st ignores OSC 52"
+  default_prompt: "Use $repair-herdr-clipboard when herdr copy leaves the X11 clipboard empty, logs copied selection without xclip on PATH, or Ctrl+Shift+C/V does nothing in st."

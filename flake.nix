@@ -19,49 +19,48 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     agenix.url = "github:ryantm/agenix";
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
-  outputs =
-    inputs@{
-      nixpkgs,
-      home-manager,
-      stylix,
-      flake-parts,
-      flake-utils,
-      ...
-    }:
-    let
-      # ---- SYSTEM SETTINGS ---- #
-      systemSettings = import ./nix/system-settings.nix;
-      # ----- USER SETTINGS ----- #
-      userSettings = import ./nix/user-settings.nix {
-        inherit nixpkgs systemSettings;
-      };
+  outputs = inputs @ {
+    nixpkgs,
+    home-manager,
+    stylix,
+    flake-parts,
+    flake-utils,
+    ...
+  }: let
+    # ---- SYSTEM SETTINGS ---- #
+    systemSettings = import ./nix/system-settings.nix;
+    # ----- USER SETTINGS ----- #
+    userSettings = import ./nix/user-settings.nix {
+      inherit nixpkgs systemSettings;
+    };
 
-      supportedSystems = builtins.filter (s: s == systemSettings.system) flake-utils.lib.defaultSystems;
-      homeModules = [
-        (./. + "/profiles" + ("/" + systemSettings.profile) + "/home.nix")
-        stylix.homeModules.stylix
-      ];
-      projectOverlays = [
-        (import ./overlays { inherit inputs; })
-      ];
-      pkgs = import nixpkgs {
-        system = systemSettings.system;
-        config = {
-          allowUnfree = true;
-          allowUnsupportedSystem = true;
-          allowUnfreePredicate = _: true;
-        };
-        overlays = projectOverlays;
+    supportedSystems = builtins.filter (s: s == systemSettings.system) flake-utils.lib.defaultSystems;
+    homeModules = [
+      (./. + "/profiles" + ("/" + systemSettings.profile) + "/home.nix")
+      stylix.homeModules.stylix
+    ];
+    projectOverlays = [
+      (import ./overlays {inherit inputs;})
+    ];
+    pkgs = import nixpkgs {
+      system = systemSettings.system;
+      config = {
+        allowUnfree = true;
+        allowUnsupportedSystem = true;
+        allowUnfreePredicate = _: true;
       };
-      args = {
-        inherit userSettings;
-        inherit systemSettings;
-        inherit inputs;
-      };
-    in
-    flake-parts.lib.mkFlake { inherit inputs; } {
+      overlays = projectOverlays;
+    };
+    args = {
+      inherit userSettings;
+      inherit systemSettings;
+      inherit inputs;
+    };
+  in
+    flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
         ./flake/devshells.nix
         ./flake/packages.nix
@@ -69,6 +68,18 @@
       ];
 
       systems = supportedSystems;
+
+      perSystem = {system, ...}: {
+        _module.args.pkgs = import nixpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;
+            allowUnsupportedSystem = true;
+            allowUnfreePredicate = _: true;
+          };
+          overlays = projectOverlays;
+        };
+      };
 
       _module.args = {
         inherit userSettings systemSettings;
@@ -83,7 +94,6 @@
             extraSpecialArgs = args;
           };
         };
-
       };
     };
 }

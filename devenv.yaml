@@ -1,7 +1,6 @@
 # yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
+# Optional. Canonical project env is `.envrc` / `use flake` via flake/devshells.nix.
 inputs:
-  llm-agents:
-    url: github:numtide/llm-agents.nix
   nixpkgs:
     url: github:cachix/devenv-nixpkgs/rolling
 allow_unfree: true

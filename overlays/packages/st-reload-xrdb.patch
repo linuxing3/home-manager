@@ -1,0 +1,41 @@
+--- a/x.c
++++ b/x.c
+@@ -2113,6 +2113,17 @@
+ 	cresize(e->xconfigure.width, e->xconfigure.height);
+ }
+ 
++static volatile sig_atomic_t reloadxrdb;
++
++static void
++sigusr1(int sig)
++{
++	(void)sig;
++	reloadxrdb = 1;
++}
++
++void config_init(void);
++
+ void
+ run(void)
+ {
+@@ -2159,6 +2170,12 @@
+ 				continue;
+ 			die("select failed: %s\n", strerror(errno));
+ 		}
++		if (reloadxrdb) {
++			reloadxrdb = 0;
++			config_init();
++			xloadcols();
++			tfulldirt();
++		}
+ 		clock_gettime(CLOCK_MONOTONIC, &now);
+ 
+ 		if (FD_ISSET(ttyfd, &rfd))
+@@ -2348,6 +2365,7 @@
+ 		die("Can't open display\n");
+ 
+ 	config_init();
++	signal(SIGUSR1, sigusr1);
+ 	cols = MAX(cols, 1);
+ 	rows = MAX(rows, 1);
+ 	defaultbg = MAX(LEN(colorname), 256);

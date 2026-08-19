@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+fail=0
+xclip_bin=$(command -v xclip || true)
+display=${DISPLAY-}
+probe="herdr-clipboard-probe-$$"
+
+if [ -z "$xclip_bin" ]; then
+  echo "FAIL xclip missing from PATH" >&2
+  fail=1
+fi
+if [ -z "$display" ]; then
+  echo "FAIL DISPLAY unset" >&2
+  fail=1
+fi
+
+got=
+if [ -n "$xclip_bin" ] && [ -n "$display" ]; then
+  printf '%s\n' "$probe" | xclip -selection clipboard -in
+  got=$(xclip -selection clipboard -o || true)
+  if [ "$got" != "$probe" ]; then
+    echo "FAIL clipboard want $probe got $got" >&2
+    fail=1
+  fi
+fi
+
+printf 'xclip=%s DISPLAY=%s roundtrip=%s\n' \
+  "${xclip_bin:-missing}" "${display:-unset}" "${got:-unset}"
+
+exit "$fail"

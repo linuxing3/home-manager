@@ -1,41 +1,55 @@
 ---
 name: repair-devenv-herdr
-description: Use when devenv reports attribute 'herdr' missing, inputs.llm-agents.herdr is not found, or direnv/devenv cannot provide the Numtide herdr package on this UOS host.
+description: Use when herdr is missing from `nix develop`/`direnv`, devenv reports attribute 'herdr' missing, inputs.llm-agents.herdr is not found, or this UOS host cannot provide the Numtide herdr package.
 ---
 
 # Repair devenv herdr
 
-`herdr` comes from `github:numtide/llm-agents.nix` as `packages.<system>.herdr`. It is not `inputs.llm-agents.herdr`.
+Project PATH comes from `.envrc` (`use flake`), not `devenv shell`. `herdr`
+comes from `github:numtide/llm-agents.nix` as `packages.<system>.herdr`. It is
+not `inputs.llm-agents.herdr`.
 
-`devenv.yaml` must declare the input:
-
-```yaml
-inputs:
-  llm-agents:
-    url: github:numtide/llm-agents.nix
-```
-
-`devenv.nix` must bind the package output, not a root flake attribute:
+`flake.nix` must declare the input:
 
 ```nix
-{pkgs, inputs, ...}: let
-  llm-agents = inputs.llm-agents.packages.${pkgs.stdenv.system};
-in {
-  packages = [llm-agents.herdr];
+llm-agents.url = "github:numtide/llm-agents.nix";
+```
+
+`flake/devshells.nix` must bind the package output, not a root flake attribute:
+
+```nix
+{inputs, ...}: {
+  perSystem = {
+    system,
+    pkgs,
+    ...
+  }: let
+    llm-agents = inputs.llm-agents.packages.${system};
+  in {
+    devShells.default = pkgs.mkShell {
+      packages = [
+        llm-agents.herdr
+      ];
+    };
+  };
 }
 ```
 
-Do not enable devenv overlays only to reach `pkgs.herdr` unless that overlay is actually imported. This project's `devenv.nix` keeps overlays commented out.
+CLIProxyAPI remains a `nix profile` install from llm-agents.nix; see
+`uos-desktop-bootstrap`. Do not enable devenv overlays only to reach
+`pkgs.herdr`.
+
+`devenv.nix` is optional. Keep `.envrc` as `use flake`. If someone still runs
+`devenv shell` and needs herdr there, bind `inputs.llm-agents.packages.${pkgs.stdenv.system}.herdr` the same way — never `inputs.llm-agents.herdr`.
 
 ## Verify
 
 ```sh
 PATH=/home/Designers/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH
-devenv info
-command -v herdr
-herdr --version
+nix develop --command sh -c 'command -v herdr && herdr --version'
 ```
 
-Require evaluation with no `attribute 'herdr' missing`, and `herdr` on the devenv profile. After the Nix change, `direnv allow` or `devenv shell` picks it up.
+Require evaluation with no `attribute 'herdr' missing`, and `herdr` on the
+flake devShell. After the Nix change, `direnv allow` picks it up.
 
-Do not add a production flake input only to satisfy devenv. CLIProxyAPI remains a `nix profile` install from llm-agents.nix; see `uos-desktop-bootstrap`.
+Do not print secret values while diagnosing PATH.

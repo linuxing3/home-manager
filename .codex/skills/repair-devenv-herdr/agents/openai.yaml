@@ -1,4 +1,4 @@
 interface:
   display_name: "Repair devenv herdr"
-  short_description: "Fix devenv llm-agents.herdr package path"
-  default_prompt: "Use $repair-devenv-herdr when devenv fails with attribute 'herdr' missing or inputs.llm-agents.herdr is not found."
+  short_description: "Fix flake/devenv llm-agents.herdr package path"
+  default_prompt: "Use $repair-devenv-herdr when herdr is missing from nix develop, direnv, or devenv, or when inputs.llm-agents.herdr is used instead of packages.<system>.herdr."

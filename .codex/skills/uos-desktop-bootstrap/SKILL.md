@@ -1,6 +1,6 @@
 ---
 name: uos-desktop-bootstrap
-description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, or Hermes Gateway service failures. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
+description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, Hermes Gateway service failures, or NixOS-beside-UOS on /dev/sda. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
 ---
 
 # UOS Desktop Bootstrap
@@ -15,7 +15,10 @@ Apply changes in this order and verify each boundary before continuing. Focused 
 | `import-atuin-env` | Atuin dotenv import and secret stripping |
 | `repair-ft-hda-analog` | No sound, PulseAudio `auto_null`, ALC897/`ft-hda` profile off |
 | `install-xdefaults-fonts` | `st`/`.Xdefaults` JetBrainsMono Nerd Font missing |
-| `repair-devenv-herdr` | devenv `attribute 'herdr' missing` |
+| `repair-st-theme-auto` | `st` Gruvbox light/dark stuck; `st-theme-auto.timer` enabled but dead |
+| `repair-devenv-herdr` | `herdr` missing from `use flake` / `packages.<system>.herdr` |
+| `repair-herdr-clipboard` | herdr copy logs success but X11 clipboard empty; `xclip` missing |
+| `install-nixos-beside-uos` | NixOS on sda4 beside UOS; nixos-install/GRUB; nspawn `--boot` EUNATCH |
 | `uos-nix-store-backup` | KeyVault packs, SSH/GPG restore, or Nix store remote backup |
 
 Keyboard mapping is **REQUIRED SUB-SKILL:** `configure-caps-escape`. Analog audio is **REQUIRED SUB-SKILL:** `repair-ft-hda-analog`.
@@ -430,4 +433,5 @@ failure.
 - `keyd.service` is enabled/active with no `pthread_setschedparam` error when Caps/Escape was requested.
 - PulseAudio default sink is analog `alsa_output.platform-PHYT0006_00.stereo-fallback` when audio was requested, not `auto_null`.
 - `fc-match 'JetBrainsMono Nerd Font'` returns the Nerd Font file when `.Xdefaults` names that family.
-- devenv evaluation finds `packages.<system>.herdr`, not `inputs.llm-agents.herdr`.
+- `st-theme-auto.timer` is active, `st-theme status` matches the local hour, and xrdb `st.background` is `#fbf1c7` by day or `#282828` after 18:00.
+- `nix develop --command command -v herdr` finds `packages.<system>.herdr`, not `inputs.llm-agents.herdr`.

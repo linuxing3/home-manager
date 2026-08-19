@@ -327,3 +327,4 @@ oxwm.key.chord({
 -- oxwm.autostart("/opt/apps/com.sogou.sogoupinyin-uos/files/bin/sogouImeService-uos")
 -- oxwm.autostart("/opt/apps/com.sogou.sogoupinyin-uos/files/bin/sogouImeService-watchdog-uos")
 oxwm.autostart("xrdb -merge ~/.Xdefaults")
+oxwm.autostart("st-theme auto")

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Install NixOS beside UOS"
+  short_description: "Install NixOS on sda4 beside UOS without formatting banana"
+  default_prompt: "Use $install-nixos-beside-uos to install NixOS beside UOS on /dev/sda banana, run nixos-install or GRUB from UOS, or when unshare --mount-proc, nixos-enter chroot, or systemd-nspawn --boot fails with EBUSY or EUNATCH on kernel 4.19."

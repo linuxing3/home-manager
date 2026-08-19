@@ -1,0 +1,35 @@
+#!/bin/sh
+set -eu
+
+hour=$(date +%H | sed 's/^0*//')
+[ -n "$hour" ] || hour=0
+theme_status=$(st-theme status 2>/dev/null || echo unknown)
+timer_state=$(systemctl --user is-active st-theme-auto.timer 2>/dev/null || echo inactive)
+bg=$(xrdb -query | awk '$1=="st.background:" {print $2}')
+
+if [ "$hour" -ge 18 ] || [ "$hour" -lt 7 ]; then
+  expect_mode=dark
+  expect_bg='#282828'
+else
+  expect_mode=light
+  expect_bg='#fbf1c7'
+fi
+
+fail=0
+printf 'hour=%s status=%s timer=%s background=%s\n' \
+  "$hour" "$theme_status" "$timer_state" "$bg"
+
+if [ "$theme_status" != "$expect_mode" ]; then
+  echo "FAIL status want $expect_mode got $theme_status" >&2
+  fail=1
+fi
+if [ "$timer_state" != "active" ]; then
+  echo "FAIL timer want active got $timer_state" >&2
+  fail=1
+fi
+if [ "$bg" != "$expect_bg" ]; then
+  echo "FAIL background want $expect_bg got $bg" >&2
+  fail=1
+fi
+
+exit "$fail"

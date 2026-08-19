@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repair st theme auto"
+  short_description: "Fix st-theme-auto.timer so Gruvbox light/dark follows 07:00/18:00"
+  default_prompt: "Use $repair-st-theme-auto when st stays on the wrong Gruvbox light/dark theme, st-theme-auto.timer is enabled but inactive, or xrdb colors ignore the local hour."
