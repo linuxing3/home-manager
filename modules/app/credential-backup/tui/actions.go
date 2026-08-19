@@ -303,4 +303,3 @@ func statusLine(res scanResult) string {
 	}
 	return usb + " · " + msg
 }
-

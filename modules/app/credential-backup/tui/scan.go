@@ -41,12 +41,12 @@ type sideInfo struct {
 type pairStatus string
 
 const (
-	statusMatch     pairStatus = "match"
-	statusDiff      pairStatus = "diff"
-	statusHostOnly  pairStatus = "host-only"
-	statusUSBOnly   pairStatus = "usb-only"
-	statusBothGone  pairStatus = "absent"
-	statusNoUSB     pairStatus = "no-usb"
+	statusMatch    pairStatus = "match"
+	statusDiff     pairStatus = "diff"
+	statusHostOnly pairStatus = "host-only"
+	statusUSBOnly  pairStatus = "usb-only"
+	statusBothGone pairStatus = "absent"
+	statusNoUSB    pairStatus = "no-usb"
 )
 
 type secretPair struct {
@@ -63,20 +63,20 @@ type secretPair struct {
 }
 
 type scanResult struct {
-	Home          string
-	USBMount      string
-	IdentityDir   string
-	IdentityName  string
-	USBReady      bool
-	USBMessage    string
-	Pairs         []secretPair
-	TarArchives   []string
-	Match         int
-	Diff          int
-	HostOnly      int
-	USBOnly       int
-	ChecksumOK    *bool
-	ChecksumNote  string
+	Home         string
+	USBMount     string
+	IdentityDir  string
+	IdentityName string
+	USBReady     bool
+	USBMessage   string
+	Pairs        []secretPair
+	TarArchives  []string
+	Match        int
+	Diff         int
+	HostOnly     int
+	USBOnly      int
+	ChecksumOK   *bool
+	ChecksumNote string
 }
 
 func defaultIdentityName() string {
