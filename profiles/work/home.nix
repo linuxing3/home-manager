@@ -61,7 +61,7 @@
   ];
   terminalPackages = with pkgs; [
     dwm
-    st
+    st-xyz
     tabbed
   ];
   editorPackages = with pkgs; [helix];

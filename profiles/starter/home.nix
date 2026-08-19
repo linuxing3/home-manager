@@ -19,7 +19,7 @@
     nnn
   ];
   terminalPackages = with pkgs; [
-    st
+    st-xyz
   ];
   editorPackages = with pkgs; [helix];
   collaborationPackages = with pkgs; [

@@ -3,7 +3,7 @@
     name = "hx-anywhere";
     runtimeInputs = with pkgs; [
       helix
-      st
+      st-xyz
       xclip
       xdotool
     ];

@@ -97,7 +97,7 @@
     ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$state_file")"
     printf '%s\n' "$mode" >"$state_file"
 
-    st_bin="$(${pkgs.coreutils}/bin/readlink -f ${pkgs.st}/bin/st)"
+    st_bin="$(${pkgs.coreutils}/bin/readlink -f ${pkgs.st-xyz}/bin/st)"
     for pid in $(${pkgs.procps}/bin/pgrep -x st || true); do
       exe="$(${pkgs.coreutils}/bin/readlink -f "/proc/$pid/exe" || true)"
       if [[ "$exe" == "$st_bin" ]]; then

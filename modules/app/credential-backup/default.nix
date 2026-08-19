@@ -2,6 +2,7 @@
   credentialVault = pkgs.writeShellApplication {
     name = "credential-vault";
     runtimeInputs = [
+      pkgs.bitwarden-cli
       pkgs.coreutils
       pkgs.findutils
       pkgs.gnugrep

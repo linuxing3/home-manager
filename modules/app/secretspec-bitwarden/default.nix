@@ -10,7 +10,10 @@
     text = builtins.readFile ./secretspec-bw-run.sh;
   };
 in {
-  home.packages = [secretspecBwRun];
+  home.packages = [
+    pkgs.bitwarden-cli
+    secretspecBwRun
+  ];
 
   xdg.configFile."secretspec/home-config.toml".source =
     ../../../secrets/secretspec.toml;
