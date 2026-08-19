@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }: let
@@ -76,7 +77,7 @@ in {
   home.sessionPath = sessionPath;
 
   home.sessionVariables = {
-    SHELL = "zsh";
+    SHELL = "${pkgs.zsh}/bin/zsh";
     VISUAL = "hx";
     NNN_OPTS = "co";
     NNN_OPENER = "${config.xdg.configHome}/nnn/plugins/nuke";
@@ -194,8 +195,16 @@ in {
     ];
   };
 
+  home.file.".local/bin/zsh" = {
+    executable = true;
+    text = ''
+      #!${pkgs.bash}/bin/bash
+      exec ${lib.getExe pkgs.zsh} "$@"
+    '';
+  };
+
   home.packages =
-    [agenixEnv agentEnv]
+    [agenixEnv agentEnv pkgs.zsh]
     ++ (with pkgs; [
       # console
       patchelf

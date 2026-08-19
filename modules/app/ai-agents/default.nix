@@ -4,6 +4,7 @@
     ./mcp.nix
     ./rtk.nix
     ./pi.nix
+    ./nix-profile-cleanup.nix
     ./codex
     ./cursor
     ./kiro.nix
@@ -13,5 +14,6 @@
     ./cliproxyapi.nix
     ./collie.nix
     ./cursor-to-openai.nix
+    ./dsh.nix
   ];
 }

@@ -7,7 +7,7 @@ description: Use when herdr copy or paste is empty, logs "copied selection to cl
 
 Herdr copies with `xclip --clipboard --input`, then OSC 52. Luke Smith `st` does not implement OSC 52, so a missing `xclip` looks like a successful copy and leaves the clipboard empty.
 
-`herdr` on this host is often a `nix profile` install. Its server PATH must contain `xclip`. Home Manager `copy_on_select` does not install a clipboard tool.
+`herdr` on this host comes from Home Manager (`my.ai.herdr`), not `nix profile`. Its server PATH must contain `xclip`. `copy_on_select` does not install a clipboard tool by itself.
 
 Luke Smith `st` clipboard keys are **Alt+c / Alt+v** and **Alt+Shift+C/V**. Ctrl+Shift+C/V exists only after the overlay patch in `overlays/packages/st.nix`.
 
@@ -30,9 +30,10 @@ Failure is `command -v xclip` empty, or a round-trip that does not print `probe`
 
 ```sh
 PATH=/home/Designers/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH
-nix profile add nixpkgs#xclip
 command -v xclip
 ```
+
+Do not `nix profile add` `herdr` or `xclip` to paper over a missing Home Manager package; that collides with `home-manager-path` on `bin/herdr`. Keep `pkgs.xclip` in the Herdr module and activate Home Manager.
 
 The running server already includes `~/.nix-profile/bin` on PATH, so a new `xclip` is visible without a session restart. If copy is still empty, restart herdr so it re-probes the tool. Do not add OSC 52 support to `st` for this bug.
 

@@ -12,6 +12,7 @@
     ../../modules/app/ranger/ranger.nix
     ../../modules/app/ai-agents
     ../../modules/app/personal-configs
+    ../../modules/app/cloudflared-office.nix
     ../../modules/app/credential-backup
     ../../modules/app/secretspec-bitwarden
     ../../modules/tui/st-theme.nix

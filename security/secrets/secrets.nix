@@ -11,4 +11,5 @@ let
   };
 in {
   "api-keys-new.age" = attrs;
+  "cloudflared-office-token.age" = attrs;
 }

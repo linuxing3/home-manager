@@ -24,11 +24,16 @@
       IFS=$old_ifs
 
       if [[ ''${1:-} == agent ]]; then
-        agent=${lib.escapeShellArg "${ai.homeDir}/.local/bin/agent"}
+        agent=${lib.escapeShellArg (
+        if config.my.ai.cursorAgent.enable
+        then "${config.my.ai.cursorAgent.package}/bin/cursor-agent"
+        else "${ai.homeDir}/.local/bin/agent"
+      )}
         if [[ ! -x "$agent" ]]; then
           echo "cursor: Cursor Agent is not installed at $agent" >&2
           exit 127
         fi
+        shift
         exec "$agent" "$@"
       fi
 
@@ -79,6 +84,10 @@
     ];
   });
 in {
+  home.packages = lib.mkIf config.my.ai.cursorAgent.enable [
+    config.my.ai.cursorAgent.package
+  ];
+
   home.file = {
     ".cursor/hooks.json".source = files/hooks.json;
     ".cursor/herdr-agent-state.sh" = {

@@ -1,6 +1,7 @@
 {inputs}: final: prev: let
   packageOverlays = [
     (import ./packages/cli-proxy-api.nix)
+    (import ./packages/dsh.nix)
     (import ./packages/fff-mcp.nix {inherit inputs;})
     (import ./packages/nnn.nix {inherit inputs;})
     (import ./packages/pi-switch.nix {inherit inputs;})

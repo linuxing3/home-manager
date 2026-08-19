@@ -18,7 +18,7 @@
       fi
       bridge=''${candidates[0]}
       cd -- "$(dirname -- "$(dirname -- "$bridge")")"
-      exec ${lib.escapeShellArg "${ai.profileBin}/bun"} run "$bridge"
+      exec ${lib.getExe pkgs.bun} run "$bridge"
     '';
   };
   stopUnmanagedCollie = pkgs.writeShellApplication {
@@ -40,6 +40,8 @@
   };
 in {
   config = lib.mkIf config.my.ai.collie.enable {
+    home.packages = [config.my.ai.collie.package];
+
     xdg.configFile."systemd/user/default.target.wants/collie.service".force = true;
 
     systemd.user.services.collie = {

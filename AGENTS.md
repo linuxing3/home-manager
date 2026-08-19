@@ -8,7 +8,7 @@ This repository defines a Nix flake for a Home Manager environment. `flake.nix` 
 - `nix/`: machine identity and user-level settings.
 - `profiles/work/`: the active Home Manager module for the `work` profile. It imports `packages.nix` and `modules/app/ai-agents`.
 - `modules/app/ai-agents/`: one submodule per AI agent (Codex, Cursor, Pi, Herdr, and related MCP/tools).
-- `overlays/packages/`: focused overrides for individual packages such as `nnn`, `st`, `rtk`, `pi-switch`, and `cli-proxy-api`.
+- `overlays/packages/`: focused overrides for individual packages such as `nnn`, `st`, `rtk`, `pi-switch`, `cli-proxy-api`, and `dsh`.
 - `docs/ai-agents.md` and `docs/agent-tools.md`: agent module map and tool notes.
 - `flake.lock`: pinned dependency revisions; update it intentionally and review input changes.
 

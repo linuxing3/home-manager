@@ -35,9 +35,9 @@ llm-agents.url = "github:numtide/llm-agents.nix";
 }
 ```
 
-CLIProxyAPI remains a `nix profile` install from llm-agents.nix; see
-`uos-desktop-bootstrap`. Do not enable devenv overlays only to reach
-`pkgs.herdr`.
+CLIProxyAPI remains a Home Manager package (`my.ai.cliProxyApi`). Do not
+`nix profile add` `herdr`; Home Manager already puts it on PATH via
+`home.packages`. A second profile install collides on `bin/herdr`.
 
 `devenv.nix` is optional. Keep `.envrc` as `use flake`. If someone still runs
 `devenv shell` and needs herdr there, bind `inputs.llm-agents.packages.${pkgs.stdenv.system}.herdr` the same way — never `inputs.llm-agents.herdr`.

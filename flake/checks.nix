@@ -9,6 +9,7 @@
       "profiles/work/packages.nix"
       "modules/tui/nnn-plugins.nix"
       "modules/app/ai-agents"
+      "overlays/packages/dsh.nix"
       "modules/app/virtualization/default.nix"
       "modules/app/hx-anywhere/default.nix"
     ];

@@ -532,6 +532,7 @@ build_manifest() {
     "$HOME/.config/rclone/"*oauth*.json
     "$HOME/.cloudflared/cert.pem"
     "$HOME/.cloudflared/"*.json
+    "$HOME/.cloudflared/"*.env
     "$HOME/.cloudflared/"*token*
     "$HOME/.config/gcloud/application_default_credentials.json"
     "$HOME/.config/gcloud/credentials.db"
@@ -585,7 +586,7 @@ archive_entry_allowed() {
     .config/rclone/*oauth*.json | .cloudflared/cert.pem)
       return 0
       ;;
-    .cloudflared/*.json | .cloudflared/*token*)
+    .cloudflared/*.json | .cloudflared/*.env | .cloudflared/*token*)
       return 0
       ;;
     .config/gcloud/application_default_credentials.json)
@@ -776,6 +777,7 @@ harden_restored_files() {
     "$HOME/.config/gcloud/credentials.db"
     "$HOME/.config/gcloud/access_tokens.db"
     "$HOME/.local/share/atuin/key"
+    "$HOME/.cloudflared/office.env"
   )
   for path in "${mode_600[@]}"; do
     [[ -f "$path" ]] && chmod 600 "$path"
@@ -789,6 +791,7 @@ harden_restored_files() {
     "$HOME/.cli-proxy-api/"*.json
     "$HOME/.cloudflared/cert.pem"
     "$HOME/.cloudflared/"*.json
+    "$HOME/.cloudflared/"*.env
     "$HOME/.cloudflared/"*token*
     "$HOME/.config/rclone/"*oauth*.json
     "$HOME/.config/chromium/Local State"
