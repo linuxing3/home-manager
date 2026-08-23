@@ -1,6 +1,14 @@
 # Hardware copied from the live UOS Phytium desktop (Designers-PC).
-# Glenfly arise and ft-hda are UOS-patched; mainline 6.18 uses modesetting +
-# snd_hda_intel / snd_hda_phytium when those modules exist.
+#
+# UOS 4.19.0-arm64-desktop: proprietary arise_pro + built-in ft-hda
+# (CONFIG_SND_HDA_PHYTIUM). Those .ko files will not load on mainline.
+#
+# Default NixOS profile (sda): mainline 6.18 — modesetting KMS +
+# snd_hda_intel HDMI only. No analog ft-hda, no Glenfly DRM.
+#
+# Opt-in vendor kernel (sda-phytium): Deepin linux-6.6.y via
+# phytium-kernel.nix — snd-hda-phytium + in-tree arise DRM. See
+# kernel-phytium.nix. Prefer 6.6.y over EOL/UOS-K5.10-LTS.
 {
   boot.initrd.availableKernelModules = [
     "nvme"

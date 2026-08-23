@@ -49,6 +49,7 @@ in {
     comma
     cachix
     crabboxPackage
+    awscli2
     android-tools
     gnirehtet
     cloudflared

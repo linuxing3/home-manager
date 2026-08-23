@@ -1,0 +1,41 @@
+--- a/x.c	2026-08-19 14:38:51.081157018 -0300
++++ b/x.c	2026-08-19 14:38:51.081157018 -0300
+@@ -1,5 +1,6 @@
+ /* See LICENSE for license details. */
+ #include <errno.h>
++#include <stdio.h>
+ #include <math.h>
+ #include <limits.h>
+ #include <locale.h>
+@@ -296,11 +297,26 @@
+ void
+ clippaste(const Arg *dummy)
+ {
+-	Atom clipboard;
+-
+-	clipboard = XInternAtom(xw.dpy, "CLIPBOARD", 0);
+-	XConvertSelection(xw.dpy, clipboard, xsel.xtarget, clipboard,
+-			xw.win, CurrentTime);
++	FILE *fp;
++	char buf[BUFSIZ];
++	size_t n;
++	int first = 1;
++
++	(void)dummy;
++	fp = popen("st-clippaste clipboard", "r");
++	if (!fp)
++		return;
++	while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
++		if (first) {
++			if (IS_SET(MODE_BRCKTPASTE))
++				ttywrite("\033[200~", 6, 0);
++			first = 0;
++		}
++		ttywrite(buf, n, 1);
++	}
++	if (!first && IS_SET(MODE_BRCKTPASTE))
++		ttywrite("\033[201~", 6, 0);
++	pclose(fp);
+ }
+ 
+ void

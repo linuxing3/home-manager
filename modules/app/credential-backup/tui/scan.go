@@ -104,7 +104,7 @@ func catalog() []secretPair {
 		{ID: "gpg-ownertrust", Label: "GPG ownertrust.txt", HostRel: "", USBRel: "gpg/ownertrust.txt", HostMode: 0600, USBMode: 0600, Kind: "gpg-asc"},
 		{ID: "gpg-host", Label: "Host GnuPG homedir", HostRel: ".gnupg", USBRel: "gpg", HostMode: 0700, USBMode: 0700, Kind: "dir"},
 		{ID: "age-readme", Label: "Agenix README", HostRel: "", USBRel: "age/README.txt", HostMode: 0644, USBMode: 0644, Kind: "file"},
-		{ID: "age-cloudflared", Label: "cloudflared-office-token.age", HostRel: "", USBRel: "age/cloudflared-office-token.age", HostMode: 0600, USBMode: 0600, Kind: "file"},
+		{ID: "age-api-keys", Label: "api-keys-new.age", HostRel: "", USBRel: "age/api-keys-new.age", HostMode: 0600, USBMode: 0600, Kind: "file"},
 		{ID: "checksums", Label: "SHA256SUMS", HostRel: "", USBRel: "checksums/SHA256SUMS", HostMode: 0644, USBMode: 0644, Kind: "file"},
 	}
 }
@@ -136,8 +136,8 @@ func findUSBMount() (string, string) {
 }
 
 func isUsableMount(path string) bool {
-	info, err := os.Lstat(path)
-	if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+	info, err := os.Stat(path)
+	if err != nil || !info.IsDir() {
 		return false
 	}
 	f, err := os.Open(path)
@@ -220,7 +220,7 @@ func classify(p *secretPair, usbReady bool) {
 func scanAgeHostCandidates(home, repoRoot string) []string {
 	var out []string
 	relatives := []string{
-		"security/secrets/cloudflared-office-token.age",
+		"security/secrets/api-keys-new.age",
 	}
 	roots := []string{repoRoot, filepath.Join(home, ".config/home-manager"), "/share/data/sources/home-config"}
 	seen := map[string]struct{}{}
@@ -275,7 +275,7 @@ func scanAll() scanResult {
 	for i := range res.Pairs {
 		p := &res.Pairs[i]
 		switch p.ID {
-		case "age-cloudflared":
+		case "age-api-keys":
 			p.Host = inspect(ageHost)
 			p.Host.Path = ageHost
 		case "gpg-public", "gpg-master", "gpg-subkeys", "gpg-ownertrust", "age-readme", "checksums":

@@ -26,10 +26,10 @@
     LC_TIME = systemSettings.locale;
   };
 
-  # Kernel default at 1920x1080 is 8x16. Terminus 32px (ter-v32n) is 16x32.
+  # Kernel default at 1920x1080 is 8x16. Spleen 32x64 is 4x the pixel area of Terminus ter-v32n (16x32).
   console.earlySetup = true;
-  console.packages = [pkgs.terminus_font];
-  console.font = "ter-v32n";
+  console.packages = [pkgs.spleen];
+  console.font = "spleen-32x64.psfu";
 
   nixpkgs.hostPlatform = systemSettings.system;
   nixpkgs.config.allowUnfree = true;

@@ -19,6 +19,7 @@
     ../../modules/app/nvim/nvim.nix
     ../../modules/app/hx-anywhere
     ../../modules/app/rclone
+    ../../modules/app/crabbox
     ../../modules/app/virtualization
     ../../modules/wm/oxwm/oxwm.nix
     ../../modules/hardware/ft-hda-audio.nix

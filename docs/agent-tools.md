@@ -16,7 +16,7 @@ Home Manager installs RTK, fff-mcp, Pi (llm-agents package + UOS wrapper), pi-sw
 | `overlays/packages/rtk.nix` | Pinned RTK release |
 | `overlays/packages/fff-mcp.nix` | Pinned fff-mcp release |
 | `overlays/packages/cli-proxy-api.nix` | Pinned CLIProxyAPI Linux binary |
-| `overlays/packages/dsh.nix` | DeepSeek Harness CLI wrapper (source checkout + pnpm; npm rc.7 graph is incomplete) |
+| `overlays/packages/dsh.nix` | DeepSeek Harness CLI wrapper (source checkout + pnpm; npm rc.7 graph is incomplete). Boot fixes: hoist profile packages into checkout `node_modules`, fetch arm64 landlock prebuild, run with `node --expose-internals`. |
 
 See `.codex/skills/agent-tools/SKILL.md` for the operational checklist.
 

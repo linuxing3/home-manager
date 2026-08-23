@@ -24,9 +24,31 @@
     ];
     text = builtins.readFile ./credential-usb-recovery.sh;
   };
+  keyvaultTuiUnwrapped = pkgs.buildGoModule {
+    pname = "keyvault-tui";
+    version = "0.1.0";
+    src = ./tui;
+    vendorHash = "sha256-i3+SFzqKYjIPJtyXigCYr2QqgdpxFqtCIVsd4VCevJk=";
+    ldflags = ["-s" "-w"];
+  };
+  keyvaultTui = pkgs.symlinkJoin {
+    name = "keyvault-tui";
+    paths = [keyvaultTuiUnwrapped];
+    nativeBuildInputs = [pkgs.makeWrapper];
+    postBuild = ''
+      wrapProgram $out/bin/keyvault-tui \
+        --prefix PATH : ${pkgs.lib.makeBinPath [
+        credentialVault
+        credentialUsbRecovery
+        pkgs.gnupg
+        pkgs.coreutils
+      ]}
+    '';
+  };
 in {
   home.packages = [
     credentialVault
     credentialUsbRecovery
+    keyvaultTui
   ];
 }

@@ -5,6 +5,7 @@
   ...
 }: let
   remoteName = "onedrive-xingwenju0928";
+  gdriveRemoteName = "gdrive-overlabor77";
   syncDir = "/share/data/workspace/onedrive";
   rcloneConfigDir = "${config.xdg.configHome}/rclone";
   rcloneConfigPath = "${rcloneConfigDir}/rclone.conf";
@@ -31,6 +32,20 @@
         fi
 
         exec rclone config reconnect ${remoteName}:
+  '';
+
+  gdriveConnect = pkgs.writeShellScriptBin "gdrive-connect" ''
+    set -euo pipefail
+
+    mkdir -p '${rcloneConfigDir}'
+
+    if [ ! -f '${rcloneConfigPath}' ] || ! grep -q '^\[${gdriveRemoteName}\]$' '${rcloneConfigPath}'; then
+      printf '\n[%s]\ntype = drive\nscope = drive\n' '${gdriveRemoteName}' >>'${rcloneConfigPath}'
+      chmod 600 '${rcloneConfigPath}'
+    fi
+
+    echo "gdrive-connect: sign in as overlabor77@gmail.com in the browser" >&2
+    exec rclone config reconnect ${gdriveRemoteName}:
   '';
 
   onedriveSync = pkgs.writeShellApplication {
@@ -105,6 +120,7 @@ in {
     fusermount3Compat
     pkgs.rclone
     onedriveConnect
+    gdriveConnect
     onedriveSync
     onedriveCopy
   ];
@@ -120,6 +136,11 @@ in {
           chmod 600 '${rcloneConfigPath}'
         elif ! grep -q '^\[${remoteName}\]$' '${rcloneConfigPath}'; then
           printf '\n[%s]\ntype = onedrive\n' '${remoteName}' >>'${rcloneConfigPath}'
+          chmod 600 '${rcloneConfigPath}'
+        fi
+
+        if ! grep -q '^\[${gdriveRemoteName}\]$' '${rcloneConfigPath}'; then
+          printf '\n[%s]\ntype = drive\nscope = drive\n' '${gdriveRemoteName}' >>'${rcloneConfigPath}'
           chmod 600 '${rcloneConfigPath}'
         fi
   '';

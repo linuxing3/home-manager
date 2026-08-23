@@ -17,6 +17,12 @@
       url = "github:nix-community/stylix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Deepin vendor tree (Phytium HDA + Glenfly Arise). Prefer 6.6.y over
+    # EOL/UOS-K5.10-LTS — same drivers, newer ABI for NixOS userspace.
+    deepin-kernel = {
+      url = "github:deepin-community/kernel/linux-6.6.y";
+      flake = false;
+    };
   };
 
   outputs = {
@@ -24,12 +30,14 @@
     nixpkgs,
     disko,
     stylix,
+    deepin-kernel,
   }: let
     systemSettings = import ../nix/system-settings.nix;
     userSettings = import ../nix/user-settings.nix {
       inherit nixpkgs systemSettings;
     };
     system = systemSettings.system;
+    pkgs = nixpkgs.legacyPackages.${system};
     sdaDisko = import ./disko-config.nix {
       device = "/dev/sda";
     };
@@ -61,17 +69,44 @@
       disko = sdaDisko.disko // {enableConfig = false;};
     };
 
+    # Opt-in: Deepin 6.6.y with snd-hda-phytium + arise DRM.
+    nixosModules.phytium-kernel = {
+      imports = [./phytium-kernel.nix];
+    };
+
     packages.${system} = {
       default = disko.packages.${system}.default;
       disko = disko.packages.${system}.default;
+      # Build just the vendor kernel (slow, large IFD) to smoke-test packaging:
+      #   nix build './disko#linux-phytium' -L
+      linux-phytium =
+        (import ./kernel-phytium.nix {
+          inherit (pkgs) lib;
+          inherit pkgs;
+          src = deepin-kernel;
+        }).kernel;
     };
 
+    # Default beside-UOS profile: mainline nixpkgs kernel (modesetting + HDMI).
     nixosConfigurations.sda = nixpkgs.lib.nixosSystem {
       inherit system;
       specialArgs = {
         inherit userSettings systemSettings;
       };
       modules = [self.nixosModules.sda];
+    };
+
+    # Same disk layout, Deepin vendor kernel for analog audio + Arise DRM.
+    #   nix build './disko#nixosConfigurations.sda-phytium.config.system.build.toplevel' -L
+    nixosConfigurations.sda-phytium = nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = {
+        inherit userSettings systemSettings deepin-kernel;
+      };
+      modules = [
+        self.nixosModules.sda
+        self.nixosModules.phytium-kernel
+      ];
     };
   };
 }

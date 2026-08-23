@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=oxwm
+Comment=OXWM dynamic window manager
+Exec=/home/Designers/.local/bin/oxwm-session
+TryExec=/home/Designers/.local/bin/oxwm-session
+Type=Application
+DesktopNames=oxwm
+X-LightDM-DesktopName=oxwm

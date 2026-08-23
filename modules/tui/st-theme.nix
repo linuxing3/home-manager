@@ -116,8 +116,8 @@ in {
   ];
 
   home.file.".Xdefaults".text = ''
-    st.font: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true
-    st.fontalt0: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true
+    st.font: JetBrainsMono Nerd Font:pixelsize=20:antialias=true:autohint=true
+    st.fontalt0: JetBrainsMono Nerd Font:pixelsize=20:antialias=true:autohint=true
     st.alpha: 1.0
   '';
 

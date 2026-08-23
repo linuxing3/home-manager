@@ -70,8 +70,8 @@ group = {group}
 working_dir = {working_dir}
 
 [[tabs]]
-name = "codex"
-command = "codex"
+name = "cursor"
+command = "cursor-agent"
 """.format(
         name=toml_string(name),
         description=toml_string("nnn bookmark: {}".format(name)),

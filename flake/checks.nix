@@ -11,7 +11,8 @@
       "modules/app/ai-agents"
       "overlays/packages/dsh.nix"
       "modules/app/virtualization/default.nix"
-      "modules/app/hx-anywhere/default.nix"
+      "modules/app/credential-backup/default.nix"
+      "modules/app/crabbox/default.nix"
     ];
     qualityPathArgs = builtins.concatStringsSep " " qualityPaths;
   in {

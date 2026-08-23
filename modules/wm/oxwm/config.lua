@@ -50,7 +50,43 @@ local bar_font = "JetBrainsMono Nerd Font:style=Bold:size=10"
 
 -- Define your blocks
 -- Similar to widgets in qtile, or dwmblocks
+-- Systray hosts IME (fcitx/sogou), sound (pasystray), and aTrust tray icons.
 local blocks = {
+    oxwm.bar.block.systray(),
+    oxwm.bar.block.static({
+        text = "│",
+        interval = 999999999,
+        color = colors.lavender,
+        underline = false,
+    }),
+    -- Clickable control shortcuts (open panels if tray icon is missed)
+    oxwm.bar.block.static({
+        text = "IME",
+        interval = 999999999,
+        color = colors.green,
+        underline = true,
+        click = "fcitx-config-gtk3",
+    }),
+    oxwm.bar.block.static({
+        text = "Music",
+        interval = 999999999,
+        color = colors.purple,
+        underline = true,
+        click = "dde-control-center -m sound -s",
+    }),
+    oxwm.bar.block.static({
+        text = "Trust",
+        interval = 999999999,
+        color = colors.blue,
+        underline = true,
+        click = "/usr/share/sangfor/aTrust/resources/bin/aTrustTray2",
+    }),
+    oxwm.bar.block.static({
+        text = "│",
+        interval = 999999999,
+        color = colors.lavender,
+        underline = false,
+    }),
     oxwm.bar.block.ram({
         format = "M: {used}/{total} GB",
         interval = 5,
@@ -143,6 +179,11 @@ oxwm.rule.add({ instance = "mpv", floating = true })
 oxwm.rule.add({ class = "st", title = "hx", floating = true })
 oxwm.rule.add({ class = "st", title = "hx-anywhere", floating = true })
 oxwm.rule.add({ class = "st", title = "nnn", floating = true })
+oxwm.rule.add({ class = "dde-control-center", floating = true })
+oxwm.rule.add({ class = "fcitx-config-gtk3", floating = true })
+oxwm.rule.add({ class = "fcitx-configtool", floating = true })
+oxwm.rule.add({ class = "aTrustTray2", floating = true })
+oxwm.rule.add({ class = "aTrustAgent", floating = true })
 
 -- To find window properties, use xprop and click on the window
 -- WM_CLASS(STRING) shows both instance and class (instance, class)
@@ -318,13 +359,9 @@ oxwm.key.chord({
 -------------------------------------------------------------------------------
 -- Autostart
 -------------------------------------------------------------------------------
--- Commands to run once when OXWM starts
--- Uncomment and modify these examples, or add your own
-
--- oxwm.autostart("picom")
--- oxwm.autostart("feh --bg-scale /share/data/sources/home-config/themes/ember/ ~/wallpaper.jpg")
--- oxwm.autostart("/usr/bin/fcitx -D")
--- oxwm.autostart("/opt/apps/com.sogou.sogoupinyin-uos/files/bin/sogouImeService-uos")
--- oxwm.autostart("/opt/apps/com.sogou.sogoupinyin-uos/files/bin/sogouImeService-watchdog-uos")
+-- Commands to run once when OXWM starts.
+-- oxwm-autostart ports DDE /etc/xdg/autostart session helpers and starts
+-- IME / sound / aTrust tray icons for the status-bar systray.
 oxwm.autostart("xrdb -merge ~/.Xdefaults")
 oxwm.autostart("st-theme auto")
+oxwm.autostart("oxwm-autostart")

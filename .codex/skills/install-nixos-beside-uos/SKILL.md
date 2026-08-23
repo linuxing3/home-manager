@@ -37,6 +37,26 @@ nix build './disko#nixosConfigurations.sda.config.system.build.toplevel' \
 sudo disko/install-nixos-beside-uos.sh install
 ```
 
+## Kernel choice (GPU / sound)
+
+| Profile | Kernel | Analog ft-hda | Glenfly GPU |
+| --- | --- | --- | --- |
+| `sda` (default) | mainline 6.18 | no | modesetting only |
+| `sda-phytium` | Deepin `linux-6.6.y` | `snd-hda-phytium` | in-tree `arise` DRM |
+
+UOS `arise_pro` / built-in `ft-hda` are tied to `4.19.0-arm64-desktop` and cannot load on NixOS. Prefer Deepin **6.6.y** over EOL `UOS-K5.10-LTS` (same drivers, newer ABI). Sketch: `disko/kernel-phytium.nix`, `disko/phytium-kernel.nix`. First time: `nix flake lock --update-input deepin-kernel` in `disko/` (large fetch).
+
+```sh
+# Smoke-test vendor kernel packaging only (slow, large IFD):
+nix build './disko#linux-phytium' -L
+
+# Full vendor-kernel system (still install with the helper after):
+nix build './disko#nixosConfigurations.sda-phytium.config.system.build.toplevel' \
+  --out-link /tmp/nixos-sda --option sandbox false --option filter-syscalls false
+```
+
+X stays on `modesetting`; full Glenfly GL still needs userspace beyond the DRM module. Default `sda` profile is unchanged (mainline 6.18).
+
 Type `INSTALL`. The helper uses `--system /tmp/nixos-sda` **or** `--flake`, never both (`nixos-install` rejects that). Then `disko/nixos-enter-uos.sh` installs GRUB. Resume GRUB only with `... bootloader`.
 
 Firmware default stays UOS NVMe. Pick **sda** EFI `BOOTAA64.EFI`. TTY login, then `startx`.

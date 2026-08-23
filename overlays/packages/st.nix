@@ -7,7 +7,8 @@
       sha256 = "sha256-XFf48+6I3IHcRKGHRJIJb9u2sTKWyuWTb5lN+BILYYc=";
     };
     buildInputs = oldAttrs.buildInputs ++ (with prev; [harfbuzz]);
-    patches = (oldAttrs.patches or []) ++ [./st-reload-xrdb.patch];
+    nativeBuildInputs = (oldAttrs.nativeBuildInputs or []) ++ [prev.makeWrapper];
+    patches = (oldAttrs.patches or []) ++ [./st-reload-xrdb.patch ./st-clippaste-image.patch];
     postPatch = ''
            sed -i 's|"NotoColorEmoji:pixelsize=10:antialias=true:autohint=true" }|"NotoColorEmoji:pixelsize=10:antialias=true:autohint=true", "Source Han Sans SC:pixelsize=16:antialias=true:autohint=true" }|' config.h
            sed -i '/"fontalt0", STRING, \\&font2\\[0\\]/a\\\t{ "fontalt1", STRING, \\&font2[1] },' config.h
@@ -25,6 +26,15 @@
                $'\tif (openpty(&m, &s, NULL, NULL, NULL) < 0)\n\t\tdie("openpty failed: %s\\n", strerror(errno));' \
                $'\tif (openpty(&m, &s, NULL, NULL, NULL) < 0)\n\t\tdie("openpty failed: %s\\n", strerror(errno));\n\n\tstruct termios ttyattr;\n\tif (tcgetattr(s, &ttyattr) == 0) {\n\t\tttyattr.c_cc[VERASE] = 0x7f;\n\t\ttcsetattr(s, TCSANOW, &ttyattr);\n\t}'
     '';
+    postInstall =
+      (oldAttrs.postInstall or "")
+      + ''
+        install -Dm755 ${./st-clippaste.sh} $out/bin/st-clippaste
+        wrapProgram $out/bin/st-clippaste --prefix PATH : ${prev.lib.makeBinPath [prev.xclip]}
+        wrapProgram $out/bin/st \
+          --prefix PATH : ${prev.lib.makeBinPath [prev.xclip]}:$out/bin \
+          --prefix TERMINFO_DIRS : ${prev.ncurses}/share/terminfo
+      '';
     meta =
       (oldAttrs.meta or {})
       // {

@@ -80,7 +80,7 @@ func restorePair(res scanResult, p secretPair) error {
 		if p.USB.Presence != presentFile {
 			return fmt.Errorf("%s is missing on USB", p.Label)
 		}
-		if p.HostRel == "" && p.ID != "age-cloudflared" {
+		if p.HostRel == "" && p.ID != "age-api-keys" {
 			return fmt.Errorf("%s has no host destination (USB-only material)", p.Label)
 		}
 		dst := p.Host.Path
@@ -91,12 +91,12 @@ func restorePair(res scanResult, p secretPair) error {
 			}
 			dst = filepath.Join(home, p.HostRel)
 		}
-		if dst == "" && p.ID == "age-cloudflared" {
+		if dst == "" && p.ID == "age-api-keys" {
 			repo := strings.TrimSpace(os.Getenv("KEYVAULT_REPO"))
 			if repo == "" {
 				repo = "/share/data/sources/home-config"
 			}
-			dst = filepath.Join(repo, "security/secrets/cloudflared-office-token.age")
+			dst = filepath.Join(repo, "security/secrets/api-keys-new.age")
 		}
 		if dst == "" {
 			return fmt.Errorf("no host path for %s", p.Label)
@@ -249,7 +249,7 @@ func restoreAllFiles(res scanResult) (int, error) {
 		if p.Kind != "file" {
 			continue
 		}
-		if p.HostRel == "" && p.ID != "age-cloudflared" {
+		if p.HostRel == "" && p.ID != "age-api-keys" {
 			continue
 		}
 		if p.USB.Presence != presentFile {
@@ -261,23 +261,6 @@ func restoreAllFiles(res scanResult) (int, error) {
 		n++
 	}
 	return n, nil
-}
-
-type commandSpec struct {
-	Name string
-	Args []string
-}
-
-func vaultBackupCmd() commandSpec {
-	return commandSpec{Name: "credential-vault", Args: []string{"backup"}}
-}
-
-func usbRestoreLatestCmd() commandSpec {
-	return commandSpec{Name: "credential-usb-recovery", Args: []string{"restore", "latest"}}
-}
-
-func usbListCmd() commandSpec {
-	return commandSpec{Name: "credential-usb-recovery", Args: []string{"list"}}
 }
 
 func statusLine(res scanResult) string {

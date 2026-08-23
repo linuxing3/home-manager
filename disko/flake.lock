@@ -68,6 +68,23 @@
         "type": "github"
       }
     },
+    "deepin-kernel": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787281797,
+        "narHash": "sha256-rZhfYFxdPrH+xv2RC6kqgUV1xllyRR1cHNmT2l400Co=",
+        "owner": "deepin-community",
+        "repo": "kernel",
+        "rev": "df27ac1c9a20446b259d0d70b9a09969e4ebacc0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "deepin-community",
+        "ref": "linux-6.6.y",
+        "repo": "kernel",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -204,6 +221,7 @@
     },
     "root": {
       "inputs": {
+        "deepin-kernel": "deepin-kernel",
         "disko": "disko",
         "nixpkgs": "nixpkgs",
         "stylix": "stylix"

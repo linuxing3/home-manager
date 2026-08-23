@@ -75,7 +75,7 @@ var menus = []struct {
 		title: "USB",
 		items: []menuItem{
 			{"Refresh scan", "f", "refresh"},
-			{"List USB tar archives", "l", "usb-list"},
+			{"List USB tar archives", "t", "usb-list"},
 			{"Restore latest USB tar", "", "usb-restore"},
 		},
 	},
@@ -226,7 +226,7 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.dispatch("backup-gpg")
 	case "v":
 		return m.dispatch("vault-backup")
-	case "l":
+	case "t":
 		return m.dispatch("usb-list")
 	case "down", "j":
 		if m.focus == focusButtons {

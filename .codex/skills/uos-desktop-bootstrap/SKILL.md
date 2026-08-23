@@ -1,6 +1,6 @@
 ---
 name: uos-desktop-bootstrap
-description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, or NixOS-beside-UOS on /dev/sda. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
+description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm getty/startx autologin, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, or NixOS-beside-UOS on /dev/sda. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
 ---
 
 # UOS Desktop Bootstrap
@@ -45,6 +45,31 @@ Keyboard mapping is **REQUIRED SUB-SKILL:** `configure-caps-escape`. Analog audi
 - Capture a selected X11 region with `maim --select` and pipe it to `xclip -selection clipboard -target image/png -in`.
 - Bind oxwm's screenshot key directly to `oxwm.spawn({ "screenshot-to-clipboard" })` instead of embedding a shell pipeline in `config.lua`.
 - Build `.#homeConfigurations.Designers.activationPackage`, activate Home Manager, restart oxwm, and verify that an image can be pasted into an image-aware application.
+
+## 3b. Getty tty1 autologin → startx → oxwm
+
+Prefer getty autologin + `startx` over LightDM on this UOS host so AccountsService / LightDM cannot race the seat.
+
+1. Activate Home Manager so `install-startx-autologin`, `.xinitrc`, and the bash/zsh tty1 `startx` hook are on PATH.
+2. Run `install-startx-autologin` (needs sudo). It must write:
+
+   ```text
+   /etc/systemd/system/getty@.service.d/autologin-startx.conf
+   ```
+
+   with `ExecStart=-/sbin/agetty --autologin Designers --noclear %I $TERM`, mask `lightdm.service`, and `daemon-reload`.
+3. **UOS systemd 241 pitfall:** drop-ins under `carlos.p@example.net.d/` are ignored (`DropInPaths` stays empty; getty keeps `/bin/login` and prompts for user/password). Always use the template directory `getty@.service.d/`. Remove any stale `carlos.p@example.net.d` leftovers.
+4. Verify before reboot:
+
+   ```sh
+   systemctl show getty@tty1.service -p DropInPaths -p ExecStart
+   systemctl is-enabled lightdm.service   # masked
+   ```
+
+   `DropInPaths` must list `.../getty@.service.d/autologin-startx.conf` and `ExecStart` must include `--autologin Designers`.
+5. Reboot to confirm: getty → Designers (no password prompt) → login shell `startx` on VT1 → oxwm.
+
+Do not stop LightDM in the current graphical session during install; masking applies on the next boot.
 
 ## 4. Activate Home Manager
 
@@ -347,6 +372,7 @@ failure.
 - Atuin contains only reviewed non-secret variables.
 - `secretspec --version`, `infocmp st-256color`, and keyboard mapping checks pass.
 - The oxwm screenshot helper contains resolved `maim` and `xclip` runtime dependencies, and `Mod+S` copies a selected PNG to the X11 clipboard.
+- When getty/startx was requested, `getty@tty1` loads `getty@.service.d/autologin-startx.conf` with `--autologin Designers`, LightDM is masked, and reboot skips the username/password prompt on tty1.
 - Any requested passwordless-sudo rule passes `visudo` and `sudo -n true`; otherwise no sudoers file is installed.
 - Cloudflare APT updates without an `eagle` repository error, and WARP has an ARM64 `buster` candidate.
 - Each requested Cloudflare client passes its own verification; package-only WARP installs are not reported as daemon setup.
