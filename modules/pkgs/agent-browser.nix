@@ -5,6 +5,7 @@
   makeWrapper,
   patchelf,
   zlib,
+  lightpanda,
 }: let
   version = "0.25.3";
   src = fetchurl {
@@ -49,7 +50,9 @@ in
       # spawns system browsers, and leaking Nix libgcc into /opt browser builds
       # makes them fail against the host glibc before DevToolsActivePort appears.
       makeWrapper $out/lib/agent-browser/agent-browser $out/bin/agent-browser \
-        --set-default AGENT_BROWSER_ENGINE ${engine}\
+        --prefix PATH : ${lib.makeBinPath [lightpanda]} \
+        --set-default AGENT_BROWSER_ENGINE ${engine} \
+        --set-default AGENT_BROWSER_EXECUTABLE_PATH ${lib.getExe lightpanda} \
         --unset LD_LIBRARY_PATH \
         --set NIX_LD ${dynamicLinker} \
         --set NIX_LD_LIBRARY_PATH ${runtimeLibPath}

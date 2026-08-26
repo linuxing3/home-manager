@@ -1,6 +1,6 @@
 ---
 name: uos-desktop-bootstrap
-description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm getty/startx autologin, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, or NixOS-beside-UOS on /dev/sda. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
+description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm getty/startx autologin, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, or NixOS-beside-UOS on /dev/sda. For NixOS oxwm getty 203/EXEC or a missing USB mouse, use repair-oxwm-getty-mouse. For the HP Color LaserJet Pro M252n / CUPS on sda-phytium, use configure-hp-m252n. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
 ---
 
 # UOS Desktop Bootstrap
@@ -21,6 +21,8 @@ Apply changes in this order and verify each boundary before continuing. Focused 
 | `repair-herdr-hx` | Herdr `prefix+m` does not open Helix; need `linuxing3/herdr-nvim --ref herdr-hx` |
 | `repair-cloudflared-office` | `cloudflared-office.service` token/ExecStart/agenix on systemd 241 |
 | `install-nixos-beside-uos` | NixOS on sda4 beside UOS; nixos-install/GRUB; nspawn `--boot` EUNATCH |
+| `repair-oxwm-getty-mouse` | NixOS oxwm: getty tty1 autologin/startx, `/usr/bin/agetty` 203/EXEC, frozen/missing USB mouse |
+| `configure-hp-m252n` | NixOS CUPS USB queue for HP Color LaserJet Pro M252n (`03f0:3c2a`) |
 | `uos-nix-store-backup` | KeyVault packs, SSH/GPG restore, or Nix store remote backup |
 
 Keyboard mapping is **REQUIRED SUB-SKILL:** `configure-caps-escape`. Analog audio is **REQUIRED SUB-SKILL:** `repair-ft-hda-analog`.
@@ -70,6 +72,8 @@ Prefer getty autologin + `startx` over LightDM on this UOS host so AccountsServi
 5. Reboot to confirm: getty → Designers (no password prompt) → login shell `startx` on VT1 → oxwm.
 
 Do not stop LightDM in the current graphical session during install; masking applies on the next boot.
+
+On **NixOS-beside-UOS** (`.#nvme-p6-phytium`), UOS drop-ins and `install-startx-autologin` do not apply. **REQUIRED SUB-SKILL:** `repair-oxwm-getty-mouse` (nixpkgs#429775 `getty@tty1` drop-in, loginShellInit startx, UHCI-blacklist mouse on xHCI).
 
 ## 4. Activate Home Manager
 
@@ -373,6 +377,7 @@ failure.
 - `secretspec --version`, `infocmp st-256color`, and keyboard mapping checks pass.
 - The oxwm screenshot helper contains resolved `maim` and `xclip` runtime dependencies, and `Mod+S` copies a selected PNG to the X11 clipboard.
 - When getty/startx was requested, `getty@tty1` loads `getty@.service.d/autologin-startx.conf` with `--autologin Designers`, LightDM is masked, and reboot skips the username/password prompt on tty1.
+- On NixOS `sda-phytium`, getty uses the nix-store wrapper with `--autologin Designers` (not `/usr/bin/agetty`), startx runs on vt1, and `USB Optical Mouse` `05af:413a` is an xinput slave pointer on xHCI.
 - Any requested passwordless-sudo rule passes `visudo` and `sudo -n true`; otherwise no sudoers file is installed.
 - Cloudflare APT updates without an `eagle` repository error, and WARP has an ARM64 `buster` candidate.
 - Each requested Cloudflare client passes its own verification; package-only WARP installs are not reported as daemon setup.

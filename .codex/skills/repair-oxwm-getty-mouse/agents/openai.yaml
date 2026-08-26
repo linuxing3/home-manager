@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repair oxwm getty/startx and mouse"
+  short_description: "Fix NixOS tty1 autologin startx and the USB optical mouse on xHCI"
+  default_prompt: "Use $repair-oxwm-getty-mouse when NixOS oxwm has no getty autologin, startx never runs on tty1, getty@tty1 dies on /usr/bin/agetty, the pointer is frozen or missing, or a USB mouse does not enumerate."

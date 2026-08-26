@@ -24,7 +24,7 @@
         llm-agents.cursor-agent
         llm-agents.pi
         xclip
-	agenix
+        agenix
       ];
     };
   };

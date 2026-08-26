@@ -7,9 +7,9 @@ readonly program_name="credential-usb-recovery"
 readonly archive_pattern="credential-backup-v1-*.tar"
 
 credential_vault_bin="${CREDENTIAL_USB_VAULT_BIN:-credential-vault}"
-udisksctl_bin="${CREDENTIAL_USB_UDISKSCTL_BIN:-/usr/bin/udisksctl}"
-lsblk_bin="${CREDENTIAL_USB_LSBLK_BIN:-/usr/bin/lsblk}"
-findmnt_bin="${CREDENTIAL_USB_FINDMNT_BIN:-/usr/bin/findmnt}"
+udisksctl_bin="${CREDENTIAL_USB_UDISKSCTL_BIN:-udisksctl}"
+lsblk_bin="${CREDENTIAL_USB_LSBLK_BIN:-lsblk}"
+findmnt_bin="${CREDENTIAL_USB_FINDMNT_BIN:-findmnt}"
 
 encrypted_device=""
 clear_device=""

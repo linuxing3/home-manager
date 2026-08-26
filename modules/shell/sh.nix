@@ -1,13 +1,12 @@
 {
   config,
-  lib,
   pkgs,
   ...
 }: let
   # My shell aliases
   myAliases = {
     syncuser = "home-manager switch --flake ${config.home.homeDirectory}/.config/home-manager -b b";
-    syncsys = "sudo nixos-rebuild switch --flake ${config.home.homeDirectory}/.config/home-manager .#system";
+    syncsys = "sudo nixos-rebuild switch --flake ${config.home.homeDirectory}/home-config#nvme-p6-phytium";
     zx = "zellix";
     zj = "zellij";
     j = "just";
@@ -28,6 +27,7 @@
 
   sessionPath = [
     "$HOME/.bin"
+    "$HOME/.nix-profile/bin"
     "$HOME/.local/bin"
     ".git/safe/../../bin"
   ];
@@ -193,14 +193,6 @@ in {
       "--marker='>' --pointer='>' --separator='─' --scrollbar='│'"
       "--info='right'"
     ];
-  };
-
-  home.file.".local/bin/zsh" = {
-    executable = true;
-    text = ''
-      #!${pkgs.bash}/bin/bash
-      exec ${lib.getExe pkgs.zsh} "$@"
-    '';
   };
 
   home.packages =

@@ -9,10 +9,11 @@
     "herdr"
     "pi"
     "collie"
+    "orca"
     "cursor-agent"
   ];
 in {
-  # These four binaries are Home Manager packages. A leftover
+  # These binaries are Home Manager packages. A leftover
   # `nix profile add github:numtide/llm-agents.nix#…` collides with
   # `home-manager-path` on the same ~/.nix-profile.
   home.activation.removeNixProfileLlmAgents = lib.hm.dag.entryBefore ["installPackages"] ''

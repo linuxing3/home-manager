@@ -104,8 +104,6 @@ in {
     yt-dlp
 
     # images
-    grim
-    slurp
     maim
     epub-thumbnailer
     imagemagick
@@ -165,8 +163,8 @@ in {
     stunnel
 
     # Lightpanda + agent browser (native CLIs)
-    # lightpanda
-    # agent-browser
+    lightpanda
+    agent-browser
 
     # NotebookLM unofficial CLI/API
     # notebooklm-py

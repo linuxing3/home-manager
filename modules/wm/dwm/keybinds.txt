@@ -1,0 +1,31 @@
+dwm (oxwm clone) — Super is Mod4
+
+  Super+Return          terminal (st)
+  Super+D               dmenu_run -l 10
+  Super+G               brave
+  Super+E               st -t hx -e hx
+  Super+A               toggle gaps
+  Super+Shift+N         nnn
+  Super+S               screenshot to clipboard
+  Super+Q               kill window
+  Super+F               toggle floating
+  Super+Shift+F         monocle (fullscreen-ish)
+  Super+Shift+Space     cycle layout  [T] tiling / [F] floating / [M] monocle
+  Super+H / Super+L     master width
+  Super+I / Super+P     master count +/-
+  Super+J / Super+K     focus stack
+  Super+Shift+J/K       zoom (swap with master)
+  Super+Comma/Period    focus monitor
+  Super+Shift+,/.       move window to monitor
+  Super+1..9            view tag
+  Super+Shift+1..9      move window to tag
+  Super+Ctrl+1..9       toggle view extra tag
+  Super+Ctrl+Shift+1..9 toggle tag on window
+  Super+B               toggle bar
+  Super+Shift+Q         quit
+  Super+Shift+R         restart dwm
+  Super+Shift+/         this help
+  Control+Alt+V         hx-anywhere
+  Status bar click      left: fcitx5-configtool  right: pavucontrol
+
+Pick dwm in greetd (F3), or run dwm-nested / dwm-session.

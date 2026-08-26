@@ -13,6 +13,7 @@
     ./herdr
     ./cliproxyapi.nix
     ./collie.nix
+    ./orca.nix
     ./cursor-to-openai.nix
     ./dsh.nix
   ];

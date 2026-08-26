@@ -1,4 +1,4 @@
 interface:
   display_name: "UOS Desktop Bootstrap"
   short_description: "Bootstrap and repair the UOS Nix desktop"
-  default_prompt: "Use $uos-desktop-bootstrap to bootstrap or repair this UOS desktop, then follow related Codex skills for keyd, analog audio, Xdefaults fonts, devenv herdr, Cachix cleanup, CLIProxyAPI, Cloudflare, DDE, agent-browser, nnn, oxwm, Agenix, automation, and Hermes Gateway."
+  default_prompt: "Use $uos-desktop-bootstrap to bootstrap or repair this UOS desktop, then follow related Codex skills for keyd, analog audio, Xdefaults fonts, devenv herdr, Cachix cleanup, CLIProxyAPI, Cloudflare, DDE, agent-browser, nnn, oxwm, Agenix, automation, Hermes Gateway, and the NixOS HP M252n CUPS queue ($configure-hp-m252n)."

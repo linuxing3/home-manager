@@ -22,6 +22,8 @@
     ../../modules/app/crabbox
     ../../modules/app/virtualization
     ../../modules/wm/oxwm/oxwm.nix
+    ../../modules/wm/xmonad
+    ../../modules/wm/dwm
     ../../modules/hardware/ft-hda-audio.nix
     ./packages.nix
   ];
@@ -31,6 +33,12 @@
   home.enableNixpkgsReleaseCheck = false;
 
   my.features.home.nvim = true;
+  my.ai.herdr.enable = true;
+  my.ai.pi.enable = true;
+  my.ai.collie.enable = true;
+  my.ai.orca.enable = true;
+  my.ai.cursorAgent.enable = true;
+  my.ai.cliProxyApi.enable = true;
 
   home.stateVersion = "25.11";
 
@@ -41,6 +49,7 @@
     AI_BROWSER = lib.getExe pkgs.agent-browser;
     AGENT_BROWSER = lib.getExe pkgs.agent-browser;
     BROWSER = userSettings.browser;
+    XDG_SESSION_TYPE = "x11";
   };
 
   news.display = "silent";

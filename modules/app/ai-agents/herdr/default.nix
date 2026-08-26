@@ -16,6 +16,9 @@
     cargo
     gcc
     pkg-config
+    bun
+    git
+    bash
   ];
   herdrPluginSync = pkgs.writeShellApplication {
     name = "herdr-plugin-sync";

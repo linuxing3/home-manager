@@ -1,41 +1,20 @@
 {
   pkgs,
   lib,
-  config,
   ...
 }: let
+  oxwmPkgs = import ../../shared/oxwm {inherit pkgs;};
+  inherit (oxwmPkgs) oxwm-session oxwm-autostart;
   screenshot-to-clipboard = pkgs.writeShellApplication {
     name = "screenshot-to-clipboard";
     runtimeInputs = with pkgs; [
+      coreutils
       maim
       xclip
     ];
     text = ''
       maim --select | xclip -selection clipboard -target image/png -in
     '';
-  };
-  oxwm-autostart = pkgs.writeShellApplication {
-    name = "oxwm-autostart";
-    runtimeInputs = with pkgs; [
-      pasystray
-      procps
-      which
-      xorg.xinput
-      xorg.xmodmap
-      gnugrep
-      gnused
-      coreutils
-    ];
-    text = builtins.readFile ./autostart.sh;
-  };
-  oxwm-session = pkgs.writeShellApplication {
-    name = "oxwm-session";
-    runtimeInputs = with pkgs; [
-      oxwm
-      xorg.xrdb
-      ncurses
-    ];
-    text = builtins.readFile ./oxwm-session.sh;
   };
   install-lightdm-oxwm = pkgs.writeShellApplication {
     name = "install-lightdm-oxwm";
@@ -54,12 +33,8 @@
     ];
     text = builtins.readFile ./install-startx-autologin.sh;
   };
-  # tty1 getty autologin → startx (before LightDM / AccountsService).
-  startxOnTty1 = ''
-    if [ -z "''${DISPLAY:-}" ] && [ "''${XDG_VTNR:-}" = "1" ]; then
-      exec startx
-    fi
-  '';
+  # greetd owns tty1 (nixos/greetd.nix). Do not exec startx from login
+  # shells: that always uses ~/.xinitrc (oxwm) and ignores the greeter.
 in {
   imports = [
     ../input/chinese-sogou.nix
@@ -70,6 +45,8 @@ in {
     dmenu
     feh
     pasystray
+    pavucontrol
+    at-spi2-core
     ncurses
     screenshot-to-clipboard
     oxwm-autostart
@@ -81,24 +58,34 @@ in {
   # Host terminfo often lacks st-256color; point clients at Nix ncurses.
   home.sessionVariables.TERMINFO_DIRS = lib.mkDefault "${pkgs.ncurses}/share/terminfo\${TERMINFO_DIRS:+:}$TERMINFO_DIRS";
 
-  home.file.".config/oxwm/config.lua".source = ./config.lua;
-  home.file.".local/share/xsessions/oxwm.desktop".source = ./oxwm.desktop;
+  home.file.".config/oxwm/config.lua" = {
+    source = oxwmPkgs.configLua;
+    force = true;
+  };
+  # Store path, not ~/.local/bin: Cursor Agent rewrites that directory and
+  # would leave startx exec'ing a missing oxwm-session (getty start-limit-hit).
+  home.file.".local/share/xsessions/oxwm.desktop".text = ''
+    [Desktop Entry]
+    Name=oxwm
+    Comment=OXWM dynamic window manager
+    Exec=${lib.getExe oxwm-session}
+    TryExec=${lib.getExe oxwm-session}
+    Type=Application
+    DesktopNames=oxwm
+    X-LightDM-DesktopName=oxwm
+  '';
   home.file.".dmrc".text = ''
     [Desktop]
     Session=oxwm
   '';
 
-  # startx entrypoint (preferred over LightDM on UOS).
+  # Bare `startx` fallback. greetd X11 sessions set XINITRC / wrap with
+  # `startx env <session>` and do not use this file.
   home.file.".xinitrc".text = ''
     #!/bin/sh
-    exec "${config.home.homeDirectory}/.local/bin/oxwm-session"
+    exec ${lib.getExe oxwm-session}
   '';
 
-  programs.bash.profileExtra = lib.mkAfter startxOnTty1;
-  programs.zsh.loginExtra = lib.mkAfter startxOnTty1;
-
-  # Keep a stable path for LightDM / startx Exec= lines.
-  home.file.".local/bin/oxwm-session".source = "${oxwm-session}/bin/oxwm-session";
   # Ensure ~/.terminfo has st-256color even when TERMINFO_DIRS is ignored.
   home.activation.installStTerminfo = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p "$HOME/.terminfo"

@@ -4,12 +4,10 @@
   pkgs,
   userSettings,
   ...
-}:
-let
+}: let
   cfg = config.my.features.home;
   mod = "Mod4";
-in
-{
+in {
   options.my.features.home.sway = lib.mkEnableOption "Enable Sway module";
 
   config = lib.mkIf cfg.sway {
@@ -35,9 +33,7 @@ in
       XDG_SESSION_TYPE = "wayland";
       XDG_CURRENT_DESKTOP = "sway";
       XDG_SESSION_DESKTOP = "sway";
-      # On UOS/non-NixOS, use host GLVND/DRI paths for wlroots on the X11 backend.
-      __EGL_VENDOR_LIBRARY_FILENAMES = "/usr/share/glvnd/egl_vendor.d/50_mesa.json";
-      LIBGL_DRIVERS_PATH = "/usr/lib/aarch64-linux-gnu/dri";
+      # Mesa comes from Nix. Do not pin UOS /usr GLVND/DRI paths.
       # Keep a reliable fallback renderer when DRM driver init is unavailable.
       WLR_RENDERER = "pixman";
       NIXOS_OZONE_WL = "1";

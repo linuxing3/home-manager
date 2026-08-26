@@ -3,13 +3,11 @@
   lib,
   pkgs,
   ...
-}:
-let
+}: let
   cfg = config.my.features.home;
   fzfLinksDir = "${config.home.homeDirectory}/.local/share/tmux-fzf-links";
   omtLinksDir = "${config.home.homeDirectory}/.local/share/oh-my-tmux";
-in
-{
+in {
   options.my.features.home.tmux = lib.mkEnableOption "Enable tmux module";
 
   config = lib.mkIf cfg.tmux {
@@ -98,7 +96,7 @@ in
         bind-key Space command-prompt "new-window -n %1 \"exec %1\""
         bind-key / command-prompt "split-window \"exec man %%\""
         bind-key S command-prompt "new-window -n %1 \"ssh %1\""
-        bind -n M-t new-window 
+        bind -n M-t new-window
         bind -n M-m run-shell "tmux_split_curdir"
         bind -n M-n split-window -h \; select-layout tiled
         bind -n M-o next-layout
@@ -150,7 +148,7 @@ in
 
         # tmux-fzf-links
         set-option -g @fzf-links-editor-open-cmd "tmux new-window -n 'hx' hx +%line '%file'"
-        set-option -g @fzf-links-browser-open-cmd "/usr/bin/brave-browser '%url'"
+        set-option -g @fzf-links-browser-open-cmd "${lib.getExe pkgs.brave} '%url'"
         set-option -g @fzf-links-fzf-path "${pkgs.fzf}/bin/fzf"
         set-option -g @fzf-links-fzf-display-options "-w 100% --maxnum-displayed 20 --multi --track --no-preview"
         set-option -g @fzf-links-log-filename "~/.local/state/tmux-fzf-links.log"
@@ -171,7 +169,7 @@ in
       '';
     };
 
-    home.activation.fzfLinksCheckout = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    home.activation.fzfLinksCheckout = lib.hm.dag.entryAfter ["writeBoundary"] ''
       target="${fzfLinksDir}"
       if [ ! -d "$target/.git" ]; then
         $DRY_RUN_CMD mkdir -p "$(dirname "$target")"
@@ -180,7 +178,7 @@ in
         fi
       fi
     '';
-    home.activation.omtLinksCheckout = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    home.activation.omtLinksCheckout = lib.hm.dag.entryAfter ["writeBoundary"] ''
       target="${omtLinksDir}"
       if [ ! -d "$target/.git" ]; then
         $DRY_RUN_CMD mkdir -p "$(dirname "$target")"

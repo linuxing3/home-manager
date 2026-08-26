@@ -1,0 +1,32 @@
+xmonad (oxwm clone) — Super is Mod4
+
+  Super+Return          terminal (st)
+  Super+D               dmenu_run -l 10
+  Super+G               brave
+  Super+E               st -t hx -e hx
+  Super+A               toggle gaps  (nnn: Super+Space, then N)
+  Super+S               screenshot to clipboard
+  Super+Q               kill window
+  Super+F               toggle floating
+  Super+Shift+F         fullscreen
+  Super+Shift+Space     cycle layout  [T] tiling / [F] floating / [=] tabbed
+  Super+H / Super+L     master width -
+  Super+I / Super+P     master count +/-
+  Super+J / Super+K     focus stack
+  Super+Shift+J/K       swap stack
+  Super+Comma/Period    focus monitor
+  Super+Shift+,/.       move window to monitor
+  Super+1..9            view tag
+  Super+Shift+1..9      move window to tag
+  Super+Ctrl+1..9       view tag (non-greedy)
+  Super+Ctrl+Shift+1..9 copy window to tag
+  Super+B               toggle bar
+  Super+Shift+Q         quit
+  Super+Shift+R         recompile + restart
+  Super+Shift+/         this help
+  Super+Space, T        terminal
+  Super+Space, N        nnn
+  Super+Space, E        hx
+  Control+Alt+V         hx-anywhere
+
+tty1 startx stays oxwm. Start this session with xmonad-session or xmonad-nested.

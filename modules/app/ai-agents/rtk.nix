@@ -11,20 +11,16 @@ in {
     pkgs.rtk
   ];
 
-  home.sessionPath = lib.mkAfter [ai.profileBin];
-
   programs.zsh.initContent = lib.mkAfter ''
-    # UOS prepends the Nix profile after .zprofile; restore user-local shims.
-    path=("$HOME/.local/bin" "''${path[@]}")
+    # UOS rewrites PATH after .zprofile. Keep Nix profile ahead of
+    # ~/.local/bin so Cursor Agent (and other) copies cannot shadow HM.
+    path=("$HOME/.bin" "$HOME/.nix-profile/bin" "''${path[@]}")
     typeset -U path
     export PATH
   '';
 
   programs.bash.profileExtra = lib.mkAfter ''
-    case ":$PATH:" in
-      *:${ai.profileBin}:*) ;;
-      *) export PATH=${lib.escapeShellArg ai.profileBin}:$PATH ;;
-    esac
+    export PATH="$HOME/.bin":${lib.escapeShellArg ai.profileBin}:"$PATH"
   '';
 
   xdg.configFile."rtk/config.toml".text = ''

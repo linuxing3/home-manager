@@ -56,10 +56,29 @@
       fi
     '';
   };
+  fixSocket = pkgs.writeShellScript "keyd-socket-group" ''
+    set -eu
+    for s in /run/keyd.socket /var/run/keyd.socket /run/keyd/keyd.sock; do
+      if [ -S "$s" ]; then
+        chgrp keyd "$s" || true
+        chmod 660 "$s" || true
+      fi
+    done
+  '';
 in {
+  # keyd drops its control socket to group keyd; without the group the
+  # daemon warns and `keyd listen` cannot connect.
+  users.groups.keyd = {};
+
   services.keyd.enable = true;
   services.keyd.keyboards.default = {
-    ids = ["*"];
+    # `*` already matches keyboards only. `k:*` is not a wildcard — keyd
+    # treats it as a literal id, so every real keyboard is ignored.
+    # Exclude the desk mouse in case a firmware HID claims it is a keyboard.
+    ids = [
+      "*"
+      "-05af:413a"
+    ];
     settings = {
       main = {
         capslock = "overload(control, esc)";
@@ -75,8 +94,27 @@ in {
   systemd.services.keyd.serviceConfig = {
     LimitRTPRIO = "infinity";
     LimitMEMLOCK = "infinity";
+    RestrictRealtime = lib.mkForce false;
     ProtectControlGroups = lib.mkForce false;
+    UMask = lib.mkForce "0007";
+    # keyd setgids to group keyd once that group exists. Without CAP_SETGID
+    # it used to warn and continue; with the group it now exits 255.
+    CapabilityBoundingSet = lib.mkForce [
+      "CAP_SYS_NICE"
+      "CAP_IPC_LOCK"
+      "CAP_SETGID"
+    ];
+    SystemCallFilter = lib.mkForce [
+      "@system-service"
+      "@resources"
+      "nice"
+      "setgid"
+      "setregid"
+      "setresgid"
+    ];
+    SupplementaryGroups = ["keyd"];
     ExecStartPre = ["+${lib.getExe grantRt}"];
+    ExecStartPost = ["+${fixSocket}"];
   };
 
   environment.systemPackages = [pkgs.keyd];

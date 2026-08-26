@@ -12,7 +12,7 @@ These tools live in `modules/app/ai-agents/`, not in the work profile `home.nix`
 | RTK | `rtk.nix` | Token-compact shell proxy; telemetry off |
 | fff-mcp | `rtk.nix` + `codex/default.nix` | Fast file MCP; Codex registers it on activation |
 | Pi | `pi.nix` | UOS `ld-linux-aarch64` wrapper around the Nix Pi binary |
-| pi-switch | `pi.nix` + `overlays/packages/pi-switch.nix` | Profile switcher CLI on `~/.local/bin` |
+| pi-switch | `pi.nix` + `overlays/packages/pi-switch.nix` | Profile switcher CLI on `~/.nix-profile/bin` |
 
 ## RTK
 
@@ -28,9 +28,7 @@ Overlay: `overlays/packages/fff-mcp.nix`. Codex MCP command must be `$HOME/.nix-
 
 ## Pi wrapper
 
-`llm-agents.nix` ships a Bun standalone that mixes the Nix loader with UOS libc on aarch64. `~/.local/bin/pi` execs `/lib/ld-linux-aarch64.so.1` against `libexec/pi/pi` when that loader exists.
-
-Zsh prepends `~/.local/bin` after UOS rewrites PATH so this shim wins over the profile binary.
+`llm-agents.nix` ships a Bun standalone that mixes the Nix loader with UOS libc on aarch64. `~/.nix-profile/bin/pi` is a `hiPrio` wrapper: on UOS it execs `/lib/ld-linux-aarch64.so.1` against `libexec/pi/pi`; on NixOS (`/etc/NIXOS`) it execs the Nix-wrapped binary because that path is stub-ld.
 
 ## pi-switch
 
@@ -48,4 +46,4 @@ Do not `npm install -g` this package on this host; it will fail at native load.
 
 ## PATH
 
-`rtk.nix` appends `~/.nix-profile/bin` for bash and restores `~/.local/bin` first on zsh. Put agent shims in `home.file.".local/bin/..."`.
+Keep `~/.nix-profile/bin` ahead of `~/.local/bin`. Cursor Agent rewrites `~/.local/bin` and would shadow or delete Home Manager shims. Put wrappers in `home.packages` (use `lib.hiPrio` when the unwrapped package is also installed).

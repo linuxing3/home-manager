@@ -6,11 +6,12 @@ set -euo pipefail
 
 readonly program_name="install-nixos-beside-uos"
 readonly script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+readonly repo_root="$(CDPATH= cd -- "${script_dir}/.." && pwd)"
 readonly sda_by_id="ata-WDC_WD10EARZ-22C5XB0_WD-WX22D657N28N"
 # Token present in lsblk MODEL (WDC_WD10EARZ-22C5XB0) and sysfs (WDC WD10EARZ-22C).
 readonly expected_model_token="WD10EARZ"
 readonly root_mnt="${NIXOS_INSTALL_ROOT:-/mnt}"
-readonly flake_uri="${script_dir}#sda"
+readonly flake_uri="${repo_root}#sda"
 readonly nvme_guard="nvme0n1"
 
 use_color=0

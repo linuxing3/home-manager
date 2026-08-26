@@ -5,6 +5,11 @@
 # UOS systemd 241 ignores instance drop-ins under carlos.p@example.net.d/
 # (DropInPaths stays empty). Use the template path getty@.service.d/ instead.
 
+if [[ -e /etc/NIXOS ]]; then
+  echo "NixOS uses services.getty.autologinUser in nixos/desktop.nix; do not install /sbin/agetty drop-ins (nixpkgs#429775)." >&2
+  exit 0
+fi
+
 USER_NAME="${SUDO_USER:-${USER:-Designers}}"
 GETTY_DROPIN_DIR=/etc/systemd/system/getty@.service.d
 GETTY_DROPIN="${GETTY_DROPIN_DIR}/autologin-startx.conf"

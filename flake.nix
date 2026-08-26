@@ -20,6 +20,14 @@
     };
     agenix.url = "github:ryantm/agenix";
     llm-agents.url = "github:numtide/llm-agents.nix";
+    disko.url = "github:nix-community/disko/latest";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
+    # Deepin vendor tree (Phytium HDA + Glenfly Arise). Prefer 6.6.y over
+    # EOL/UOS-K5.10-LTS — same drivers, newer ABI for NixOS userspace.
+    deepin-kernel = {
+      url = "github:deepin-community/kernel/linux-6.6.y";
+      flake = false;
+    };
   };
 
   outputs = inputs @ {
@@ -64,6 +72,7 @@
       imports = [
         ./flake/devshells.nix
         ./flake/packages.nix
+        ./flake/nixos.nix
         inputs.devenv.flakeModule
       ];
 

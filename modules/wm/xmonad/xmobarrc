@@ -1,0 +1,19 @@
+Config {
+    font = "JetBrainsMono Nerd Font Bold 10"
+  , bgColor = "#1a1b26"
+  , fgColor = "#bbbbbb"
+  , position = TopH 24
+  , lowerOnStart = True
+  , hideOnStart = False
+  , allDesktops = True
+  , overrideRedirect = True
+  , persistent = True
+  , commands = [
+        Run Memory ["-t", "M: <used>/<total> GB"] 10
+      , Run Date "%a, %b %d - %I:%M %p" "date" 10
+      , Run UnsafeXMonadLog
+    ]
+  , sepChar = "%"
+  , alignSep = "}{"
+  , template = "%UnsafeXMonadLog% }{ <action=`fcitx5-configtool`><fc=#9ece6a>󱇤</fc></action>  <fc=#a9b1d6>│</fc>  <action=`pavucontrol`><fc=#ad8ee6></fc></action>  <fc=#a9b1d6>│</fc>  <fc=#7aa2f7>%memory%</fc>  <fc=#a9b1d6>│</fc>  <fc=#0db9d7>%date%</fc>           "
+}

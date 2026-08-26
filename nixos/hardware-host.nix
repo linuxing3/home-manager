@@ -9,7 +9,7 @@
 # Opt-in vendor kernel (sda-phytium): Deepin linux-6.6.y via
 # phytium-kernel.nix — snd-hda-phytium + in-tree arise DRM. See
 # kernel-phytium.nix. Prefer 6.6.y over EOL/UOS-K5.10-LTS.
-{
+{pkgs, ...}: {
   boot.initrd.availableKernelModules = [
     "nvme"
     "ahci"
@@ -24,12 +24,22 @@
     "snd_hda_intel"
     "snd_hda_codec_hdmi"
   ];
-  boot.blacklistedKernelModules = ["r8168"];
+  # Zhaoxin UHCI at 0d:10.x hard-hangs Deepin 6.6.152 ("host controller
+  # process error"). KeyVault + HID belong on xHCI 0d:12.0 — plug those into
+  # USB3 ports. Cmdline blacklist covers initrd; module blacklist covers late boot.
+  boot.blacklistedKernelModules = [
+    "r8168"
+    "uhci_hcd"
+  ];
   boot.extraModprobeConfig = ''
     options snd-hda-intel enable_msi=1
   '';
   boot.kernelParams = [
     "video=HDMI-A-1:1920x1080@60"
+    # Glenfly exposes a dummy VGA connector; X made it primary and the
+    # pointer never appeared on HDMI. Disable it at KMS.
+    "video=VGA-1:d"
+    "modprobe.blacklist=uhci_hcd"
   ];
 
   hardware.graphics.enable = true;
@@ -39,11 +49,36 @@
   # NixOS has no arise package, so modesetting is the KMS fallback.
   services.xserver.videoDrivers = ["modesetting"];
   services.xserver.exportConfiguration = true;
+  # 10-glenfly.conf's Device is a GPUDevice; the screen uses Device-modesetting[0].
+  # SWcursor must be on that device or the pointer stays invisible (llvmpipe HW cursor).
+  services.xserver.deviceSection = ''
+    Option "SWcursor" "on"
+    Option "HWCursor" "off"
+  '';
   environment.etc."X11/xorg.conf.d/10-glenfly.conf".text = ''
     Section "OutputClass"
         Identifier "glenfly-arise"
         MatchDriver "arise"
         Driver "modesetting"
+    EndSection
+
+    # Apply to Device-modesetting[0] as well as the named Glenfly Device.
+    Section "OutputClass"
+        Identifier "modesetting-swcursor"
+        MatchDriver "modesetting"
+        Option "SWcursor" "on"
+    EndSection
+
+    Section "Monitor"
+        Identifier "VGA-1"
+        Option "Ignore" "true"
+        Option "Enable" "false"
+    EndSection
+
+    Section "Monitor"
+        Identifier "HDMI-1"
+        Option "Primary" "true"
+        Option "PreferredMode" "1920x1080"
     EndSection
 
     Section "Device"
@@ -52,7 +87,9 @@
         BusID "PCI:1:0:0"
         Option "AccelMethod" "glamor"
         Option "PageFlip" "on"
-        Option "SWcursor" "off"
+        # HW cursor is invisible on arise + modesetting/llvmpipe.
+        Option "SWcursor" "on"
+        Option "HWCursor" "off"
     EndSection
   '';
 
@@ -73,6 +110,9 @@
           actions.update-props = {
             "device.profile" = "output:stereo-fallback";
             "device.description" = "Phytium ft-hda analog";
+            "api.acp.auto-profile" = false;
+            "api.acp.auto-port" = false;
+            "session.suspend-timeout-seconds" = 0;
           };
         }
         {
@@ -89,6 +129,12 @@
   };
 
   # analog-stereo uses front:%f; UOS has no cards/ft-hda.conf so it never probes.
+  environment.systemPackages = [pkgs.alsa-utils];
+  hardware.alsa.enablePersistence = true;
+  # Mixer watchdog (GPIO/EAPD + Headphone unmute) lives in phytium-kernel.nix
+  # as ft-hda-unmute.service. This host uses startx, so graphical.target
+  # never starts and cannot own that persist.
+
   environment.etc."alsa/cards/ft-hda.conf".text = ''
     <confdir:pcm/front.conf>
     ft-hda.pcm.front.0 {

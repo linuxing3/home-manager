@@ -6,6 +6,10 @@
 }: {
   networking.hostName = "nixos";
   networking.firewall.enable = true;
+  # Deepin 6.6.y has ipt_rpfilter (IPv4) but CONFIG_IP6_NF_MATCH_RPFILTER
+  # is unset. NixOS still appends ip6tables rpfilter and firewall.service
+  # exits 4 ("Extension rpfilter revision 0 not supported").
+  networking.firewall.checkReversePath = false;
 
   time.timeZone = systemSettings.timezone;
   i18n.defaultLocale = systemSettings.locale;
@@ -61,7 +65,7 @@
   users.mutableUsers = true;
   users.users.${userSettings.username} = {
     isNormalUser = true;
-    extraGroups = ["wheel" "networkmanager" "audio" "video" "input"];
+    extraGroups = ["wheel" "networkmanager" "audio" "video" "input" "keyd"];
     hashedPassword = userSettings.initialHashedPassword;
     openssh.authorizedKeys.keys =
       userSettings.mainSshAuthorizedKeys
@@ -69,8 +73,17 @@
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFjKk9OcBNVc24J+zly4Z3IJ2eEZbQVN1LsBBesOE+Xl Designers@Designers-PC"
       ];
   };
+  # Initrd emergency /etc/shadow is root:* unless this is set. sulogin then
+  # prints "Cannot open access to console, the root account is locked" and
+  # the machine is stuck (generation 22). Same hash as Designers.
+  users.users.root.hashedPassword = userSettings.initialHashedPassword;
   users.users.root.openssh.authorizedKeys.keys =
     userSettings.mainSshAuthorizedKeys;
+  boot.initrd.systemd.emergencyAccess = userSettings.initialHashedPassword;
+  # After switch-root, emergency/rescue still read the real shadow. Root was
+  # created locked (mutableUsers); force sulogin so a failed .mount is usable.
+  systemd.services.emergency.environment.SYSTEMD_SULOGIN_FORCE = "1";
+  systemd.services.rescue.environment.SYSTEMD_SULOGIN_FORCE = "1";
 
   security.sudo.extraRules = [
     {

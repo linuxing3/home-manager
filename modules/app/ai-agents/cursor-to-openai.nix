@@ -60,7 +60,7 @@ in {
           EnvironmentFile = "${ai.configHome}/cursor-to-openai.env";
           Environment = [
             "PORT=3010"
-            "PATH=${ai.profileBin}:/usr/bin:/bin"
+            "PATH=${ai.profileBin}:/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
           ];
           ExecStart = "${ai.profileBin}/node --require ${nodeLoopbackListen} src/app.js";
           Restart = "on-failure";

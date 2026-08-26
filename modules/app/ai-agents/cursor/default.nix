@@ -27,7 +27,7 @@
         agent=${lib.escapeShellArg (
         if config.my.ai.cursorAgent.enable
         then "${config.my.ai.cursorAgent.package}/bin/cursor-agent"
-        else "${ai.homeDir}/.local/bin/agent"
+        else "${ai.profileBin}/cursor-agent"
       )}
         if [[ ! -x "$agent" ]]; then
           echo "cursor: Cursor Agent is not installed at $agent" >&2
@@ -84,9 +84,11 @@
     ];
   });
 in {
-  home.packages = lib.mkIf config.my.ai.cursorAgent.enable [
-    config.my.ai.cursorAgent.package
-  ];
+  home.packages =
+    [cursorShim]
+    ++ lib.optionals config.my.ai.cursorAgent.enable [
+      config.my.ai.cursorAgent.package
+    ];
 
   home.file = {
     ".cursor/hooks.json".source = files/hooks.json;
@@ -99,7 +101,6 @@ in {
       mcpServers.canva = mcp.canva;
       mcpServers.aws-mcp = mcp.aws;
     };
-    ".local/bin/cursor".source = "${cursorShim}/bin/cursor";
   };
 
   home.activation.mergeCursorConfig = lib.hm.dag.entryAfter ["writeBoundary"] ''

@@ -1,13 +1,15 @@
 ---
 name: install-nixos-beside-uos
-description: Use when installing NixOS beside UOS on /dev/sda banana (sda4), running nixos-install or GRUB from UOS, systemd-nspawn testing the /mnt tree, unshare mount /proc EBUSY, nixos-enter chroot not found, or systemd-nspawn Failed to mount API filesystems with Protocol driver not attached (EUNATCH) on kernel 4.19.
+description: Use when installing NixOS beside UOS on /dev/sda banana (sda4), running nixos-install or GRUB from UOS, systemd-nspawn testing the /mnt tree, unshare mount /proc EBUSY, nixos-enter chroot not found, or systemd-nspawn Failed to mount API filesystems with Protocol driver not attached (EUNATCH) on kernel 4.19. For post-install oxwm getty autologin, startx, or USB mouse on sda-phytium, use repair-oxwm-getty-mouse. For the HP Color LaserJet Pro M252n / CUPS USB queue, use configure-hp-m252n.
 ---
 
 # Install NixOS beside UOS
 
-UOS stays on `nvme0n1`. NixOS lives on the WDC WD10EARZ (`/dev/sda`). Flake: `disko#sda`. Helper: `disko/install-nixos-beside-uos.sh`.
+**Live root (2026-08-24+):** NixOS is `nvme0n1p6` (`nixos-nvme`, flake `.#nvme-p6-phytium`). UOS stays on `nvme0n1p1`–`p5`. Banana `sda4` is the old copy. `/boot` and `/share` stay on sda.
 
-**Never** `mkfs` `sda3`/`sda4`, never Disko `destroy`/`format`, never touch `nvme0n1`. Live GPT has **no PARTLABELS**; mounts are UUIDs in `disko/hardware-sda.nix`.
+Never `nixos-rebuild switch --flake …#sda-phytium` while running from NVMe. That writes a GRUB generation whose fstab is sda4 but whose store exists only on NVMe `@nix`. Generation 22 failed that way: initrd emergency, then `Cannot open access to console, the root account is locked` (`boot.initrd.systemd.emergencyAccess` plus a root hash live in `nixos/configuration.nix`).
+
+Helper for the original sda install: `nixos/install-nixos-beside-uos.sh`. **Never** `mkfs` `sda3`/`sda4`, never Disko `destroy`/`format`, never touch UOS on `nvme0n1p1`–`p5`. Live GPT has **no PARTLABELS**; mounts are UUIDs.
 
 ## Disk
 
@@ -20,11 +22,11 @@ UOS stays on `nvme0n1`. NixOS lives on the WDC WD10EARZ (`/dev/sda`). Flake: `di
 
 ## Install
 
-Needs a real terminal and sudo. Sandbox is off because UOS 4.19 cannot run systemd 261 `udevadm verify` (`disko/udev.nix`).
+Needs a real terminal and sudo. Sandbox is off because UOS 4.19 cannot run systemd 261 `udevadm verify` (`nixos/udev.nix`).
 
 ```sh
-sudo disko/install-nixos-beside-uos.sh mount
-sudo disko/install-nixos-beside-uos.sh swap
+sudo nixos/install-nixos-beside-uos.sh mount
+sudo nixos/install-nixos-beside-uos.sh swap
 ```
 
 `swapon` of the 16G btrfs swapfile fails on 4.19; NixOS 6.18 uses it.
@@ -32,9 +34,9 @@ sudo disko/install-nixos-beside-uos.sh swap
 Build, then copy. Prefer the already-built closure:
 
 ```sh
-nix build './disko#nixosConfigurations.sda.config.system.build.toplevel' \
+nix build '.#nixosConfigurations.sda.config.system.build.toplevel' \
   --out-link /tmp/nixos-sda --option sandbox false --option filter-syscalls false
-sudo disko/install-nixos-beside-uos.sh install
+sudo nixos/install-nixos-beside-uos.sh install
 ```
 
 ## Kernel choice (GPU / sound)
@@ -44,24 +46,34 @@ sudo disko/install-nixos-beside-uos.sh install
 | `sda` (default) | mainline 6.18 | no | modesetting only |
 | `sda-phytium` | Deepin `linux-6.6.y` | `snd-hda-phytium` | in-tree `arise` DRM |
 
-UOS `arise_pro` / built-in `ft-hda` are tied to `4.19.0-arm64-desktop` and cannot load on NixOS. Prefer Deepin **6.6.y** over EOL `UOS-K5.10-LTS` (same drivers, newer ABI). Sketch: `disko/kernel-phytium.nix`, `disko/phytium-kernel.nix`. First time: `nix flake lock --update-input deepin-kernel` in `disko/` (large fetch).
+UOS `arise_pro` / built-in `ft-hda` are tied to `4.19.0-arm64-desktop` and cannot load on NixOS. Prefer Deepin **6.6.y** over EOL `UOS-K5.10-LTS` (same drivers, newer ABI). Sketch: `nixos/kernel-phytium.nix`, `nixos/phytium-kernel.nix`. First time: `nix flake lock --update-input deepin-kernel` at the repo root (large fetch).
 
 ```sh
 # Smoke-test vendor kernel packaging only (slow, large IFD):
-nix build './disko#linux-phytium' -L
+nix build '.#linux-phytium' -L
 
 # Full vendor-kernel system (still install with the helper after):
-nix build './disko#nixosConfigurations.sda-phytium.config.system.build.toplevel' \
+nix build '.#nixosConfigurations.sda-phytium.config.system.build.toplevel' \
   --out-link /tmp/nixos-sda --option sandbox false --option filter-syscalls false
 ```
 
 X stays on `modesetting`; full Glenfly GL still needs userspace beyond the DRM module. Default `sda` profile is unchanged (mainline 6.18).
 
-Type `INSTALL`. The helper uses `--system /tmp/nixos-sda` **or** `--flake`, never both (`nixos-install` rejects that). Then `disko/nixos-enter-uos.sh` installs GRUB. Resume GRUB only with `... bootloader`.
+Type `INSTALL`. The helper uses `--system /tmp/nixos-sda` **or** `--flake`, never both (`nixos-install` rejects that). Then `nixos/nixos-enter-uos.sh` installs GRUB. Resume GRUB only with `... bootloader`.
 
-Firmware default stays UOS NVMe. Pick **sda** EFI `BOOTAA64.EFI`. TTY login, then `startx`.
+Firmware default stays UOS NVMe. Pick **sda** EFI `BOOTAA64.EFI`.
 
-NixOS also ships **REQUIRED SUB-SKILL:** `configure-caps-escape` (`disko/keyd.nix`), Terminus `ter-v32n` console font, and GRUB at `1920x1080` with Stylix Gruvbox dark (`stylix.targets.grub`).
+Live rebuild:
+
+```sh
+sudo nixos-rebuild switch --flake /home/Designers/home-config#nvme-p6-phytium
+```
+
+Getty autologin → `startx` → oxwm, Glenfly dummy VGA, and the USB optical mouse (xHCI only; do not load `uhci_hcd`) are **REQUIRED SUB-SKILL:** `repair-oxwm-getty-mouse`. Do not add `systemd.services."getty@tty1"`.
+
+USB HP Color LaserJet Pro M252n (EHCI, CUPS) is **REQUIRED SUB-SKILL:** `configure-hp-m252n` (`nixos/printing.nix`). Do not load `uhci_hcd` to configure it.
+
+NixOS also ships **REQUIRED SUB-SKILL:** `configure-caps-escape` (`nixos/keyd.nix`), Terminus `ter-v32n` console font, and GRUB at `1920x1080` with Stylix Gruvbox dark (`stylix.targets.grub`).
 
 Boot requires the **KeyVault USB** (LUKS passphrase on the console). `/keyvault` is mounted read-only. Banana `sda4` stays plaintext; do not `luksFormat` it. UOS on NVMe still boots without the USB.
 
@@ -76,7 +88,7 @@ On every NixOS boot and reboot, `@home` is snapshotted read-only to `@snapshots/
 | `mount: command not found` inside enter | Host PATH after chroot | `PATH=/nix/var/nix/profiles/system/sw/bin:...` inside `-c` |
 | nspawn `--boot`: `Protocol driver not attached` / `Failed to mount API filesystems` | systemd 261 PID 1 on kernel 4.19 (`EUNATCH`) | Do not `--boot`. Shell only: helper `nspawn` |
 | nspawn `--boot`: `execv(.../sbin/init) failed` | NixOS init is the profile, not FHS | Irrelevant; `--boot` still cannot work on 4.19 |
-| Build `udevadm verify` EUNATCH | same kernel gap | `disko/udev.nix`; `sandbox false` |
+| Build `udevadm verify` EUNATCH | same kernel gap | `nixos/udev.nix`; `sandbox false` |
 
 `systemd-nspawn --boot` cannot smoke-test this install on UOS. Real test is sda EFI. Shell nspawn / `nixos-enter-uos.sh` only inspect files.
 

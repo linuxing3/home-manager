@@ -14,7 +14,6 @@
 in {
   boot.initrd.availableKernelModules = [
     "usb_storage"
-    "uas"
     "xhci_pci"
     "xhci_plat_hcd"
     "sd_mod"
@@ -25,6 +24,16 @@ in {
     "aes_generic"
     "sha256"
     "sha512"
+  ];
+
+  # Deepin phytium kernel omits cryptd/input_leds and several legacy ciphers.
+  # Match initrd shrink to modules that exist (aes-xts + af_alg for LUKS).
+  boot.initrd.luks.cryptoModules = lib.mkForce [
+    "aes"
+    "xts"
+    "sha256"
+    "af_alg"
+    "algif_skcipher"
   ];
 
   boot.initrd.luks.devices.keyvault = {

@@ -64,6 +64,19 @@ in {
       };
     };
 
+    orca = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Install Orca from llm-agents.nix and run `orca serve` behind orca.efwmcstyle.ccwu.cc.";
+      };
+      package = lib.mkOption {
+        type = lib.types.package;
+        default = llmAgents.orca;
+        description = "Orca package from llm-agents.nix.";
+      };
+    };
+
     cursorAgent = {
       enable = lib.mkOption {
         type = lib.types.bool;

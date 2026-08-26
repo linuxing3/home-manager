@@ -12,10 +12,19 @@
   bisyncDir = "${config.xdg.cacheHome}/rclone/bisync/onedrive-xingwenju0928";
   bisyncInitialized = "${bisyncDir}/initialized";
 
-  # UOS provides a setuid FUSE 2 helper. Reuse it because the FUSE 3 helper in
-  # the Nix store cannot carry the setuid bit required for user mounts.
+  # NixOS setuid wrappers live in /run/wrappers. UOS ships FUSE 2 at /usr/bin.
   fusermount3Compat = pkgs.writeShellScriptBin "fusermount3" ''
-    exec /usr/bin/fusermount "$@"
+    if [ -x /run/wrappers/bin/fusermount3 ]; then
+      exec /run/wrappers/bin/fusermount3 "$@"
+    fi
+    if [ -x /run/wrappers/bin/fusermount ]; then
+      exec /run/wrappers/bin/fusermount "$@"
+    fi
+    if [ -x /usr/bin/fusermount ]; then
+      exec /usr/bin/fusermount "$@"
+    fi
+    echo "fusermount3: no setuid fusermount helper" >&2
+    exit 1
   '';
 
   onedriveConnect = pkgs.writeShellScriptBin "onedrive-connect" ''

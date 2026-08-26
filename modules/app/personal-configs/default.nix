@@ -28,6 +28,14 @@ in {
     dotfiles.enable = true;
   };
 
+  home.packages = [
+    pkgs.google-cloud-sdk
+  ];
+
+  home.sessionVariables = {
+    CLOUDSDK_CORE_DISABLE_USAGE_REPORTING = "true";
+  };
+
   xdg.configFile = {
     "glow/glow.yml".source = files/glow/glow.yml;
     "television/config.toml".source = files/television/config.toml;

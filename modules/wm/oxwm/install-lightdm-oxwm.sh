@@ -3,9 +3,14 @@
 # Also installs a systemd unit that re-asserts oxwm before LightDM
 # (Deepin/AccountsService otherwise rewrites XSession=deepin).
 
+if [[ -e /etc/NIXOS ]]; then
+  echo "NixOS uses startx/getty (nixos/desktop.nix), not LightDM. Skip." >&2
+  exit 0
+fi
+
 USER_NAME="${SUDO_USER:-${USER:-Designers}}"
 HOME_DIR=$(getent passwd "$USER_NAME" | cut -d: -f6)
-SESSION_WRAPPER="${HOME_DIR}/.local/bin/oxwm-session"
+SESSION_WRAPPER="${HOME_DIR}/.nix-profile/bin/oxwm-session"
 SYSTEM_SESSION=/usr/share/xsessions/oxwm.desktop
 LIGHTDM_CONF=/etc/lightdm/lightdm.conf
 ACCOUNTS=/var/lib/AccountsService/users/${USER_NAME}

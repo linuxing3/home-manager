@@ -20,6 +20,8 @@
       pkgs.findutils
       pkgs.gawk
       pkgs.gnused
+      pkgs.udisks2
+      pkgs.util-linux
       credentialVault
     ];
     text = builtins.readFile ./credential-usb-recovery.sh;

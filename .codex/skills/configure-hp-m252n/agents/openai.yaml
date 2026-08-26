@@ -1,0 +1,4 @@
+interface:
+  display_name: "Configure HP Color LaserJet Pro M252n"
+  short_description: "CUPS USB queue for the HP M252n on NixOS sda-phytium"
+  default_prompt: "Use $configure-hp-m252n when configuring or repairing the HP Color LaserJet Pro M252n on NixOS sda-phytium, CUPS is missing, ensure-printers fails, cups-driverd cannot get a PPD, or USB print jobs never leave the queue."

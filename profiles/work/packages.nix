@@ -15,6 +15,15 @@
       exec -a "$0" "$wrapped" "$@"
     '';
   };
+  gnirehtetConnect = pkgs.writeShellApplication {
+    name = "gnirehtet-connect";
+    runtimeInputs = [pkgs.android-tools];
+    text = ''
+      adb start-server >/dev/null
+      adb devices -l
+      exec ${gnirehtetCompatWrapper}/bin/gnirehtet run "$@"
+    '';
+  };
   crabboxPackage = pkgs.buildGoModule {
     pname = "crabbox";
     version = "0.22.1-e73b02f";
@@ -52,6 +61,8 @@ in {
     awscli2
     android-tools
     gnirehtet
+    (lib.hiPrio gnirehtetCompatWrapper)
+    gnirehtetConnect
     cloudflared
     cloudflare-warp
     tailscale
@@ -68,18 +79,4 @@ in {
     mpv
     viu
   ];
-
-  home.file = {
-    ".local/bin/gnirehtet".source = "${gnirehtetCompatWrapper}/bin/gnirehtet";
-    ".local/bin/gnirehtet-connect" = {
-      executable = true;
-      text = ''
-        #!${pkgs.bash}/bin/bash
-        set -euo pipefail
-        ${pkgs.android-tools}/bin/adb start-server >/dev/null
-        ${pkgs.android-tools}/bin/adb devices -l
-        exec ${gnirehtetCompatWrapper}/bin/gnirehtet run "$@"
-      '';
-    };
-  };
 }

@@ -8,19 +8,19 @@
   curl,
   cacert,
 }: let
-  version = "0.2.8";
+  version = "0.3.7";
   src =
     if stdenv.hostPlatform.system == "x86_64-linux"
     then
       fetchurl {
         url = "https://github.com/lightpanda-io/browser/releases/download/${version}/lightpanda-x86_64-linux";
-        hash = "sha256-jjpeBM9QhpmZCnigqGhuozmJEs2Ykf2pBRNCm4kjAwA=";
+        hash = "sha256-iVM5sCIFFxoYHd50OuAGi7RWSIQHb+rISCusqcISqlo=";
       }
     else if stdenv.hostPlatform.system == "aarch64-linux"
     then
       fetchurl {
         url = "https://github.com/lightpanda-io/browser/releases/download/${version}/lightpanda-aarch64-linux";
-        hash = "sha256-n1TyzDGw2t2Ge6BuzOWfiqWfeHY5R5jpeIKupoC1rRk=";
+        hash = "sha256-TA7LKLT8+21bzoLshuFfxs3onOoWjPOEBJTw7iZ1WFI=";
       }
     else throw "lightpanda: unsupported system ${stdenv.hostPlatform.system}";
 in
@@ -49,7 +49,8 @@ in
 
       wrapProgram $out/bin/lightpanda \
         --set SSL_CERT_FILE ${cacert}/etc/ssl/certs/ca-bundle.crt \
-        --set CURL_CA_BUNDLE ${cacert}/etc/ssl/certs/ca-bundle.crt
+        --set CURL_CA_BUNDLE ${cacert}/etc/ssl/certs/ca-bundle.crt \
+        --set-default LIGHTPANDA_DISABLE_TELEMETRY true
 
       runHook postInstall
     '';

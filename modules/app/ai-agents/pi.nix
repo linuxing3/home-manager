@@ -25,8 +25,9 @@
       fi
 
       # llm-agents.nix's Bun standalone mixes the Nix loader with UOS libc on
-      # aarch64. Starting it with the UOS loader keeps the runtime consistent.
-      if [[ -x "$system_loader" && -x "$standalone_pi" ]]; then
+      # aarch64. On UOS, start it with the host loader. NixOS ships a stub at
+      # the same path (stub-ld), so exec the Nix-wrapped binary there instead.
+      if [[ ! -e /etc/NIXOS && -x "$system_loader" && -x "$standalone_pi" ]]; then
         export PI_PACKAGE_DIR="$package_dir"
         export PI_SKIP_VERSION_CHECK=1
         export PI_TELEMETRY=0
@@ -44,9 +45,7 @@
 in {
   config = lib.mkIf cfg.enable {
     home = {
-      packages = [cfg.package pkgs.pi-switch];
-      file.".local/bin/pi".source = "${piCompatWrapper}/bin/pi";
-      file.".local/bin/pi-switch".source = "${pkgs.pi-switch}/bin/pi-switch";
+      packages = [cfg.package (lib.hiPrio piCompatWrapper) pkgs.pi-switch];
       activation.mergePiSettings = lib.hm.dag.entryAfter ["writeBoundary"] ''
         ${ai.activationPreamble}
         ${ai.mergeJsonFile "${ai.homeDir}/.pi/agent/settings.json" piDefaults}
@@ -61,10 +60,14 @@ in {
         ${pkgs.coreutils}/bin/mv "$pi_settings.hm-new" "$pi_settings"
       '';
       activation.installPiSwitch = lib.hm.dag.entryAfter ["installPackages" "linkGeneration"] ''
-        pi_bin=${lib.escapeShellArg "${ai.homeDir}/.local/bin/pi"}
+        pi_bin=${lib.escapeShellArg "${ai.profileBin}/pi"}
         if [[ -x "$pi_bin" ]]; then
           if [[ ! -d ${lib.escapeShellArg "${ai.homeDir}/.pi/agent/npm/node_modules/@heihei0299/pi-switch"} ]]; then
-            "$pi_bin" install npm:@heihei0299/pi-switch
+            if ! NPM_CONFIG_CACHE=${lib.escapeShellArg "${ai.homeDir}/.cache/pi-npm"} \
+              PATH=${lib.escapeShellArg "${pkgs.nodejs}/bin"}''${PATH:+:$PATH} \
+              "$pi_bin" install npm:@heihei0299/pi-switch; then
+              echo "pi activation: pi-switch npm install failed; PATH still uses pkgs.pi-switch" >&2
+            fi
           fi
         else
           echo "pi activation: skipping pi-switch install; missing $pi_bin" >&2

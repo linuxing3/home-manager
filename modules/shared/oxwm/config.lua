@@ -50,7 +50,7 @@ local bar_font = "JetBrainsMono Nerd Font:style=Bold:size=10"
 
 -- Define your blocks
 -- Similar to widgets in qtile, or dwmblocks
--- Systray hosts IME (fcitx/sogou), sound (pasystray), and aTrust tray icons.
+-- Systray hosts IME (fcitx5/rime), sound (pasystray), and aTrust tray icons.
 local blocks = {
     oxwm.bar.block.systray(),
     oxwm.bar.block.static({
@@ -61,25 +61,24 @@ local blocks = {
     }),
     -- Clickable control shortcuts (open panels if tray icon is missed)
     oxwm.bar.block.static({
-        text = "IME",
+        text = "󱇤",
         interval = 999999999,
         color = colors.green,
         underline = true,
-        click = "fcitx-config-gtk3",
+        click = "fcitx5-configtool",
     }),
     oxwm.bar.block.static({
-        text = "Music",
+        text = "│",
+        interval = 999999999,
+        color = colors.lavender,
+        underline = false,
+    }),
+    oxwm.bar.block.static({
+        text = "",
         interval = 999999999,
         color = colors.purple,
         underline = true,
-        click = "dde-control-center -m sound -s",
-    }),
-    oxwm.bar.block.static({
-        text = "Trust",
-        interval = 999999999,
-        color = colors.blue,
-        underline = true,
-        click = "/usr/share/sangfor/aTrust/resources/bin/aTrustTray2",
+        click = "pavucontrol",
     }),
     oxwm.bar.block.static({
         text = "│",
@@ -179,8 +178,9 @@ oxwm.rule.add({ instance = "mpv", floating = true })
 oxwm.rule.add({ class = "st", title = "hx", floating = true })
 oxwm.rule.add({ class = "st", title = "hx-anywhere", floating = true })
 oxwm.rule.add({ class = "st", title = "nnn", floating = true })
+oxwm.rule.add({ class = "Pavucontrol", floating = true })
 oxwm.rule.add({ class = "dde-control-center", floating = true })
-oxwm.rule.add({ class = "fcitx-config-gtk3", floating = true })
+oxwm.rule.add({ class = "fcitx5-configtool", floating = true })
 oxwm.rule.add({ class = "fcitx-configtool", floating = true })
 oxwm.rule.add({ class = "aTrustTray2", floating = true })
 oxwm.rule.add({ class = "aTrustAgent", floating = true })
@@ -231,7 +231,7 @@ oxwm.bar.set_scheme_urgent(colors.red, colors.bg, colors.red)
 oxwm.key.bind({ modkey }, "Return", oxwm.spawn_terminal())
 -- Launch Dmenu
 oxwm.key.bind({ modkey }, "D", oxwm.spawn({ "sh", "-c", "dmenu_run -l 10" }))
-oxwm.key.bind({ modkey }, "G", oxwm.spawn({ "sh", "-c", "brave-browser" }))
+oxwm.key.bind({ modkey }, "G", oxwm.spawn({ "sh", "-c", "brave" }))
 oxwm.key.bind({ modkey }, "E", oxwm.spawn({ "sh", "-c", "st -t hx -e hx" }))
 oxwm.key.bind({ modkey }, "A", oxwm.spawn({ "sh", "-c", "st -t nnn -e nnn" }))
 -- Helix anywhere (vim-anywhere equivalent): edit temp buffer, copy on close
@@ -364,4 +364,5 @@ oxwm.key.chord({
 -- IME / sound / aTrust tray icons for the status-bar systray.
 oxwm.autostart("xrdb -merge ~/.Xdefaults")
 oxwm.autostart("st-theme auto")
+oxwm.autostart("xsetroot -cursor_name left_ptr")
 oxwm.autostart("oxwm-autostart")
