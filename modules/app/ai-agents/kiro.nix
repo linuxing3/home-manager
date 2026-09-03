@@ -26,6 +26,12 @@ in {
           timeout = 100000;
           transport = "stdio";
         };
+      veo =
+        mcp.veo
+        // {
+          timeout = 100000;
+          transport = "stdio";
+        };
     };
   };
 }

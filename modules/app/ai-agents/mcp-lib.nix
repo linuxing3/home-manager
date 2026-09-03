@@ -6,6 +6,23 @@
   configHome = config.xdg.configHome;
   gdriveCredsDir = "${configHome}/gdrive-mcp";
   canvaConfigDir = "${configHome}/canva-mcp";
+  veoConfigDir = "${configHome}/veo-mcp";
+  veoOutputDir = "${config.home.homeDirectory}/Videos/veo";
+  veoMcp = pkgs.writeShellApplication {
+    name = "veo-mcp";
+    runtimeInputs = [pkgs.python3];
+    text = ''
+      env_file=${lib.escapeShellArg "${veoConfigDir}/env"}
+      if [[ -f "$env_file" ]]; then
+        set -a
+        # shellcheck disable=SC1090
+        source "$env_file"
+        set +a
+      fi
+      export VEO_OUTPUT_DIR="''${VEO_OUTPUT_DIR:-${lib.escapeShellArg veoOutputDir}}"
+      exec ${pkgs.python3}/bin/python3 ${./veo-mcp/server.py} "$@"
+    '';
+  };
   gdriveMcp = pkgs.writeShellApplication {
     name = "gdrive-mcp";
     runtimeInputs = [pkgs.nodejs];
@@ -32,7 +49,7 @@
     '';
   };
 in rec {
-  inherit gdriveCredsDir canvaConfigDir gdriveMcp canvaMcp;
+  inherit gdriveCredsDir canvaConfigDir veoConfigDir veoOutputDir gdriveMcp canvaMcp veoMcp;
 
   gdrive = {
     command = "${gdriveMcp}/bin/gdrive-mcp";
@@ -58,5 +75,13 @@ in rec {
       "--metadata"
       "INSTALL_SOURCE=aws-cli"
     ];
+  };
+
+  veo = {
+    command = "${veoMcp}/bin/veo-mcp";
+    args = [];
+    env = {
+      VEO_OUTPUT_DIR = veoOutputDir;
+    };
   };
 }

@@ -22,6 +22,28 @@
     # Optional:
     # CANVA_BASE_URL=https://api.canva.com/rest/v1
   '';
+  veoEnvTemplate = pkgs.writeText "veo-mcp-env" ''
+    # Gemini API key from AI Studio (Generative Language API).
+    # https://aistudio.google.com/apikey
+    GEMINI_API_KEY=
+  '';
+  veoMcpHelp = pkgs.writeShellApplication {
+    name = "veo-mcp-help";
+    runtimeInputs = [pkgs.coreutils];
+    text = ''
+      mkdir -p ${lib.escapeShellArg mcp.veoConfigDir} ${lib.escapeShellArg mcp.veoOutputDir}
+      chmod 700 ${lib.escapeShellArg mcp.veoConfigDir}
+      env_file=${lib.escapeShellArg "${mcp.veoConfigDir}/env"}
+      if [[ ! -f "$env_file" ]]; then
+        umask 077
+        cp ${veoEnvTemplate} "$env_file"
+      fi
+      echo "Veo MCP wrapper: ${mcp.veoMcp}/bin/veo-mcp"
+      echo "API key file: $env_file"
+      echo "Videos: ${mcp.veoOutputDir}"
+      echo "Top up AI Studio prepaid credits: https://aistudio.google.com/"
+    '';
+  };
   canvaMcpTokenHelp = pkgs.writeShellApplication {
     name = "canva-mcp-token-help";
     runtimeInputs = [pkgs.coreutils];
@@ -40,7 +62,9 @@
 in {
   home.packages = [
     mcp.canvaMcp
+    mcp.veoMcp
     gdriveMcpAuth
     canvaMcpTokenHelp
+    veoMcpHelp
   ];
 }

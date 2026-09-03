@@ -100,6 +100,7 @@ in {
       mcpServers.gdrive = mcp.gdrive;
       mcpServers.canva = mcp.canva;
       mcpServers.aws-mcp = mcp.aws;
+      mcpServers.veo = mcp.veo;
     };
   };
 
