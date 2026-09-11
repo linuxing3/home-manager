@@ -22,6 +22,8 @@
     '';
   };
   # Office Cloudflare Tunnel hostname (Zero Trust Access in front).
+  # 8787 is Cursor MCP OAuth (localhost:8787/callback); keep Collie off it.
+  colliePort = 8788;
   colliePublicHost = "collie.efwmcstyle.ccwu.cc";
   colliePublicOrigin = "https://${colliePublicHost}";
   stopUnmanagedCollie = pkgs.writeShellApplication {
@@ -31,7 +33,7 @@
       port_busy() {
         # User units RestrictAddressFamilies to inet/unix, so `ss` (netlink) fails
         # on UOS systemd 241 and would treat a live listener as free.
-        ${pkgs.bash}/bin/bash -c 'exec 3<>/dev/tcp/127.0.0.1/8787' 2>/dev/null
+        ${pkgs.bash}/bin/bash -c 'exec 3<>/dev/tcp/127.0.0.1/${toString colliePort}' 2>/dev/null
       }
       ${pkgs.procps}/bin/pkill -f '/lib/collie/bridge/index.ts' || true
       ${pkgs.procps}/bin/pkill -f 'herdr.collie-[^/]*/bridge/index.ts' || true
@@ -41,7 +43,7 @@
         fi
         sleep 0.25
       done
-      echo "collie: port 8787 is still in use by an unmanaged process" >&2
+      echo "collie: port ${toString colliePort} is still in use by an unmanaged process" >&2
       exit 1
     '';
   };
@@ -72,7 +74,7 @@ in {
           ProtectKernelModules = false;
           Environment = [
             "HERDR_SOCKET_PATH=${herdrConfig}/herdr.sock"
-            "COLLIE_PORT=8787"
+            "COLLIE_PORT=${toString colliePort}"
             "HERDR_PLUGIN_CONFIG_DIR=${herdrConfig}/plugins/config/herdr.collie"
             # Variant E: office cloudflared token tunnel is the front door, not tailscale serve.
             "COLLIE_SKIP_SERVE=1"

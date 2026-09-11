@@ -231,12 +231,19 @@ oxwm.bar.set_scheme_urgent(colors.red, colors.bg, colors.red)
 oxwm.key.bind({ modkey }, "Return", oxwm.spawn_terminal())
 -- Launch Dmenu
 oxwm.key.bind({ modkey }, "D", oxwm.spawn({ "sh", "-c", "dmenu_run -l 10" }))
-oxwm.key.bind({ modkey }, "G", oxwm.spawn({ "sh", "-c", "brave" }))
+
+
+ -- nohup /run/current-system/sw/bin/brave --remote-debugging-port=9222 --remote-allow-origins='http://localhost:9222' -profile-directory=Default >/tmp/brave-youtube-studio.log 2>&1 
+
+oxwm.key.bind({ modkey }, "G", oxwm.spawn({ "sh", "-c", "nohup /run/current-system/sw/bin/brave --remote-debugging-port=9222 --remote-allow-origins='http://localhost:9222' -profile-directory=Default >/tmp/brave-youtube-studio.log 2>&1" }))
+
 oxwm.key.bind({ modkey }, "E", oxwm.spawn({ "sh", "-c", "st -t hx -e hx" }))
+
 oxwm.key.bind({ modkey }, "A", oxwm.spawn({ "sh", "-c", "st -t nnn -e nnn" }))
+
 -- Helix anywhere (vim-anywhere equivalent): edit temp buffer, copy on close
 oxwm.key.bind({ "Control", "Mod1" }, "V", oxwm.spawn({ "hx-anywhere" }))
--- Copy screenshot to clipboard
+-- Save a selected screenshot and copy its path to the clipboard
 oxwm.key.bind({ modkey }, "S", oxwm.spawn({ "screenshot-to-clipboard" }))
 oxwm.key.bind({ modkey }, "Q", oxwm.client.kill())
 

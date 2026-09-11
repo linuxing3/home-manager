@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>内容创作工作台</title>
+  <style>
+    :root {
+      --bg: #f3eee6;
+      --paper: #fffdf8;
+      --ink: #1c1814;
+      --muted: #6a6158;
+      --line: #ddd2c4;
+      --line-strong: #cbbba8;
+      --accent: #2c5c4f;
+      --accent-soft: #e4efe9;
+      --danger: #9e3428;
+      --danger-bg: #f8e6e2;
+      --warn: #9a5a12;
+      --warn-bg: #f7ead6;
+      --ok: #2c5c4f;
+      --shadow: 0 1px 0 rgba(28, 24, 20, 0.04), 0 8px 24px rgba(28, 24, 20, 0.06);
+      --radius: 12px;
+      --tap: 44px;
+      --font: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+        "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+      --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; overflow-x: hidden; }
+    body {
+      font-family: var(--font);
+      color: var(--ink);
+      background: var(--bg);
+      font-size: 16px;
+      line-height: 1.5;
+      min-height: 100vh;
+      max-width: 100%;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: 16px;
+      max-width: 100%;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .wrap {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: 16px 16px 64px;
+      overflow-x: hidden;
+    }
+
+    .sticky-top {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: color-mix(in srgb, var(--bg) 92%, white);
+      backdrop-filter: blur(8px);
+      margin: -16px -16px 0;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mast {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .mast h1 {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin: 0 0 4px;
+    }
+
+    .date-line {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .mast-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .save-pill {
+      min-height: 32px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+    }
+    .save-pill.error {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: var(--tap);
+      min-width: var(--tap);
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line-strong);
+      background: var(--paper);
+      color: var(--ink);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #f7f1e8; }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { filter: brightness(1.05); }
+    .btn-danger {
+      color: var(--danger);
+      border-color: #e3b8b2;
+      background: #fff;
+    }
+    .btn-ghost {
+      background: transparent;
+    }
+    .btn-small {
+      min-height: var(--tap);
+      padding: 8px 12px;
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn svg { flex-shrink: 0; }
+
+    .urgent {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+    }
+    .urgent.overdue {
+      border-color: #e3b8b2;
+      background: var(--danger-bg);
+    }
+    .urgent-kicker {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 650;
+    }
+    .urgent.overdue .urgent-kicker { color: var(--danger); }
+    .urgent-title {
+      font-weight: 650;
+      margin: 2px 0 0;
+    }
+    .urgent-meta { color: var(--muted); font-size: 14px; }
+
+    .section-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 14px 0 8px;
+    }
+    .section-label h2 {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .hint { color: var(--muted); font-size: 13px; }
+
+    .today-groups { display: grid; gap: 10px; }
+    .group {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .group-head {
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 650;
+      background: #f7f1e8;
+      border-bottom: 1px solid var(--line);
+    }
+    .group.overdue .group-head {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+    .empty-row {
+      padding: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px 12px;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+      align-items: center;
+    }
+    .item:first-child { border-top: 0; }
+    .item.overdue { background: #fff8f6; }
+    .item-title { font-weight: 650; word-break: break-word; }
+    .item-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+      align-items: center;
+    }
+    .item-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 650;
+      background: #efe8de;
+      color: var(--ink);
+    }
+    .pill-due { background: var(--warn-bg); color: var(--warn); }
+    .pill-overdue { background: var(--danger-bg); color: var(--danger); }
+    .st-候选选题 { background: #efe8de; }
+    .st-待生成 { background: #e4ecf4; color: #2a4a68; }
+    .st-待修改 { background: var(--warn-bg); color: var(--warn); }
+    .st-待配图 { background: #dceee8; color: var(--accent); }
+    .st-待发布 { background: #ece6f4; color: #4a3568; }
+    .st-已发布 { background: var(--accent-soft); color: var(--accent); }
+    .st-已归档 { background: #e8e4de; color: var(--muted); }
+    .demo-badge {
+      font-size: 11px;
+      border: 1px solid var(--line-strong);
+      padding: 0 6px;
+      border-radius: 4px;
+      color: var(--muted);
+    }
+
+    .panel {
+      margin-top: 22px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 2px);
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+    .panel-head {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-head h2 {
+      margin: 0;
+      font-size: 18px;
+      font-family: var(--serif);
+    }
+    .panel-body { padding: 12px 16px 16px; min-width: 0; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+    }
+    .toolbar .grow { flex: 1 1 180px; min-width: 0; }
+
+    .field, .field-input, select.field-input, textarea.field-input {
+      width: 100%;
+      min-height: var(--tap);
+      padding: 10px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+    }
+    textarea.field-input { min-height: 88px; resize: vertical; }
+    label.lbl {
+      display: block;
+      font-size: 13px;
+      font-weight: 650;
+      margin: 0 0 6px;
+      color: var(--muted);
+    }
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+    @media (min-width: 720px) {
+      .form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    }
+
+    .board {
+      display: grid;
+      gap: 10px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      min-width: 0;
+      background: #fff;
+    }
+    .card.overdue { border-color: #e3b8b2; background: #fff8f6; }
+    .card-top {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .card-title { font-weight: 700; word-break: break-word; }
+    .card-foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: center;
+    }
+    .status-select {
+      min-height: var(--tap);
+      border-radius: 10px;
+      border: 1px solid var(--line-strong);
+      padding: 8px 10px;
+      background: #fff;
+      max-width: 100%;
+    }
+
+    .split {
+      display: grid;
+      gap: 16px;
+      margin-top: 0;
+    }
+    @media (min-width: 880px) {
+      .split { grid-template-columns: 1.15fr 0.85fr; align-items: start; }
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    @media (min-width: 600px) {
+      .metric-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    .issue {
+      display: grid;
+      gap: 8px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .issue:last-child { border-bottom: 0; }
+    .issue.done { opacity: 0.55; }
+    .issue.done .issue-text { text-decoration: line-through; }
+
+    .banner {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--danger-bg);
+      color: var(--danger);
+      display: none;
+    }
+    .banner.show { display: block; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 10px;
+      z-index: 80;
+      max-width: calc(100% - 24px);
+      display: none;
+    }
+    .toast.show { display: block; }
+    .toast.error { background: var(--danger); }
+
+    dialog {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 0;
+      width: min(520px, calc(100% - 24px));
+      max-width: calc(100vw - 24px);
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 0 24px 60px rgba(28, 24, 20, 0.18);
+    }
+    dialog:not([open]) { display: none !important; }
+    dialog::backdrop { background: rgba(28, 24, 20, 0.35); }
+    .dlg-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .dlg-head h3 { margin: 0; font-size: 18px; font-family: var(--serif); }
+    .dlg-body { padding: 16px; display: grid; gap: 12px; }
+    .dlg-foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      padding: 12px 16px 16px;
+    }
+
+    .icon-btn {
+      width: var(--tap);
+      height: var(--tap);
+      padding: 0;
+    }
+
+    a.link {
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    @media (max-width: 720px) {
+      .sticky-top {
+        max-height: 68vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      #todayList {
+        max-height: 28vh;
+        overflow: auto;
+      }
+      .item {
+        grid-template-columns: 1fr;
+      }
+      .item-actions,
+      .card-foot,
+      .mast-actions {
+        width: 100%;
+      }
+      .item-actions .btn,
+      .card-foot .btn,
+      .card-foot .status-select {
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: 100%;
+      }
+      .status-select { width: 100%; }
+    }
+
+    .sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    .file-in {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="sticky-top" id="stickyTop">
+      <div class="mast">
+        <div>
+          <h1>内容创作工作台</h1>
+          <div class="date-line" id="todayDate"></div>
+        </div>
+        <div class="mast-actions">
+          <span class="save-pill" id="savePill">已保存</span>
+          <button type="button" class="btn" data-action="export" title="导出 JSON 备份">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            导出备份
+          </button>
+          <button type="button" class="btn" data-action="import" title="从 JSON 恢复">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21V9"/><path d="M7 14l5-5 5 5"/><path d="M5 3h14"/></svg>
+            导入恢复
+          </button>
+          <input id="importFile" class="file-in" type="file" accept="application/json,.json" aria-label="选择备份 JSON 文件" />
+        </div>
+      </div>
+      <div id="urgentBox"></div>
+      <div class="banner" id="errorBanner" role="alert"></div>
+      <div class="section-label">
+        <h2>今天要处理</h2>
+        <span class="hint">来自内容看板 · 快到期 = 3 天内</span>
+      </div>
+      <div class="today-groups" id="todayList"></div>
+    </div>
+
+    <section class="panel" id="boardPanel">
+      <div class="panel-head">
+        <h2>内容看板</h2>
+        <button type="button" class="btn btn-primary" data-action="add-content">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          新增内容
+        </button>
+      </div>
+      <div class="panel-body">
+        <div class="toolbar">
+          <input class="field grow" id="searchQ" type="search" placeholder="搜索标题" autocomplete="off" />
+          <select class="field" id="filterStatus" style="flex:1 1 140px">
+            <option value="">全部状态</option>
+          </select>
+          <select class="field" id="filterPlatform" style="flex:1 1 140px">
+            <option value="">全部平台</option>
+          </select>
+        </div>
+        <div class="board" id="boardList" style="margin-top:12px"></div>
+      </div>
+    </section>
+
+    <div class="split" style="margin-top:16px">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>发布记录</h2>
+          <button type="button" class="btn btn-small" data-action="edit-metrics">数据字段</button>
+        </div>
+        <div class="panel-body" id="publishList"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>待处理问题</h2>
+          <button type="button" class="btn btn-primary btn-small" data-action="add-issue">记录卡点</button>
+        </div>
+        <div class="panel-body" id="issueList"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <dialog id="contentDlg">
+    <div class="dlg-head">
+      <h3 id="contentDlgTitle">新增内容</h3>
+      <button type="button" class="btn icon-btn btn-ghost" data-action="close-dlg" aria-label="关闭">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <form id="contentForm" class="dlg-body">
+      <input type="hidden" id="cId" />
+      <div>
+        <label class="lbl" for="cTitle">标题</label>
+        <input class="field-input" id="cTitle" required maxlength="200" />
+      </div>
+      <div class="form-grid cols-2">
+        <div>
+          <label class="lbl" for="cPlatform">平台</label>
+          <input class="field-input" id="cPlatform" list="platformList" required maxlength="40" />
+          <datalist id="platformList"></datalist>
+        </div>
+        <div>
+          <label class="lbl" for="cDue">截止时间</label>
+          <input class="field-input" id="cDue" type="date" required />
+        </div>
+      </div>
+      <div>
+        <label class="lbl" for="cStatus">当前状态</label>
+        <select class="field-input" id="cStatus"></select>
+      </div>
+      <div class="dlg-foot">
+        <button type="button" class="btn" data-action="close-dlg">取消</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="publishDlg">
+    <div class="dlg-head">
+      <h3>填写发布信息</h3>
+      <button type="button" class="btn icon-btn btn-ghost" data-action="close-dlg" aria-label="关闭">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <form id="publishForm" class="dlg-body">
+      <input type="hidden" id="pId" />
+      <p class="hint" id="pTitleHint"></p>
+      <div>
+        <label class="lbl" for="pUrl">发布链接</label>
+        <input class="field-input" id="pUrl" type="url" placeholder="https://" />
+      </div>
+      <div>
+        <label class="lbl" for="pAt">发布时间</label>
+        <input class="field-input" id="pAt" type="datetime-local" />
+      </div>
+      <div id="pMetrics"></div>
+      <div class="dlg-foot">
+        <button type="button" class="btn" data-action="close-dlg">稍后填写</button>
+        <button type="submit" class="btn btn-primary">保存发布信息</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="issueDlg">
+    <div class="dlg-head">
+      <h3>记录卡点</h3>
+      <button type="button" class="btn icon-btn btn-ghost" data-action="close-dlg" aria-label="关闭">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <form id="issueForm" class="dlg-body">
+      <div>
+        <label class="lbl" for="iText">问题</label>
+        <input class="field-input" id="iText" required maxlength="200" placeholder="例如：缺首图、数字待核实" />
+      </div>
+      <div>
+        <label class="lbl" for="iContent">关联内容（可选）</label>
+        <select class="field-input" id="iContent"></select>
+      </div>
+      <div class="dlg-foot">
+        <button type="button" class="btn" data-action="close-dlg">取消</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="metricsDlg">
+    <div class="dlg-head">
+      <h3>基础数据字段</h3>
+      <button type="button" class="btn icon-btn btn-ghost" data-action="close-dlg" aria-label="关闭">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <form id="metricsForm" class="dlg-body">
+      <p class="hint">用于已发布内容的阅读、点赞等。每行一个字段名。</p>
+      <textarea class="field-input" id="mFields" rows="6"></textarea>
+      <div class="dlg-foot">
+        <button type="button" class="btn" data-action="close-dlg">取消</button>
+        <button type="submit" class="btn btn-primary">保存字段</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+(function () {
+  const STORAGE_KEY = "content-studio-workbench-v1";
+  const SOON_DAYS = 3;
+  const STATUSES = ["候选选题", "待生成", "待修改", "待配图", "待发布", "已发布", "已归档"];
+  const NEXT = {
+    "候选选题": { to: "待生成", label: "开始生成" },
+    "待生成": { to: "待修改", label: "完成初稿" },
+    "待修改": { to: "待配图", label: "去配图" },
+    "待配图": { to: "待发布", label: "准备发布" },
+    "待发布": { to: "已发布", label: "填写发布" },
+    "已发布": { to: "已归档", label: "去归档" }
+  };
+  const PLATFORMS = ["YouTube", "小红书", "公众号", "B站", "闲鱼", "Etsy", "KDP"];
+  const DEFAULT_METRICS = ["阅读", "点赞", "收藏", "评论"];
+  const OPEN_STATUSES = STATUSES.filter(function (s) { return s !== "已发布" && s !== "已归档"; });
+
+  var state = emptyState();
+  var saveTimer = null;
+
+  function emptyState() {
+    return { version: 1, contents: [], issues: [], metricFields: DEFAULT_METRICS.slice() };
+  }
+
+  function uid(prefix) {
+    return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+  }
+
+  function pad(n) { return String(n).padStart(2, "0"); }
+
+  function todayDate() {
+    var d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function toISODate(d) {
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+
+  function parseISODate(s) {
+    if (!s) return null;
+    var p = String(s).slice(0, 10).split("-");
+    if (p.length !== 3) return null;
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function addDays(d, n) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  }
+
+  function weekdayName(d) {
+    return ["日", "一", "二", "三", "四", "五", "六"][d.getDay()];
+  }
+
+  function formatHumanDate(d) {
+    return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日 星期" + weekdayName(d);
+  }
+
+  function formatDue(iso) {
+    var d = parseISODate(iso);
+    if (!d) return "无截止日期";
+    return (d.getMonth() + 1) + "月" + d.getDate() + "日";
+  }
+
+  function formatUpdated(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var t = todayDate();
+    var day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var diff = Math.round((t - day) / 86400000);
+    var hm = pad(d.getHours()) + ":" + pad(d.getMinutes());
+    if (diff === 0) return "今天 " + hm;
+    if (diff === 1) return "昨天 " + hm;
+    return (d.getMonth() + 1) + "月" + d.getDate() + "日 " + hm;
+  }
+
+  function dayDiffFromToday(iso) {
+    var d = parseISODate(iso);
+    if (!d) return null;
+    return Math.round((d - todayDate()) / 86400000);
+  }
+
+  function isOpen(item) {
+    return OPEN_STATUSES.indexOf(item.status) !== -1;
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+
+  function icon(name) {
+    var paths = {
+      edit: '<path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M14 6l4 4"/>',
+      trash: '<path d="M5 7h14"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 14h10l1-14"/><path d="M9 7V4h6v3"/>',
+      check: '<path d="M5 12l5 5L20 7"/>'
+    };
+    return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' + (paths[name] || "") + "</svg>";
+  }
+
+  function setSavePill(ok, msg) {
+    var el = document.getElementById("savePill");
+    el.textContent = msg;
+    el.classList.toggle("error", !ok);
+  }
+
+  function showBanner(msg) {
+    var el = document.getElementById("errorBanner");
+    if (!msg) {
+      el.classList.remove("show");
+      el.textContent = "";
+      return;
+    }
+    el.textContent = msg;
+    el.classList.add("show");
+  }
+
+  function toast(msg, isError) {
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.className = "toast show" + (isError ? " error" : "");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.classList.remove("show"); }, 3200);
+  }
+
+  function persist(opts) {
+    opts = opts || {};
+    try {
+      var raw = JSON.stringify(state);
+      localStorage.setItem(STORAGE_KEY, raw);
+      var check = localStorage.getItem(STORAGE_KEY);
+      if (check !== raw) throw new Error("写入后读回不一致");
+      setSavePill(true, "已保存");
+      showBanner("");
+      return true;
+    } catch (err) {
+      var msg = "存储失败：" + (err && err.message ? err.message : String(err));
+      setSavePill(false, "存储失败");
+      showBanner(msg);
+      if (!opts.silent) toast(msg, true);
+      return false;
+    }
+  }
+
+  function validContent(c) {
+    return c && typeof c === "object" && typeof c.id === "string" && typeof c.title === "string"
+      && STATUSES.indexOf(c.status) !== -1;
+  }
+
+  function validIssue(i) {
+    return i && typeof i === "object" && typeof i.id === "string" && typeof i.text === "string";
+  }
+
+  function normalizeState(data) {
+    if (!data || typeof data !== "object") throw new Error("根对象无效");
+    if (!Array.isArray(data.contents) || !Array.isArray(data.issues)) throw new Error("缺少 contents 或 issues 数组");
+    var metricFields = Array.isArray(data.metricFields) && data.metricFields.length
+      ? data.metricFields.map(function (x) { return String(x).trim(); }).filter(Boolean)
+      : DEFAULT_METRICS.slice();
+    var contents = data.contents.filter(validContent).map(function (c) {
+      return {
+        id: String(c.id),
+        title: String(c.title),
+        platform: String(c.platform || ""),
+        dueAt: c.dueAt ? String(c.dueAt).slice(0, 10) : "",
+        status: c.status,
+        updatedAt: c.updatedAt || new Date().toISOString(),
+        publishUrl: c.publishUrl ? String(c.publishUrl) : "",
+        publishedAt: c.publishedAt ? String(c.publishedAt) : "",
+        metrics: (c.metrics && typeof c.metrics === "object") ? c.metrics : {},
+        demo: !!c.demo
+      };
+    });
+    var issues = data.issues.filter(validIssue).map(function (i) {
+      return {
+        id: String(i.id),
+        text: String(i.text),
+        contentId: i.contentId ? String(i.contentId) : "",
+        done: !!i.done,
+        createdAt: i.createdAt || new Date().toISOString(),
+        demo: !!i.demo
+      };
+    });
+    return { version: 1, contents: contents, issues: issues, metricFields: metricFields };
+  }
+
+  function seedState() {
+    var t = todayDate();
+    var now = new Date().toISOString();
+    return {
+      version: 1,
+      metricFields: DEFAULT_METRICS.slice(),
+      contents: [
+        {
+          id: "c-demo-overdue",
+          title: "南方小村雨天鲜鱼汤｜分镜与旁白",
+          platform: "YouTube",
+          dueAt: toISODate(addDays(t, -2)),
+          status: "待配图",
+          updatedAt: now,
+          publishUrl: "",
+          publishedAt: "",
+          metrics: {},
+          demo: true
+        },
+        {
+          id: "c-demo-today",
+          title: "秋季书桌整理清单",
+          platform: "小红书",
+          dueAt: toISODate(t),
+          status: "待修改",
+          updatedAt: now,
+          publishUrl: "",
+          publishedAt: "",
+          metrics: {},
+          demo: true
+        },
+        {
+          id: "c-demo-published",
+          title: "KDP 选品周报 第12期",
+          platform: "公众号",
+          dueAt: toISODate(addDays(t, -7)),
+          status: "已发布",
+          updatedAt: now,
+          publishUrl: "https://example.com/kdp-week-12",
+          publishedAt: toISODate(addDays(t, -6)) + "T10:00",
+          metrics: { "阅读": 1280, "点赞": 86, "收藏": 41, "评论": 12 },
+          demo: true
+        }
+      ],
+      issues: [
+        {
+          id: "i-demo-1",
+          text: "缺首图：鱼汤特写还没定",
+          contentId: "c-demo-overdue",
+          done: false,
+          createdAt: now,
+          demo: true
+        }
+      ]
+    };
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        state = seedState();
+        persist({ silent: true });
+        return;
+      }
+      state = normalizeState(JSON.parse(raw));
+      setSavePill(true, "已保存");
+    } catch (err) {
+      state = emptyState();
+      var msg = "读取本地数据失败：" + (err && err.message ? err.message : String(err)) + "。未覆盖原存储。可尝试导入备份，或清除后使用演示数据。";
+      showBanner(msg);
+      setSavePill(false, "读取失败");
+      toast(msg, true);
+    }
+  }
+
+  function findContent(id) {
+    for (var i = 0; i < state.contents.length; i++) {
+      if (state.contents[i].id === id) return state.contents[i];
+    }
+    return null;
+  }
+
+  function touch(item) {
+    item.updatedAt = new Date().toISOString();
+  }
+
+  function dueBucket(item) {
+    if (!isOpen(item) || !item.dueAt) return null;
+    var diff = dayDiffFromToday(item.dueAt);
+    if (diff === null) return null;
+    if (diff < 0) return "overdue";
+    if (diff === 0) return "today";
+    if (diff > 0 && diff <= SOON_DAYS) return "soon";
+    return null;
+  }
+
+  function sortByDue(a, b) {
+    if (!a.dueAt && !b.dueAt) return 0;
+    if (!a.dueAt) return 1;
+    if (!b.dueAt) return -1;
+    return a.dueAt < b.dueAt ? -1 : a.dueAt > b.dueAt ? 1 : 0;
+  }
+
+  function mostUrgent() {
+    var open = state.contents.filter(isOpen).slice().sort(function (a, b) {
+      var da = dayDiffFromToday(a.dueAt);
+      var db = dayDiffFromToday(b.dueAt);
+      if (da === null && db === null) return 0;
+      if (da === null) return 1;
+      if (db === null) return -1;
+      return da - db;
+    });
+    return open[0] || null;
+  }
+
+  function nextButton(item, extra, allowArchive) {
+    var n = NEXT[item.status];
+    if (!n) return "";
+    if (item.status === "已发布" && !allowArchive) return "";
+    return '<button type="button" class="btn btn-primary btn-small" data-action="next" data-id="' +
+      esc(item.id) + '">' + esc(n.label) + "</button>" + (extra || "");
+  }
+
+  function statusPill(status) {
+    return '<span class="pill st-' + esc(status) + '">' + esc(status) + "</span>";
+  }
+
+  function duePill(item) {
+    var diff = dayDiffFromToday(item.dueAt);
+    var label = "截止 " + formatDue(item.dueAt);
+    var cls = "pill pill-due";
+    if (diff !== null && diff < 0 && isOpen(item)) {
+      cls = "pill pill-overdue";
+      label = "逾期 " + Math.abs(diff) + " 天 · " + formatDue(item.dueAt);
+    } else if (diff === 0 && isOpen(item)) {
+      label = "今天到期";
+    }
+    return '<span class="' + cls + '">' + esc(label) + "</span>";
+  }
+
+  function renderUrgent() {
+    var box = document.getElementById("urgentBox");
+    var item = mostUrgent();
+    document.getElementById("todayDate").textContent = formatHumanDate(todayDate());
+    if (!item) {
+      box.innerHTML = '<div class="urgent"><div><div class="urgent-kicker">最需要处理</div><div class="urgent-title">今天没有未完成内容</div></div></div>';
+      return;
+    }
+    var diff = dayDiffFromToday(item.dueAt);
+    var overdue = diff !== null && diff < 0;
+    box.innerHTML =
+      '<div class="urgent' + (overdue ? " overdue" : "") + '">' +
+        '<div><div class="urgent-kicker">最需要处理' + (overdue ? " · 逾期" : "") + "</div>" +
+        '<div class="urgent-title">' + esc(item.title) + "</div>" +
+        '<div class="urgent-meta">' + esc(item.platform) + " · " + statusPill(item.status) + " · " + duePill(item) + "</div></div>" +
+        '<div class="item-actions">' + nextButton(item) + "</div></div>";
+  }
+
+  function renderToday() {
+    var groups = { overdue: [], today: [], soon: [] };
+    state.contents.forEach(function (c) {
+      var b = dueBucket(c);
+      if (b) groups[b].push(c);
+    });
+    groups.overdue.sort(sortByDue);
+    groups.today.sort(sortByDue);
+    groups.soon.sort(sortByDue);
+
+    function rows(list, overdue) {
+      if (!list.length) return '<div class="empty-row">暂无</div>';
+      return list.map(function (item) {
+        return '<div class="item' + (overdue ? " overdue" : "") + '">' +
+          "<div><div class=\"item-title\">" + esc(item.title) + (item.demo ? ' <span class="demo-badge">演示</span>' : "") + "</div>" +
+          '<div class="item-meta">' + esc(item.platform) + statusPill(item.status) + duePill(item) + "</div></div>" +
+          '<div class="item-actions">' + nextButton(item) + "</div></div>";
+      }).join("");
+    }
+
+    document.getElementById("todayList").innerHTML =
+      '<div class="group overdue"><div class="group-head">逾期</div>' + rows(groups.overdue, true) + "</div>" +
+      '<div class="group"><div class="group-head">今天到期</div>' + rows(groups.today, false) + "</div>" +
+      '<div class="group"><div class="group-head">快到期（' + SOON_DAYS + " 天内）</div>" + rows(groups.soon, false) + "</div>";
+  }
+
+  function uniquePlatforms() {
+    var set = {};
+    PLATFORMS.forEach(function (p) { set[p] = true; });
+    state.contents.forEach(function (c) { if (c.platform) set[c.platform] = true; });
+    return Object.keys(set);
+  }
+
+  function fillFilters() {
+    var st = document.getElementById("filterStatus");
+    var cur = st.value;
+    st.innerHTML = '<option value="">全部状态</option>' + STATUSES.map(function (s) {
+      return '<option value="' + esc(s) + '">' + esc(s) + "</option>";
+    }).join("");
+    st.value = cur;
+    var pf = document.getElementById("filterPlatform");
+    var pcur = pf.value;
+    pf.innerHTML = '<option value="">全部平台</option>' + uniquePlatforms().map(function (s) {
+      return '<option value="' + esc(s) + '">' + esc(s) + "</option>";
+    }).join("");
+    pf.value = pcur;
+    document.getElementById("platformList").innerHTML = uniquePlatforms().map(function (s) {
+      return '<option value="' + esc(s) + '">';
+    }).join("");
+    var cs = document.getElementById("cStatus");
+    if (!cs.options.length) {
+      cs.innerHTML = STATUSES.map(function (s) {
+        return '<option value="' + esc(s) + '">' + esc(s) + "</option>";
+      }).join("");
+    }
+  }
+
+  function boardItems() {
+    var q = document.getElementById("searchQ").value.trim().toLowerCase();
+    var st = document.getElementById("filterStatus").value;
+    var pf = document.getElementById("filterPlatform").value;
+    return state.contents.filter(function (c) {
+      if (st && c.status !== st) return false;
+      if (pf && c.platform !== pf) return false;
+      if (q && c.title.toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    }).slice().sort(function (a, b) {
+      var ao = isOpen(a);
+      var bo = isOpen(b);
+      if (ao !== bo) return ao ? -1 : 1;
+      return sortByDue(a, b);
+    });
+  }
+
+  function renderBoard() {
+    fillFilters();
+    var list = boardItems();
+    var el = document.getElementById("boardList");
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-row">没有匹配的内容。可新增，或放宽筛选。</div>';
+      return;
+    }
+    el.innerHTML = list.map(function (item) {
+      var overdue = dueBucket(item) === "overdue";
+      var opts = STATUSES.map(function (s) {
+        return '<option value="' + esc(s) + '"' + (s === item.status ? " selected" : "") + ">" + esc(s) + "</option>";
+      }).join("");
+      return '<article class="card' + (overdue ? " overdue" : "") + '">' +
+        '<div class="card-top"><div><div class="card-title">' + esc(item.title) +
+        (item.demo ? ' <span class="demo-badge">演示</span>' : "") + "</div>" +
+        '<div class="item-meta">' + esc(item.platform) + duePill(item) +
+        "<span>更新 " + esc(formatUpdated(item.updatedAt)) + "</span></div></div></div>" +
+        '<div class="card-foot">' +
+        '<select class="status-select" data-action="status" data-id="' + esc(item.id) + '" aria-label="修改状态">' + opts + "</select>" +
+        nextButton(item) +
+        '<button type="button" class="btn btn-small" data-action="edit" data-id="' + esc(item.id) + '">' + icon("edit") + " 编辑</button>" +
+        '<button type="button" class="btn btn-small btn-danger" data-action="delete" data-id="' + esc(item.id) + '">' + icon("trash") + " 删除</button>" +
+        "</div></article>";
+    }).join("");
+  }
+
+  function metricInputs(item, prefix) {
+    return '<div class="metric-row">' + state.metricFields.map(function (name) {
+      var val = item.metrics && item.metrics[name] != null ? item.metrics[name] : "";
+      var fid = prefix + "-" + item.id + "-" + name;
+      return '<div><label class="lbl" for="' + esc(fid) + '">' + esc(name) + "</label>" +
+        '<input class="field-input" id="' + esc(fid) + '" type="number" min="0" step="1" inputmode="numeric" data-action="metric" data-id="' +
+        esc(item.id) + '" data-field="' + esc(name) + '" value="' + esc(val) + '" /></div>';
+    }).join("") + "</div>";
+  }
+
+  function renderPublish() {
+    var list = state.contents.filter(function (c) {
+      return c.status === "已发布" || c.status === "已归档";
+    }).slice().sort(function (a, b) {
+      return (b.publishedAt || b.updatedAt) < (a.publishedAt || a.updatedAt) ? -1 : 1;
+    });
+    var el = document.getElementById("publishList");
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-row">还没有已发布或已归档的内容。</div>';
+      return;
+    }
+    el.innerHTML = list.map(function (item) {
+      var archived = item.status === "已归档";
+      var missing = !String(item.publishUrl || "").trim();
+      var archiveBtn = archived ? "" : (
+        missing
+          ? '<button type="button" class="btn btn-small" disabled title="没有链接时不允许归档">去归档</button>'
+          : '<button type="button" class="btn btn-primary btn-small" data-action="archive" data-id="' + esc(item.id) + '">去归档</button>'
+      );
+      return '<article class="card" style="margin-bottom:10px">' +
+        '<div class="card-title">' + esc(item.title) + " " + statusPill(item.status) + "</div>" +
+        '<div class="item-meta">' + esc(item.platform) +
+        (item.publishedAt ? "<span>发布 " + esc(item.publishedAt.replace("T", " ")) + "</span>" : "<span>未填发布时间</span>") +
+        "</div>" +
+        (item.publishUrl ? '<p><a class="link" href="' + esc(item.publishUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(item.publishUrl) + "</a></p>"
+          : '<p class="hint">还没有发布链接。归档前必须填写。</p>') +
+        (archived ? "" : (
+          '<label class="lbl">发布链接</label>' +
+          '<input class="field-input" data-action="url" data-id="' + esc(item.id) + '" value="' + esc(item.publishUrl) + '" placeholder="https://" style="margin-bottom:8px" />' +
+          '<label class="lbl">发布时间</label>' +
+          '<input class="field-input" type="datetime-local" data-action="published-at" data-id="' + esc(item.id) + '" value="' + esc(item.publishedAt) + '" style="margin-bottom:8px" />' +
+          metricInputs(item, "m")
+        )) +
+        (archived ? "" : '<div class="card-foot">' + archiveBtn +
+          '<button type="button" class="btn btn-small" data-action="fill-publish" data-id="' + esc(item.id) + '">完善信息</button></div>') +
+        "</article>";
+    }).join("");
+  }
+
+  function renderIssues() {
+    var el = document.getElementById("issueList");
+    var list = state.issues.slice().sort(function (a, b) {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return (b.createdAt || "") < (a.createdAt || "") ? -1 : 1;
+    });
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-row">没有待处理问题。</div>';
+      return;
+    }
+    el.innerHTML = list.map(function (iss) {
+      var c = iss.contentId ? findContent(iss.contentId) : null;
+      return '<div class="issue' + (iss.done ? " done" : "") + '">' +
+        '<div class="issue-text">' + esc(iss.text) + (iss.demo ? ' <span class="demo-badge">演示</span>' : "") + "</div>" +
+        '<div class="item-meta">' + (c ? esc(c.title) : "未关联内容") + "</div>" +
+        '<div class="item-actions">' +
+        (iss.done
+          ? '<button type="button" class="btn btn-small" data-action="issue-open" data-id="' + esc(iss.id) + '">重新打开</button>'
+          : '<button type="button" class="btn btn-primary btn-small" data-action="issue-done" data-id="' + esc(iss.id) + '">' + icon("check") + " 标为已处理</button>") +
+        '<button type="button" class="btn btn-small btn-danger" data-action="issue-del" data-id="' + esc(iss.id) + '">删除</button>' +
+        "</div></div>";
+    }).join("");
+  }
+
+  function render() {
+    renderUrgent();
+    renderToday();
+    renderBoard();
+    renderPublish();
+    renderIssues();
+  }
+
+  function closeDialogs() {
+    ["contentDlg", "publishDlg", "issueDlg", "metricsDlg"].forEach(function (id) {
+      var d = document.getElementById(id);
+      if (d.open) d.close();
+    });
+  }
+
+  function openContentDialog(item) {
+    document.getElementById("contentDlgTitle").textContent = item ? "编辑内容" : "新增内容";
+    document.getElementById("cId").value = item ? item.id : "";
+    document.getElementById("cTitle").value = item ? item.title : "";
+    document.getElementById("cPlatform").value = item ? item.platform : "";
+    document.getElementById("cDue").value = item ? item.dueAt : toISODate(todayDate());
+    document.getElementById("cStatus").value = item ? item.status : "候选选题";
+    document.getElementById("contentDlg").showModal();
+    document.getElementById("cTitle").focus();
+  }
+
+  function openPublishDialog(item) {
+    document.getElementById("pId").value = item.id;
+    document.getElementById("pTitleHint").textContent = item.title;
+    document.getElementById("pUrl").value = item.publishUrl || "";
+    var at = item.publishedAt;
+    if (!at) {
+      var n = new Date();
+      at = toISODate(n) + "T" + pad(n.getHours()) + ":" + pad(n.getMinutes());
+    }
+    document.getElementById("pAt").value = at;
+    document.getElementById("pMetrics").innerHTML = metricInputs(item, "pd");
+    document.getElementById("publishDlg").showModal();
+    document.getElementById("pUrl").focus();
+  }
+
+  function applyStatus(item, next) {
+    if (next === "已归档" && !String(item.publishUrl || "").trim()) {
+      toast("没有发布链接，不能标记为已归档。", true);
+      return false;
+    }
+    item.status = next;
+    touch(item);
+    if (next === "已发布") {
+      persist();
+      render();
+      openPublishDialog(item);
+      return true;
+    }
+    persist();
+    render();
+    return true;
+  }
+
+  function exportBackup() {
+    try {
+      var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "content-studio-backup-" + toISODate(todayDate()) + ".json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
+      toast("已导出备份");
+    } catch (err) {
+      toast("导出失败：" + err.message, true);
+    }
+  }
+
+  function importBackup(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onerror = function () { toast("导入失败：无法读取文件", true); };
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(String(reader.result || ""));
+        var next = normalizeState(data);
+        if (!next.contents.length && !next.issues.length && !Array.isArray(data.contents)) {
+          throw new Error("备份里没有可用内容");
+        }
+        state = next;
+        if (!persist()) throw new Error("已解析但未能写入本地存储");
+        render();
+        toast("已从备份恢复");
+      } catch (err) {
+        toast("导入失败：" + (err && err.message ? err.message : "JSON 无效"), true);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  document.body.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-action]");
+    if (!t) return;
+    var action = t.getAttribute("data-action");
+    var id = t.getAttribute("data-id");
+    var item = id ? findContent(id) : null;
+
+    if (action === "export") { exportBackup(); return; }
+    if (action === "import") { document.getElementById("importFile").click(); return; }
+    if (action === "close-dlg") { closeDialogs(); return; }
+    if (action === "add-content") { openContentDialog(null); return; }
+    if (action === "edit" && item) { openContentDialog(item); return; }
+    if (action === "fill-publish" && item) { openPublishDialog(item); return; }
+    if (action === "add-issue") {
+      var sel = document.getElementById("iContent");
+      sel.innerHTML = '<option value="">不关联</option>' + state.contents.map(function (c) {
+        return '<option value="' + esc(c.id) + '">' + esc(c.title) + "</option>";
+      }).join("");
+      document.getElementById("iText").value = "";
+      document.getElementById("issueDlg").showModal();
+      document.getElementById("iText").focus();
+      return;
+    }
+    if (action === "edit-metrics") {
+      document.getElementById("mFields").value = state.metricFields.join("\n");
+      document.getElementById("metricsDlg").showModal();
+      return;
+    }
+    if (action === "delete" && item) {
+      if (!confirm("删除「" + item.title + "」？此操作立即保存。")) return;
+      state.contents = state.contents.filter(function (c) { return c.id !== item.id; });
+      state.issues.forEach(function (iss) {
+        if (iss.contentId === item.id) iss.contentId = "";
+      });
+      persist();
+      render();
+      return;
+    }
+    if (action === "next" && item) {
+      var n = NEXT[item.status];
+      if (!n) return;
+      applyStatus(item, n.to);
+      return;
+    }
+    if (action === "archive" && item) {
+      applyStatus(item, "已归档");
+      return;
+    }
+    if (action === "issue-done" || action === "issue-open") {
+      for (var i = 0; i < state.issues.length; i++) {
+        if (state.issues[i].id === id) {
+          state.issues[i].done = action === "issue-done";
+          persist();
+          render();
+          return;
+        }
+      }
+    }
+    if (action === "issue-del") {
+      if (!confirm("删除这条卡点？")) return;
+      state.issues = state.issues.filter(function (iss) { return iss.id !== id; });
+      persist();
+      render();
+    }
+  });
+
+  document.body.addEventListener("change", function (e) {
+    var t = e.target;
+    var action = t.getAttribute("data-action");
+    var id = t.getAttribute("data-id");
+    var item = id ? findContent(id) : null;
+    if (action === "status" && item) {
+      var prev = item.status;
+      if (!applyStatus(item, t.value)) t.value = prev;
+      return;
+    }
+    if (action === "published-at" && item) {
+      item.publishedAt = t.value;
+      touch(item);
+      persist();
+      return;
+    }
+  });
+
+  document.body.addEventListener("input", function (e) {
+    var t = e.target;
+    var action = t.getAttribute("data-action");
+    var id = t.getAttribute("data-id");
+    var item = id ? findContent(id) : null;
+    if (action === "url" && item) {
+      item.publishUrl = t.value.trim();
+      touch(item);
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function () {
+        persist();
+        renderPublish();
+        renderUrgent();
+        renderToday();
+      }, 250);
+      return;
+    }
+    if (action === "metric" && item) {
+      var field = t.getAttribute("data-field");
+      if (!item.metrics) item.metrics = {};
+      var num = t.value === "" ? "" : Number(t.value);
+      item.metrics[field] = (num === "" || isNaN(num)) ? t.value : num;
+      touch(item);
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function () { persist(); }, 250);
+    }
+  });
+
+  document.getElementById("searchQ").addEventListener("input", function () { renderBoard(); });
+  document.getElementById("filterStatus").addEventListener("change", function () { renderBoard(); });
+  document.getElementById("filterPlatform").addEventListener("change", function () { renderBoard(); });
+  document.getElementById("importFile").addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    importBackup(file);
+  });
+
+  document.getElementById("contentForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var id = document.getElementById("cId").value;
+    var title = document.getElementById("cTitle").value.trim();
+    var platform = document.getElementById("cPlatform").value.trim();
+    var dueAt = document.getElementById("cDue").value;
+    var status = document.getElementById("cStatus").value;
+    if (!title || !platform || !dueAt) {
+      toast("请填写标题、平台和截止时间", true);
+      return;
+    }
+    if (status === "已归档") {
+      var existing = id ? findContent(id) : null;
+      var url = existing && existing.publishUrl;
+      if (!url) {
+        toast("没有发布链接，不能标记为已归档。", true);
+        return;
+      }
+    }
+    var item;
+    if (id) {
+      item = findContent(id);
+      if (!item) { toast("未找到该内容", true); return; }
+      item.title = title;
+      item.platform = platform;
+      item.dueAt = dueAt;
+      if (status !== item.status) {
+        document.getElementById("contentDlg").close();
+        applyStatus(item, status);
+        item.title = title;
+        item.platform = platform;
+        item.dueAt = dueAt;
+        persist();
+        render();
+        return;
+      }
+      touch(item);
+    } else {
+      item = {
+        id: uid("c"),
+        title: title,
+        platform: platform,
+        dueAt: dueAt,
+        status: status,
+        updatedAt: new Date().toISOString(),
+        publishUrl: "",
+        publishedAt: "",
+        metrics: {},
+        demo: false
+      };
+      if (status === "已发布") {
+        state.contents.unshift(item);
+        persist();
+        closeDialogs();
+        render();
+        openPublishDialog(item);
+        return;
+      }
+      state.contents.unshift(item);
+    }
+    persist();
+    closeDialogs();
+    render();
+  });
+
+  document.getElementById("publishForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var item = findContent(document.getElementById("pId").value);
+    if (!item) return;
+    item.publishUrl = document.getElementById("pUrl").value.trim();
+    item.publishedAt = document.getElementById("pAt").value;
+    item.metrics = item.metrics || {};
+    state.metricFields.forEach(function (name) {
+      var input = document.querySelector('#publishDlg [data-field="' + name + '"]');
+      if (input) {
+        var num = input.value === "" ? "" : Number(input.value);
+        item.metrics[name] = (num === "" || isNaN(num)) ? input.value : num;
+      }
+    });
+    if (item.status !== "已归档") item.status = "已发布";
+    touch(item);
+    persist();
+    closeDialogs();
+    render();
+    toast("发布信息已保存");
+  });
+
+  document.getElementById("issueForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = document.getElementById("iText").value.trim();
+    if (!text) return;
+    state.issues.unshift({
+      id: uid("i"),
+      text: text,
+      contentId: document.getElementById("iContent").value,
+      done: false,
+      createdAt: new Date().toISOString(),
+      demo: false
+    });
+    persist();
+    closeDialogs();
+    render();
+  });
+
+  document.getElementById("metricsForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var fields = document.getElementById("mFields").value.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!fields.length) {
+      toast("至少保留一个数据字段", true);
+      return;
+    }
+    state.metricFields = fields;
+    persist();
+    closeDialogs();
+    render();
+  });
+
+  load();
+  render();
+})();
+  </script>
+</body>
+</html>

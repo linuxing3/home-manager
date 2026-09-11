@@ -7,7 +7,7 @@ Home Manager installs RTK, fff-mcp, Pi (llm-agents package + UOS wrapper), pi-sw
 | Path | Owns |
 | --- | --- |
 | `modules/app/ai-agents/rtk.nix` | `pkgs.rtk`, `pkgs.fff-mcp`, telemetry, PATH |
-| `modules/app/ai-agents/pi.nix` | llm-agents Pi, UOS loader shim, `pi-switch` on PATH, settings merge |
+| `modules/app/ai-agents/pi.nix` | llm-agents Pi, UOS loader shim, `pi-switch` on PATH, settings merge, DeepSeek V4 provider |
 | `modules/app/ai-agents/herdr/` | llm-agents Herdr, plugins, xclip |
 | `modules/app/ai-agents/collie.nix` | llm-agents Collie CLI and user unit |
 | `modules/app/ai-agents/orca.nix` | llm-agents Orca, `orca serve`, `orca-remote` tunnel |
@@ -17,9 +17,17 @@ Home Manager installs RTK, fff-mcp, Pi (llm-agents package + UOS wrapper), pi-sw
 | `overlays/packages/rtk.nix` | Pinned RTK release |
 | `overlays/packages/fff-mcp.nix` | Pinned fff-mcp release |
 | `overlays/packages/cli-proxy-api.nix` | Pinned CLIProxyAPI Linux binary |
-| `overlays/packages/dsh.nix` | DeepSeek Harness CLI wrapper (source checkout + pnpm; npm rc.7 graph is incomplete). Boot fixes: hoist profile packages into checkout `node_modules`, fetch arm64 landlock prebuild, run with `node --expose-internals`. |
+| `overlays/packages/dsh.nix` | DeepSeek Harness CLI wrapper (source checkout + pnpm). npm cache is `~/.cache/dsh-npm` (not root-owned `~/.npm`). Boot fixes: hoist profile packages into checkout `node_modules`, fetch arm64 landlock prebuild, run with `node --expose-internals`. Web: `dsh web --no-open` on `127.0.0.1:3080`. |
 
 See `.codex/skills/agent-tools/SKILL.md` for the operational checklist.
+Host restore: `.codex/skills/repair-cursor-to-openai/SKILL.md`,
+`.codex/skills/repair-dsh/SKILL.md`, `.codex/skills/configure-video-mcp/SKILL.md`,
+`.codex/skills/configure-notion-mcp/SKILL.md`. Notion MCP: `docs/notion-mcp.md`.
+
+Drive MCP: Cursor and Kiro use Google's remote HTTP server
+(`https://drivemcp.googleapis.com/mcp/v1`). Complete Google sign-in in the
+desktop client once. The stdio `gdrive-mcp` wrapper (Codex/Codeium) keeps npm
+off root-owned `~/.npm` by using `~/.cache/gdrive-mcp-npm`.
 
 ## Why Pi is wrapped
 

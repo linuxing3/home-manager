@@ -5,6 +5,10 @@
   ...
 }: let
   ai = import ./lib.nix {inherit config lib pkgs;};
+  cursorToOpenaiEnvFile = "${ai.configHome}/cursor-to-openai.env";
+  cursorToOpenaiEnvTemplate = pkgs.writeText "cursor-to-openai.env" ''
+    PORT=3010
+  '';
   nodeLoopbackListen = pkgs.writeText "node-loopback-listen.cjs" ''
     const net = require("node:net");
     const originalListen = net.Server.prototype.listen;
@@ -57,7 +61,7 @@ in {
         // {
           Type = "simple";
           WorkingDirectory = "/share/data/sources/cursor-to-openai";
-          EnvironmentFile = "${ai.configHome}/cursor-to-openai.env";
+          EnvironmentFile = "-${cursorToOpenaiEnvFile}";
           Environment = [
             "PORT=3010"
             "PATH=${ai.profileBin}:/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
@@ -69,4 +73,13 @@ in {
       Install.WantedBy = ["default.target"];
     };
   };
+
+  home.activation.seedCursorToOpenaiEnv = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    ${ai.activationPreamble}
+    ${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg ai.configHome}
+    env_file=${lib.escapeShellArg cursorToOpenaiEnvFile}
+    if [[ ! -f "$env_file" ]]; then
+      ${pkgs.coreutils}/bin/install -m 600 ${cursorToOpenaiEnvTemplate} "$env_file"
+    fi
+  '';
 }

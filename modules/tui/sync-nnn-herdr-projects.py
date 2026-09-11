@@ -70,8 +70,8 @@ group = {group}
 working_dir = {working_dir}
 
 [[tabs]]
-name = "cursor"
-command = "cursor-agent"
+name = "open"
+command = "nnn-herdr-open"
 """.format(
         name=toml_string(name),
         description=toml_string("nnn bookmark: {}".format(name)),

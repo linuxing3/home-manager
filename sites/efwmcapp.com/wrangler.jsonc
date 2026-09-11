@@ -1,0 +1,17 @@
+{
+  // Script-only updates must keep the existing ASSETS tree (API keep_assets=true).
+  // A wrangler deploy without that tree would replace the live landing pages.
+  "$schema": "https://www.unpkg.com/wrangler@4.93.0/config-schema.json",
+  "name": "efwmcapp-lp",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-05",
+  "account_id": "dc6e3e767a93266774857d962dd60a4f",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "efwmcapp.com", "custom_domain": true },
+    { "pattern": "www.efwmcapp.com", "custom_domain": true },
+    { "pattern": "glow.efwmcapp.com", "custom_domain": true },
+    { "pattern": "smart.efwmcapp.com", "custom_domain": true },
+    { "pattern": "cozy.efwmcapp.com", "custom_domain": true }
+  ]
+}

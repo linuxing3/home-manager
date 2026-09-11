@@ -1,0 +1,22 @@
+{
+  "$schema": "https://www.unpkg.com/wrangler@4.93.0/config-schema.json",
+  "name": "efwmc-pinterest",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-04",
+  "account_id": "dc6e3e767a93266774857d962dd60a4f",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    {
+      "pattern": "pintor.efwmcapp.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "SITE_ORIGIN": "https://pintor.efwmcapp.com",
+    "COMPANY_NAME": "EFWMC",
+    "PINTEREST_CLIENT_ID": "1608367"
+  }
+}

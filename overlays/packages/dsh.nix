@@ -37,8 +37,12 @@ _final: prev: {
           src="''${DSH_SRC:-$HOME/.local/share/deepseek-harness}"
           tools="''${DSH_TOOLS:-$HOME/.local/share/dsh-tools}"
           dsh_home="''${DSH_HOME:-$HOME/.dsh}"
+          npm_cache="''${DSH_NPM_CACHE:-$HOME/.cache/dsh-npm}"
           rev="''${DSH_REV:-141eb6fef83422698aef7a981029e843e8161534}"
           landlock_pkg="$src/native/landlock-run/packages/linux-arm64"
+          mkdir -p "$npm_cache"
+          export npm_config_cache="$npm_cache"
+          export NPM_CONFIG_CACHE="$npm_cache"
           export npm_config_update_notifier=false
           export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
           export NODE_EXTRA_CA_CERTS="$SSL_CERT_FILE"

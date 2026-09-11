@@ -47,6 +47,49 @@
       chmod 400 "$cred"
     '';
   };
+  # Linux computer-use runs `python3` + AT-SPI from the Orca daemon PATH.
+  # A bare `python3` on the profile cannot import `gi` even if pygobject3 is
+  # listed in home.packages, so give Orca a wrapped interpreter and typelibs.
+  computerUsePython = pkgs.python3.withPackages (ps: [
+    ps.pygobject3
+    ps.pycairo
+  ]);
+  computerUseBinPath = lib.makeBinPath [
+    computerUsePython
+    pkgs.xdotool
+    pkgs.xclip
+  ];
+  computerUseTypelibPath = lib.makeSearchPath "lib/girepository-1.0" [
+    pkgs.at-spi2-core
+    pkgs.gobject-introspection
+    pkgs.glib.out
+    pkgs.gtk3
+    pkgs.gdk-pixbuf
+    pkgs.pango.out
+    pkgs.harfbuzz
+    pkgs.cairo
+  ];
+  # `orca-ide` is the Electron GUI. Agents on Linux are told to call it instead
+  # of `orca` (GNOME screen reader). Forward CLI verbs to the Node CLI so
+  # `orca-ide computer` / `orca-ide skills get` do not spawn a second app.
+  orcaIdeCli = pkgs.writeShellApplication {
+    name = "orca-ide";
+    text = ''
+      case "''${1:-}" in
+        --help|-h|-v|--version|version|open|serve|status|diagnostics|agent-context|account|skills|host|environment|vm|automations|project|repo|worktree|file|terminal|computer|browser|artifact|comment|orchestration|linear|emulator|doctor)
+          exec ${lib.getExe' cfg.package "orca"} "$@"
+          ;;
+      esac
+      exec ${lib.getExe' cfg.package "orca-ide"} "$@"
+    '';
+  };
+  computerUsePythonBin = pkgs.writeShellApplication {
+    name = "python3";
+    text = ''
+      export GI_TYPELIB_PATH=${lib.escapeShellArg computerUseTypelibPath}"''${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}"
+      exec ${computerUsePython}/bin/python3 "$@"
+    '';
+  };
   # Interactive shells authenticate `gh` via GH_TOKEN from api-keys-new.age
   # (agenix-env / agent-env). systemd user units do not inherit that, and
   # there is no hosts.yml, so Orca's GitHub check reports unauthenticated.
@@ -86,12 +129,17 @@
       fi
       exec ${pkgs.coreutils}/bin/env "''${extra_env[@]}" \
         ${cfg.package}/bin/orca serve --port ${toString orcaPort} \
-        --pairing-address ${orcaPublicOrigin}/runtime --json
+        --pairing-address ${orcaPublicOrigin} --json
     '';
   };
 in {
   config = lib.mkIf cfg.enable {
-    home.packages = [cfg.package pkgs.nodejs];
+    home.packages = [cfg.package pkgs.nodejs pkgs.xdotool];
+    # The Orca daemon looks up `python3` / `orca-ide` from PATH. Its PATH puts
+    # ~/.bin first, so CLI verbs and AT-SPI land here instead of a second
+    # Electron instance or a bare CPython without `gi`.
+    home.file.".bin/python3".source = "${computerUsePythonBin}/bin/python3";
+    home.file.".bin/orca-ide".source = "${orcaIdeCli}/bin/orca-ide";
 
     xdg.configFile = {
       "systemd/user/default.target.wants/orca.service".force = true;
@@ -122,7 +170,8 @@ in {
           Environment = [
             "LIBGL_ALWAYS_SOFTWARE=1"
             "NPM_CONFIG_CACHE=${ai.homeDir}/.cache/npm-orca"
-            "PATH=${lib.makeBinPath [pkgs.nodejs pkgs.gh]}:${ai.profileBin}:/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
+            "GI_TYPELIB_PATH=${computerUseTypelibPath}"
+            "PATH=${computerUseBinPath}:${lib.makeBinPath [pkgs.nodejs pkgs.gh]}:${ai.profileBin}:/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
           ];
           ExecStart = lib.getExe orcaServe;
           KillMode = "mixed";
@@ -169,6 +218,10 @@ in {
             ExecStart = "${pkgs.cloudflared}/bin/cloudflared --no-autoupdate --metrics 127.0.0.1:20242 tunnel --config ${configFile} run ${tunnelName}";
             Restart = "on-failure";
             RestartSec = 5;
+            # UOS systemd 241 rejects these in user units (218/CAPABILITIES)
+            # and never starts the connector, so the public hostname 404s.
+            PrivateDevices = false;
+            ProtectKernelModules = false;
           };
         Install.WantedBy = ["default.target"];
       };

@@ -97,10 +97,12 @@ in {
       executable = true;
     };
     ".cursor/mcp.json".text = builtins.toJSON {
-      mcpServers.gdrive = mcp.gdrive;
+      mcpServers.gdrive = mcp.gdriveRemote;
       mcpServers.canva = mcp.canva;
       mcpServers.aws-mcp = mcp.aws;
       mcpServers.veo = mcp.veo;
+      mcpServers.higgsfield = mcp.higgsfield;
+      mcpServers.notion = mcp.notion;
     };
   };
 

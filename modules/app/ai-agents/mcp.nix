@@ -63,6 +63,7 @@ in {
   home.packages = [
     mcp.canvaMcp
     mcp.veoMcp
+    mcp.gdriveMcp
     gdriveMcpAuth
     canvaMcpTokenHelp
     veoMcpHelp

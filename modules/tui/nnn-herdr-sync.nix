@@ -14,8 +14,32 @@
         --projects-dir ${lib.escapeShellArg projectsDir}
     '';
   };
+  nnnHerdrOpen = pkgs.writeShellApplication {
+    name = "nnn-herdr-open";
+    runtimeInputs = [pkgs.fzf];
+    text = ''
+      choice="$(
+        printf '%s\n' cursor-agent pi codex hx shell \
+          | fzf --prompt='command> ' --reverse \
+        || true
+      )"
+
+      case "$choice" in
+        cursor-agent|pi|codex|hx)
+          if command -v "$choice" >/dev/null 2>&1; then
+            exec "$choice"
+          fi
+          echo "nnn-herdr-open: $choice not on PATH" >&2
+          exec "''${SHELL:-bash}"
+          ;;
+        *)
+          exec "''${SHELL:-bash}"
+          ;;
+      esac
+    '';
+  };
 in {
-  home.packages = [syncNnnHerdrProjects];
+  home.packages = [syncNnnHerdrProjects nnnHerdrOpen];
 
   home.activation.nnnHerdrSync = lib.hm.dag.entryAfter ["writeBoundary"] ''
     run ${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg bookmarksDir}

@@ -13,6 +13,7 @@
     ../../modules/app/ai-agents
     ../../modules/app/personal-configs
     ../../modules/app/cloudflared-office.nix
+    # ../../modules/app/novnc.nix
     ../../modules/app/credential-backup
     ../../modules/app/secretspec-bitwarden
     ../../modules/tui/st-theme.nix

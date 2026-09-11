@@ -9,10 +9,9 @@ in {
   home.file.".kiro/settings/mcp.json".text = builtins.toJSON {
     mcpServers = {
       gdrive =
-        mcp.gdrive
+        mcp.gdriveRemote
         // {
           timeout = 100000;
-          transport = "stdio";
         };
       canva =
         mcp.canva
@@ -31,6 +30,11 @@ in {
         // {
           timeout = 100000;
           transport = "stdio";
+        };
+      higgsfield =
+        mcp.higgsfield
+        // {
+          timeout = 100000;
         };
     };
   };

@@ -13,7 +13,12 @@
       xclip
     ];
     text = ''
-      maim --select | xclip -selection clipboard -target image/png -in
+      screenshot_dir="$HOME/Pictures/snapshorts"
+      mkdir -p -- "$screenshot_dir"
+      screenshot_path="$screenshot_dir/screenshot-$(date +%Y%m%d-%H%M%S).png"
+
+      maim --select "$screenshot_path"
+      printf '%s' "$screenshot_path" | xclip -selection clipboard
     '';
   };
   install-lightdm-oxwm = pkgs.writeShellApplication {
