@@ -8,7 +8,7 @@ This repository defines a Nix flake with two layers: Home Manager (`homeConfigur
 - `nix/`: machine identity and user-level settings (shared by both layers).
 - `nixos/`: NixOS host modules (boot, kernel, hardware, display, printing). Not a nested flake.
 - `profiles/work/`: the active Home Manager module for the `work` profile. It imports `packages.nix` and `modules/app/ai-agents`.
-- `modules/app/ai-agents/`: one submodule per AI agent (Codex, Cursor, Pi, Herdr, and related MCP/tools).
+- `modules/app/ai-agents/`: one submodule per AI agent (Codex, Cursor, Pi, oh-my-pi, Herdr, and related MCP/tools).
 - `modules/shared/oxwm/`: oxwm session scripts and wrappers used by both Home Manager and NixOS.
 - `overlays/packages/`: focused overrides for individual packages such as `nnn`, `st`, `rtk`, `pi-switch`, `cli-proxy-api`, and `dsh`.
 - `docs/ai-agents.md` and `docs/agent-tools.md`: agent module map and tool notes.

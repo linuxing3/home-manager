@@ -1,6 +1,6 @@
 # Agent tools
 
-Home Manager installs RTK, fff-mcp, Pi (llm-agents package + UOS wrapper), pi-switch, Herdr, Collie, and Cursor Agent from `modules/app/ai-agents/`. The work profile only imports that tree.
+Home Manager installs RTK, fff-mcp, Pi (llm-agents package + UOS wrapper), oh-my-pi (`omp`), pi-switch, Herdr, Collie, and Cursor Agent from `modules/app/ai-agents/`. The work profile only imports that tree.
 
 ## Layout
 
@@ -8,11 +8,12 @@ Home Manager installs RTK, fff-mcp, Pi (llm-agents package + UOS wrapper), pi-sw
 | --- | --- |
 | `modules/app/ai-agents/rtk.nix` | `pkgs.rtk`, `pkgs.fff-mcp`, telemetry, PATH |
 | `modules/app/ai-agents/pi.nix` | llm-agents Pi, UOS loader shim, `pi-switch` on PATH, settings merge, DeepSeek V4 provider |
+| `modules/app/ai-agents/omp.nix` | oh-my-pi (`omp`) Home Manager module and `~/.omp/agent/config.yml` |
 | `modules/app/ai-agents/herdr/` | llm-agents Herdr, plugins, xclip |
 | `modules/app/ai-agents/collie.nix` | llm-agents Collie CLI and user unit |
 | `modules/app/ai-agents/orca.nix` | llm-agents Orca, `orca serve`, `orca-remote` tunnel |
 | `modules/app/ai-agents/cursor/default.nix` | Cursor shim and llm-agents `cursor-agent` |
-| `modules/app/ai-agents/nix-profile-cleanup.nix` | Drops leftover `nix profile` copies of herdr/pi/collie/cursor-agent |
+| `modules/app/ai-agents/nix-profile-cleanup.nix` | Drops leftover `nix profile` copies of herdr/pi/omp/collie/cursor-agent |
 | `modules/app/ai-agents/codex/default.nix` | Codex files, TOML merge, `rtk init --codex`, fff MCP |
 | `overlays/packages/rtk.nix` | Pinned RTK release |
 | `overlays/packages/fff-mcp.nix` | Pinned fff-mcp release |

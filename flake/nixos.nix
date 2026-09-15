@@ -46,9 +46,10 @@ in {
         disko = sdaDisko.disko // {enableConfig = false;};
       };
 
-      # Same modules as sda, but / @nix @home @swap on nvme0n1p6 (nixos-nvme).
-      # UOS EFI/Boot/Roota/SWAP on nvme0n1p1–p5 are untouched. /boot and /share
-      # stay on sda. Never Disko-format nvme0n1.
+      # Same modules as sda, but / @nix @home @tmp on nvme0n1p6 (nixos-nvme).
+      # Swap is nvme0n1p3 (UOS SWAP). UOS EFI/Boot/Roota/KT_PART on
+      # nvme0n1p1–p2 and p4–p5 are untouched. /boot and /share stay on sda.
+      # Never Disko-format nvme0n1.
       nvme-p6 = {
         imports =
           sdaImports

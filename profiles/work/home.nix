@@ -33,9 +33,15 @@
   home.homeDirectory = "/home/" + userSettings.username;
   home.enableNixpkgsReleaseCheck = false;
 
+  xdg.configFile."nix/nix.conf".text = ''
+    warn-dirty = false
+  '';
+
   my.features.home.nvim = true;
   my.ai.herdr.enable = true;
   my.ai.pi.enable = true;
+  my.ai.agentlyMail.enable = true;
+  my.ai.omp.enable = true;
   my.ai.collie.enable = true;
   my.ai.orca.enable = true;
   my.ai.cursorAgent.enable = true;

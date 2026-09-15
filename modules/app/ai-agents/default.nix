@@ -2,8 +2,10 @@
   imports = [
     ./options.nix
     ./mcp.nix
+    ./agently-mail.nix
     ./rtk.nix
     ./pi.nix
+    ./omp.nix
     ./nix-profile-cleanup.nix
     ./codex
     ./cursor

@@ -20,6 +20,7 @@
     };
     agenix.url = "github:ryantm/agenix";
     llm-agents.url = "github:numtide/llm-agents.nix";
+    omp.url = "github:can1357/oh-my-pi";
     disko.url = "github:nix-community/disko/latest";
     disko.inputs.nixpkgs.follows = "nixpkgs";
     # Deepin vendor tree (Phytium HDA + Glenfly Arise). Prefer 6.6.y over

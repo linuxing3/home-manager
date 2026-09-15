@@ -15,6 +15,7 @@ These tools live in `modules/app/ai-agents/`, not in the work profile `home.nix`
 | RTK | `rtk.nix` | Token-compact shell proxy; telemetry off |
 | fff-mcp | `rtk.nix` + `codex/default.nix` | Fast file MCP; Codex registers it on activation |
 | Pi | `pi.nix` | UOS `ld-linux-aarch64` wrapper around the Nix Pi binary |
+| oh-my-pi | `omp.nix` | `omp` from `github:can1357/oh-my-pi`; config `~/.omp/agent/config.yml` |
 | pi-switch | `pi.nix` + `overlays/packages/pi-switch.nix` | Profile switcher CLI on `~/.nix-profile/bin` |
 | DeepSeek (Pi) | `pi.nix` | V4 profile `pi-switch-deepseek`; key `$DEEPSEEK_API_KEY` |
 | dsh | `dsh.nix` + `overlays/packages/dsh.nix` | DeepSeek Harness CLI; web on 3080 |

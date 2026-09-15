@@ -5,7 +5,7 @@ description: Use when installing NixOS beside UOS on /dev/sda banana (sda4), run
 
 # Install NixOS beside UOS
 
-**Live root (2026-08-24+):** NixOS is `nvme0n1p6` (`nixos-nvme`, flake `.#nvme-p6-phytium`). UOS stays on `nvme0n1p1`–`p5`. Banana `sda4` is the old copy. `/boot` and `/share` stay on sda.
+**Live root (2026-08-24+):** NixOS is `nvme0n1p6` (`nixos-nvme`, flake `.#nvme-p6-phytium`) with `@nixos` `/`, `@nix`, `@home`, `@tmp` `/tmp`. Swap is the UOS partition `nvme0n1p3` (`7dc5be43-fb98-48e2-a893-4d84a216d0e3`), not a swapfile. UOS stays on `nvme0n1p1`–`p5`. Banana `sda4` is the old copy. `/boot` and `/share` stay on sda.
 
 Never `nixos-rebuild switch --flake …#sda-phytium` while running from NVMe. That writes a GRUB generation whose fstab is sda4 but whose store exists only on NVMe `@nix`. Generation 22 failed that way: initrd emergency, then `Cannot open access to console, the root account is locked` (`boot.initrd.systemd.emergencyAccess` plus a root hash live in `nixos/configuration.nix`).
 

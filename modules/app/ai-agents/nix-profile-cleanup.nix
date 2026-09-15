@@ -8,6 +8,7 @@
   names = lib.concatStringsSep " " [
     "herdr"
     "pi"
+    "omp"
     "collie"
     "orca"
     "cursor-agent"

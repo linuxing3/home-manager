@@ -9,8 +9,8 @@
       pasystray
       procps
       which
-      xorg.xinput
-      xorg.xmodmap
+      xinput
+      xmodmap
       xrandr
       xsetroot
       gnugrep
@@ -26,7 +26,7 @@
     name = "oxwm-session";
     runtimeInputs = with pkgs; [
       oxwm
-      xorg.xrdb
+      xrdb
       xrandr
       xsetroot
       ncurses

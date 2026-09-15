@@ -5,7 +5,7 @@
   ...
 }: let
   herdrManifest = builtins.fromJSON (builtins.readFile ./herdr/files/plugins.json);
-  llmAgents = inputs.llm-agents.packages.${pkgs.system};
+  llmAgents = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system};
 in {
   options.my.ai = {
     herdr = {
@@ -48,6 +48,19 @@ in {
         type = lib.types.package;
         default = llmAgents.pi;
         description = "Pi package from llm-agents.nix.";
+      };
+    };
+
+    omp = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Install oh-my-pi (omp) from github:can1357/oh-my-pi via its Home Manager module.";
+      };
+      package = lib.mkOption {
+        type = lib.types.package;
+        default = inputs.omp.packages.${pkgs.stdenv.hostPlatform.system}.default;
+        description = "OMP package from the oh-my-pi flake.";
       };
     };
 

@@ -19,13 +19,13 @@
     runtimeInputs = [pkgs.fzf];
     text = ''
       choice="$(
-        printf '%s\n' cursor-agent pi codex hx shell \
+        printf '%s\n' cursor-agent pi omp codex hx shell \
           | fzf --prompt='command> ' --reverse \
         || true
       )"
 
       case "$choice" in
-        cursor-agent|pi|codex|hx)
+        cursor-agent|pi|omp|codex|hx)
           if command -v "$choice" >/dev/null 2>&1; then
             exec "$choice"
           fi
