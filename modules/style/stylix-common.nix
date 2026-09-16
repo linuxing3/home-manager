@@ -28,12 +28,12 @@ in {
       package = userSettings.fontPkg;
     };
     serif = {
-      name = userSettings.font;
-      package = userSettings.fontPkg;
+      name = "Inter";
+      package = pkgs.inter;
     };
     sansSerif = {
-      name = userSettings.font;
-      package = userSettings.fontPkg;
+      name = "Inter";
+      package = pkgs.inter;
     };
     emoji = {
       name = "Noto Emoji";
@@ -44,8 +44,8 @@ in {
 
   fonts.fontconfig.defaultFonts = {
     monospace = [userSettings.font];
-    sansSerif = [userSettings.font];
-    serif = [userSettings.font];
+    sansSerif = ["Inter" userSettings.font];
+    serif = ["Inter" userSettings.font];
   };
 
   stylix.targets.kitty.enable = true;

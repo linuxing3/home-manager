@@ -58,6 +58,12 @@ in {
   home.packages = [stTheme pkgs.nerd-fonts.jetbrains-mono];
 
   home.file.".Xdefaults".text = ''
+    Xft.dpi: 96
+    Xft.antialias: true
+    Xft.hinting: true
+    Xft.hintstyle: hintfull
+    Xft.rgba: rgb
+    Xft.lcdfilter: lcddefault
     st.font: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true
     st.fontalt0: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true
     st.alpha: 0.4

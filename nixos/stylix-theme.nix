@@ -21,6 +21,10 @@
       gsettings set org.gnome.desktop.interface color-scheme prefer-dark || true
       gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark || true
       gsettings set org.gnome.desktop.interface icon-theme Yaru-purple || true
+      gsettings set org.gnome.desktop.interface font-name 'Inter 12' || true
+      gsettings set org.gnome.desktop.interface document-font-name 'Inter 12' || true
+      gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 12' || true
+      gsettings set org.gnome.desktop.wm.preferences titlebar-font 'Inter Bold 12' || true
 
       echo "stylix theme: omarchy-catppuccin-dark"
     '';

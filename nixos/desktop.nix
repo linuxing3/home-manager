@@ -34,12 +34,12 @@ in {
       package = pkgs.nerd-fonts.jetbrains-mono;
     };
     sansSerif = {
-      name = "JetBrainsMono Nerd Font";
-      package = pkgs.nerd-fonts.jetbrains-mono;
+      name = "Inter";
+      package = pkgs.inter;
     };
     serif = {
-      name = "JetBrainsMono Nerd Font";
-      package = pkgs.nerd-fonts.jetbrains-mono;
+      name = "Inter";
+      package = pkgs.inter;
     };
     emoji = {
       name = "Noto Emoji";
@@ -57,7 +57,12 @@ in {
   stylix.targets.grub.useWallpaper = true;
 
   fonts.fontconfig.enable = true;
+  fonts.fontconfig.subpixel.rgba = "rgb";
+  fonts.fontconfig.subpixel.lcdfilter = "default";
+  fonts.fontconfig.hinting.style = "full";
+  fonts.fontconfig.antialias = true;
   fonts.packages = with pkgs; [
+    inter
     nerd-fonts.jetbrains-mono
     noto-fonts-cjk-sans
     noto-fonts-monochrome-emoji
