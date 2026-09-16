@@ -17,6 +17,7 @@
     ../../modules/app/credential-backup
     ../../modules/app/secretspec-bitwarden
     ../../modules/tui/st-theme.nix
+    ../../modules/style/omarchy-catppuccin-dark.nix
     ../../modules/app/nvim/nvim.nix
     ../../modules/app/hx-anywhere
     ../../modules/app/rclone

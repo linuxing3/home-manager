@@ -1,7 +1,7 @@
 Config {
     font = "JetBrainsMono Nerd Font Bold 10"
-  , bgColor = "#1a1b26"
-  , fgColor = "#bbbbbb"
+  , bgColor = "#010101"
+  , fgColor = "#cdd6f4"
   , position = TopH 24
   , lowerOnStart = True
   , hideOnStart = False
@@ -15,5 +15,5 @@ Config {
     ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = "%UnsafeXMonadLog% }{ <action=`fcitx5-configtool`><fc=#9ece6a>󱇤</fc></action>  <fc=#a9b1d6>│</fc>  <action=`pavucontrol`><fc=#ad8ee6></fc></action>  <fc=#a9b1d6>│</fc>  <fc=#7aa2f7>%memory%</fc>  <fc=#a9b1d6>│</fc>  <fc=#0db9d7>%date%</fc>           "
+  , template = "%UnsafeXMonadLog% }{ <action=`fcitx5-configtool`><fc=#a6e3a1>󱇤</fc></action>  <fc=#b4befe>│</fc>  <action=`pavucontrol`><fc=#f5c2e7></fc></action>  <fc=#b4befe>│</fc>  <fc=#89b4fa>%memory%</fc>  <fc=#b4befe>│</fc>  <fc=#94e2d5>%date%</fc>           "
 }

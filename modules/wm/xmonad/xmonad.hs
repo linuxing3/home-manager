@@ -46,7 +46,7 @@ myTrayer =
     , "--alpha"
     , "0"
     , "--tint"
-    , "0x1a1b26"
+    , "0x010101"
     , "--SetDockType"
     , "true"
     , "--SetPartialStrut"
@@ -59,22 +59,22 @@ myKeybinds :: String
 myKeybinds = "@keybinds@"
 
 myFocusColor :: String
-myFocusColor = "#6dade3"
+myFocusColor = "#89b4fa"
 
 myUnfocusColor :: String
-myUnfocusColor = "#bbbbbb"
+myUnfocusColor = "#6c7086"
 
 myBg :: String
-myBg = "#1a1b26"
+myBg = "#010101"
 
 myCyan :: String
-myCyan = "#0db9d7"
+myCyan = "#94e2d5"
 
 myRed :: String
-myRed = "#f7768e"
+myRed = "#f38ba8"
 
 myPurple :: String
-myPurple = "#ad8ee6"
+myPurple = "#f5c2e7"
 
 myWorkspaces :: [String]
 myWorkspaces =
@@ -152,11 +152,11 @@ myPP =
     { ppCurrent = xmobarColor myCyan "" . wrap "[" "]"
     , ppVisible = xmobarColor myCyan ""
     , ppHidden = xmobarColor myCyan ""
-    , ppHiddenNoWindows = xmobarColor "#bbbbbb" ""
+    , ppHiddenNoWindows = xmobarColor myUnfocusColor ""
     , ppUrgent = xmobarColor myRed ""
     , ppSep = "  "
     , ppWsSep = " "
-    , ppTitle = xmobarColor "#bbbbbb" "" . shorten 40
+    , ppTitle = xmobarColor myUnfocusColor "" . shorten 40
     , ppLayout = xmobarColor myPurple "" . renameLayout
     }
   where
@@ -171,8 +171,8 @@ myPP =
 
 myStartupHook :: X ()
 myStartupHook = do
-  spawnOnce "st-theme auto"
-  spawnOnce "stylix-theme auto"
+  spawnOnce "st-theme"
+  spawnOnce "stylix-theme"
   spawnOnce "xsetroot -cursor_name left_ptr"
   spawnOnce "oxwm-autostart"
   spawnOnce myTrayer

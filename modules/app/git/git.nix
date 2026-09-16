@@ -7,7 +7,7 @@
   programs.lazygit.settings = {
     gui = {
       theme = {
-        lightTheme = true;
+        lightTheme = false;
         activeBorderColor = [
           "blue"
           "bold"

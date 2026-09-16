@@ -3,7 +3,7 @@ onboarding = false
 kitty_graphics = true
 
 [theme]
-name = "gruvbox"
+name = "catppuccin"
 auto_switch = false
 light_name = "catppuccin-latte"
 dark_name = "catppuccin"

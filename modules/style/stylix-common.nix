@@ -8,11 +8,12 @@
   themeDir = themesDir + "/${userSettings.theme}";
   themePath = themeDir + "/${userSettings.theme}.yaml";
   themePolarity = lib.removeSuffix "\n" (builtins.readFile (themeDir + "/polarity.txt"));
-  backgroundUrl = builtins.readFile (themeDir + "/backgroundurl.txt");
-  backgroundSha256 = builtins.readFile (themeDir + "/backgroundsha256.txt");
+  backgroundUrl = lib.removeSuffix "\n" (builtins.readFile (themeDir + "/backgroundurl.txt"));
+  backgroundSha256 = lib.removeSuffix "\n" (builtins.readFile (themeDir + "/backgroundsha256.txt"));
 in {
   home.file.".currenttheme".text = userSettings.theme;
 
+  stylix.enable = true;
   stylix.autoEnable = false;
   stylix.polarity = themePolarity;
   stylix.image = pkgs.fetchurl {
@@ -49,6 +50,7 @@ in {
 
   stylix.targets.kitty.enable = true;
   stylix.targets.gtk.enable = true;
+  stylix.targets.qt.enable = true;
   stylix.targets.rofi.enable = userSettings.wmType == "x11";
   stylix.targets.feh.enable = userSettings.wmType == "x11";
 

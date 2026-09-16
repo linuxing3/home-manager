@@ -14,10 +14,10 @@
       maim --select | xclip -selection clipboard -target image/png -in
     '';
   };
-  gruvbox = ../themes/gruvbox-dark-medium;
+  themeDir = ../themes + "/${userSettings.theme}";
   wallpaper = pkgs.fetchurl {
-    url = lib.removeSuffix "\n" (builtins.readFile (gruvbox + "/backgroundurl.txt"));
-    sha256 = lib.removeSuffix "\n" (builtins.readFile (gruvbox + "/backgroundsha256.txt"));
+    url = lib.removeSuffix "\n" (builtins.readFile (themeDir + "/backgroundurl.txt"));
+    sha256 = lib.removeSuffix "\n" (builtins.readFile (themeDir + "/backgroundsha256.txt"));
   };
 in {
   imports = [./greetd.nix];
@@ -25,8 +25,8 @@ in {
   stylix.enable = true;
   stylix.autoEnable = false;
   stylix.homeManagerIntegration.autoImport = false;
-  stylix.polarity = lib.removeSuffix "\n" (builtins.readFile (gruvbox + "/polarity.txt"));
-  stylix.base16Scheme = gruvbox + "/gruvbox-dark-medium.yaml";
+  stylix.polarity = lib.removeSuffix "\n" (builtins.readFile (themeDir + "/polarity.txt"));
+  stylix.base16Scheme = themeDir + "/${userSettings.theme}.yaml";
   stylix.image = wallpaper;
   stylix.fonts = {
     monospace = {
@@ -46,6 +46,12 @@ in {
       package = pkgs.noto-fonts-monochrome-emoji;
     };
   };
+  stylix.icons = {
+    enable = true;
+    package = pkgs.yaru-theme;
+    dark = "Yaru-purple";
+    light = "Yaru-purple";
+  };
   stylix.targets.gtk.enable = true;
   stylix.targets.grub.enable = true;
   stylix.targets.grub.useWallpaper = true;
@@ -59,6 +65,16 @@ in {
   ];
 
   programs.dconf.enable = true;
+  environment.etc = {
+    "chromium/policies/managed/omarchy-theme.json".text = builtins.toJSON {
+      BrowserColorScheme = "device";
+      BrowserThemeColor = "#0f0f0f";
+    };
+    "brave/policies/managed/omarchy-theme.json".text = builtins.toJSON {
+      BrowserColorScheme = "device";
+      BrowserThemeColor = "#0f0f0f";
+    };
+  };
   services.libinput.enable = true;
   services.libinput.mouse.leftHanded = true;
   services.libinput.touchpad.leftHanded = true;

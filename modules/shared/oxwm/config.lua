@@ -29,16 +29,16 @@ local terminal = "st"
 -- local colors = require("colors.lua") and make colors.lua a file
 -- in the ~/.config/oxwm directory
 local colors = {
-    fg = "#bbbbbb",
-    red = "#f7768e",
-    bg = "#1a1b26",
-    cyan = "#0db9d7",
-    green = "#9ece6a",
-    lavender = "#a9b1d6",
-    light_blue = "#7aa2f7",
-    grey = "#bbbbbb",
-    blue = "#6dade3",
-    purple = "#ad8ee6",
+    fg = "#cdd6f4",
+    red = "#f38ba8",
+    bg = "#010101",
+    cyan = "#94e2d5",
+    green = "#a6e3a1",
+    lavender = "#b4befe",
+    light_blue = "#89b4fa",
+    grey = "#6c7086",
+    blue = "#89b4fa",
+    purple = "#f5c2e7",
 }
 
 -- Workspace tags - can be numbers, names, or icons (requires a Nerd Font)
@@ -204,7 +204,7 @@ oxwm.bar.set_blocks(blocks)
 -- Parameters: foreground, background, border
 
 -- Unoccupied tags
-oxwm.bar.set_scheme_normal(colors.fg, colors.bg, "#444444")
+oxwm.bar.set_scheme_normal(colors.fg, colors.bg, colors.grey)
 -- Occupied tags
 oxwm.bar.set_scheme_occupied(colors.cyan, colors.bg, colors.cyan)
 -- Currently selected tag
@@ -370,6 +370,7 @@ oxwm.key.chord({
 -- oxwm-autostart ports DDE /etc/xdg/autostart session helpers and starts
 -- IME / sound / aTrust tray icons for the status-bar systray.
 oxwm.autostart("xrdb -merge ~/.Xdefaults")
-oxwm.autostart("st-theme auto")
+oxwm.autostart("st-theme")
 oxwm.autostart("xsetroot -cursor_name left_ptr")
+oxwm.autostart("sh ~/.fehbg-stylix")
 oxwm.autostart("oxwm-autostart")

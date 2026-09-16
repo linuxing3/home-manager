@@ -35,10 +35,9 @@ in {
       ];
 
       plugins = with pkgs.vimPlugins; [
-        auto-dark-mode-nvim
+        catppuccin-nvim
         gitsigns-nvim
         herdrNvim
-        lush-nvim
         mini-nvim
         nvim-highlight-colors
         nvim-lspconfig
@@ -50,7 +49,6 @@ in {
         todo-comments-nvim
         treesitter-modules-nvim
         zen-mode-nvim
-        zenbones-nvim
       ];
 
       initLua = builtins.readFile ./init.lua;

@@ -78,5 +78,10 @@ in {
     vlc
     mpv
     viu
+    appimage-run
+    stdenv.cc.cc.lib
+    gst_all_1.gstreamer
+    gst_all_1.gstreamer.out
+    gst_all_1.gst-plugins-base
   ];
 }

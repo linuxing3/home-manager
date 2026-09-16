@@ -1,91 +1,38 @@
 {
   lib,
   pkgs,
+  userSettings,
   ...
 }: let
-  lightTheme = pkgs.writeText "st-gruvbox-light.Xresources" ''
-    st.foreground: #3c3836
-    st.background: #fbf1c7
-    st.cursorColor: #3c3836
+  themeDir = ../../themes + "/${userSettings.theme}";
+  palette = import (themeDir + "/palette.nix");
+  color = name: "#${palette.${name}}";
 
-    st.color0:  #fbf1c7
-    st.color1:  #cc241d
-    st.color2:  #98971a
-    st.color3:  #d79921
-    st.color4:  #458588
-    st.color5:  #b16286
-    st.color6:  #689d6a
-    st.color7:  #7c6f64
-    st.color8:  #928374
-    st.color9:  #9d0006
-    st.color10: #79740e
-    st.color11: #b57614
-    st.color12: #076678
-    st.color13: #8f3f71
-    st.color14: #427b58
-    st.color15: #3c3836
-  '';
+  theme = pkgs.writeText "st-omarchy-catppuccin-dark.Xresources" ''
+    st.foreground: ${color "text"}
+    st.background: ${color "background"}
+    st.cursorColor: ${color "rosewater"}
 
-  darkTheme = pkgs.writeText "st-gruvbox-dark.Xresources" ''
-    st.foreground: #ebdbb2
-    st.background: #282828
-    st.cursorColor: #ebdbb2
-
-    st.color0:  #282828
-    st.color1:  #cc241d
-    st.color2:  #98971a
-    st.color3:  #d79921
-    st.color4:  #458588
-    st.color5:  #b16286
-    st.color6:  #689d6a
-    st.color7:  #a89984
-    st.color8:  #928374
-    st.color9:  #fb4934
-    st.color10: #b8bb26
-    st.color11: #fabd2f
-    st.color12: #83a598
-    st.color13: #d3869b
-    st.color14: #8ec07c
-    st.color15: #ebdbb2
+    st.color0:  ${color "surface1"}
+    st.color1:  ${color "red"}
+    st.color2:  ${color "green"}
+    st.color3:  ${color "yellow"}
+    st.color4:  ${color "blue"}
+    st.color5:  ${color "pink"}
+    st.color6:  ${color "teal"}
+    st.color7:  ${color "subtext1"}
+    st.color8:  ${color "surface2"}
+    st.color9:  ${color "red"}
+    st.color10: ${color "green"}
+    st.color11: ${color "yellow"}
+    st.color12: ${color "blue"}
+    st.color13: ${color "pink"}
+    st.color14: ${color "teal"}
+    st.color15: ${color "subtext0"}
   '';
 
   stTheme = pkgs.writeShellScriptBin "st-theme" ''
     set -euo pipefail
-
-    mode="''${1:-auto}"
-    if [[ "$mode" == "auto" ]]; then
-      hour="$(${pkgs.coreutils}/bin/date +%H)"
-      if ((10#$hour >= 7 && 10#$hour < 18)); then
-        mode="light"
-      else
-        mode="dark"
-      fi
-    fi
-
-    state_home="''${XDG_STATE_HOME:-$HOME/.local/state}"
-    state_file="$state_home/st-theme/current"
-
-    if [[ "$mode" == "status" ]]; then
-      if [[ -r "$state_file" ]]; then
-        ${pkgs.coreutils}/bin/cat "$state_file"
-      else
-        echo "unknown"
-      fi
-      exit 0
-    fi
-
-    case "$mode" in
-      light)
-        theme_file=${lightTheme}
-        ;;
-      dark)
-        theme_file=${darkTheme}
-        ;;
-      *)
-        echo "Usage: st-theme [auto|light|dark|status]" >&2
-        exit 2
-        ;;
-    esac
 
     export DISPLAY="''${DISPLAY:-:0}"
     export LC_ALL=C
@@ -93,9 +40,7 @@
       export XAUTHORITY="$HOME/.Xauthority"
     fi
 
-    ${pkgs.xrdb}/bin/xrdb -merge "$theme_file"
-    ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$state_file")"
-    printf '%s\n' "$mode" >"$state_file"
+    ${pkgs.xrdb}/bin/xrdb -merge ${theme}
 
     st_bin="$(${pkgs.coreutils}/bin/readlink -f ${pkgs.st-xyz}/bin/st)"
     for pid in $(${pkgs.procps}/bin/pgrep -x st || true); do
@@ -105,71 +50,35 @@
       fi
     done
 
-    echo "st theme: $mode"
+    echo "st theme: omarchy-catppuccin-dark"
   '';
 in {
   fonts.fontconfig.enable = true;
 
-  home.packages = [
-    stTheme
-    pkgs.nerd-fonts.jetbrains-mono
-  ];
+  home.packages = [stTheme pkgs.nerd-fonts.jetbrains-mono];
 
   home.file.".Xdefaults".text = ''
     st.font: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true
     st.fontalt0: JetBrainsMono Nerd Font:pixelsize=16:antialias=true:autohint=true
-    st.alpha: 1.0
+    st.alpha: 0.4
   '';
 
   home.file.".xsessionrc".text = ''
     ${pkgs.xrdb}/bin/xrdb -merge "$HOME/.Xdefaults"
-    ${stTheme}/bin/st-theme auto
+    ${stTheme}/bin/st-theme
   '';
 
-  xdg.configFile."st/gruvbox-light.Xresources".source = lightTheme;
-  xdg.configFile."st/gruvbox-dark.Xresources".source = darkTheme;
+  xdg.configFile."st/omarchy-catppuccin-dark.Xresources".source = theme;
 
-  xdg.configFile."autostart/st-theme-auto.desktop".text = ''
+  xdg.configFile."autostart/st-theme.desktop".text = ''
     [Desktop Entry]
     Type=Application
-    Name=st theme auto
-    Comment=Apply Gruvbox light/dark st colors by local hour
-    Exec=${stTheme}/bin/st-theme auto
+    Name=st Omarchy Catppuccin theme
+    Exec=${stTheme}/bin/st-theme
     X-GNOME-Autostart-enabled=true
   '';
 
-  home.activation.startStThemeAuto = lib.hm.dag.entryAfter ["reloadSystemd"] ''
-    run ${pkgs.systemd}/bin/systemctl --user start --no-block st-theme-auto.timer || true
-    run ${stTheme}/bin/st-theme auto || true
+  home.activation.applyStTheme = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    run ${stTheme}/bin/st-theme || true
   '';
-
-  systemd.user.services.st-theme-auto = {
-    Unit = {
-      Description = "Select the Gruvbox theme for st";
-      After = ["default.target"];
-    };
-
-    Service = {
-      Type = "oneshot";
-      ExecStart = "${stTheme}/bin/st-theme auto";
-      Environment = ["DISPLAY=:0"];
-    };
-
-    Install.WantedBy = ["default.target"];
-  };
-
-  systemd.user.timers.st-theme-auto = {
-    Unit.Description = "Switch the st Gruvbox theme by time";
-
-    Timer = {
-      OnCalendar = [
-        "*-*-* 07:00:00"
-        "*-*-* 18:00:00"
-      ];
-      Persistent = true;
-      Unit = "st-theme-auto.service";
-    };
-
-    Install.WantedBy = ["timers.target" "default.target"];
-  };
 }

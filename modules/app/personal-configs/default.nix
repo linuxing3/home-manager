@@ -49,6 +49,9 @@ in {
     '';
   };
 
+  home.file.".cursor/rules/application-source-layout.mdc".source =
+    files/cursor/application-source-layout.mdc;
+
   home.activation.mergeDesktopConfigs = lib.hm.dag.entryAfter ["writeBoundary"] ''
     set -eu
 

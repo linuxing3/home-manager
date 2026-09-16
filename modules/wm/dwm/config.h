@@ -12,11 +12,11 @@ static const int showbar            = 1;
 static const int topbar             = 1;
 static const char *fonts[]          = { "JetBrainsMono Nerd Font:style=Bold:size=10" };
 static const char dmenufont[]       = "JetBrainsMono Nerd Font:style=Bold:size=10";
-static const char col_fg[]          = "#bbbbbb";
-static const char col_bg[]          = "#1a1b26";
-static const char col_gray2[]       = "#444444";
-static const char col_cyan[]        = "#0db9d7";
-static const char col_blue[]        = "#6dade3";
+static const char col_fg[]          = "#cdd6f4";
+static const char col_bg[]          = "#010101";
+static const char col_gray2[]       = "#6c7086";
+static const char col_cyan[]        = "#94e2d5";
+static const char col_blue[]        = "#89b4fa";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_fg,    col_bg,    col_gray2 },

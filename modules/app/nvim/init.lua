@@ -39,21 +39,14 @@ end, { expr = true, desc = "Jump to next snippet stop" })
 
 vim.keymap.set("n", "<leader>fs", "1z=", { silent = true, desc = "Fix spelling under cursor" })
 
-vim.g.zenbones = {
-  solid_line_nr = true,
-  solid_vert_split = true,
-}
-vim.cmd.colorscheme("zenbones")
-
-require("auto-dark-mode").setup({
-  update_interval = 1000,
-  set_dark_mode = function()
-    vim.opt.background = "dark"
-  end,
-  set_light_mode = function()
-    vim.opt.background = "light"
-  end,
+require("catppuccin").setup({
+  flavour = "mocha",
+  transparent_background = true,
+  float = {
+    transparent = true,
+  },
 })
+vim.cmd.colorscheme("catppuccin")
 
 require("nvim-highlight-colors").setup({
   render = "virtual",

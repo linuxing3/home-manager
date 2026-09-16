@@ -64,10 +64,10 @@ if command -v xsetroot >/dev/null 2>&1; then
 fi
 
 if command -v st-theme >/dev/null 2>&1; then
-  st-theme auto >/dev/null 2>&1 || true
+  st-theme >/dev/null 2>&1 || true
 fi
 if command -v stylix-theme >/dev/null 2>&1; then
-  stylix-theme auto >/dev/null 2>&1 || true
+  stylix-theme >/dev/null 2>&1 || true
 fi
 if command -v oxwm-autostart >/dev/null 2>&1; then
   oxwm-autostart >/dev/null 2>&1 || true
@@ -78,7 +78,7 @@ dwm-status >/dev/null 2>&1 &
 
 pkill -x trayer >/dev/null 2>&1 || true
 trayer --edge top --align right --widthtype request --height 22 \
-  --transparent true --alpha 0 --tint 0x1a1b26 \
+  --transparent true --alpha 0 --tint 0x010101 \
   --SetDockType true --SetPartialStrut true --padding 4 \
   >/dev/null 2>&1 &
 

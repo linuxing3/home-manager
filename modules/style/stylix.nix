@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  inputs,
   userSettings,
   ...
 }: let
@@ -11,9 +10,6 @@
   };
 in
   lib.mkMerge [
-    {
-      imports = [inputs.stylix.homeManagerModules.stylix];
-    }
     (stylixCommon {
       fontSizes = {
         terminal = 18;
@@ -55,35 +51,5 @@ in
       };
 
       programs.feh.enable = true;
-
-      home.file = {
-        ".config/qt5ct/colors/oomox-current.conf".source = config.lib.stylix.colors {
-          template = builtins.readFile ./oomox-current.conf.mustache;
-          extension = ".conf";
-        };
-        ".config/Trolltech.conf".source = config.lib.stylix.colors {
-          template = builtins.readFile ./Trolltech.conf.mustache;
-          extension = ".conf";
-        };
-        ".config/kdeglobals".source = config.lib.stylix.colors {
-          template = builtins.readFile ./Trolltech.conf.mustache;
-          extension = "";
-        };
-        ".config/qt5ct/qt5ct.conf".text = pkgs.lib.mkBefore (builtins.readFile ./qt5ct.conf);
-      };
-
-      home.packages = with pkgs; [
-        libsForQt5.qt5ct
-        libsForQt5.breeze-qt5
-        libsForQt5.breeze-icons
-        noto-fonts-monochrome-emoji
-      ];
-
-      qt = {
-        enable = true;
-        style.package = pkgs.libsForQt5.breeze-qt5;
-        style.name = "breeze-dark";
-        platformTheme = "kde";
-      };
     }
   ]
