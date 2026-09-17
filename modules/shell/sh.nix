@@ -103,7 +103,6 @@ in {
     enableZshIntegration = true;
     enableBashIntegration = true;
     flags = [
-      "--disable-ctrl-r"
       "--disable-up-arrow"
     ];
   };
@@ -189,6 +188,9 @@ in {
     changeDirWidget.options = [
       "--preview 'eza --tree --color=always {} | head -200'"
     ];
+
+    # Let atuin own Ctrl+R for shell history
+    historyWidget.command = "";
 
     ## Theme
     defaultOptions = [

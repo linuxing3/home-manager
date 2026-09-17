@@ -1,13 +1,4 @@
-{
-  pkgs,
-  inputs,
-  ...
-}: let
-  system = pkgs.stdenv.hostPlatform.system;
-  # qmd = pkgs.callPackage ../pkgs/qmd.nix {
-  #   src = inputs.qmd.outPath;
-  # };
-in {
+{pkgs, ...}: {
   # Collection of useful CLI apps
   home.packages = with pkgs; [
     # dev
@@ -91,6 +82,11 @@ in {
 
     # file viewer
     pistol
+    doxx
+    xleak
+
+    # music player
+    cliamp
 
     # archive tool / viewer
     zip

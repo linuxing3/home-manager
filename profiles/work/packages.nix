@@ -71,6 +71,7 @@ in {
     chromium
     python3
     television
+    quickshell
     zathura
     imv
     sxiv

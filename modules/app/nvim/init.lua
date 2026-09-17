@@ -39,14 +39,39 @@ end, { expr = true, desc = "Jump to next snippet stop" })
 
 vim.keymap.set("n", "<leader>fs", "1z=", { silent = true, desc = "Fix spelling under cursor" })
 
-require("catppuccin").setup({
-  flavour = "mocha",
-  transparent_background = true,
-  float = {
-    transparent = true,
-  },
-})
-vim.cmd.colorscheme("catppuccin")
+-- Theme auto-switch: reads ~/.local/state/theme-mode and watches for changes
+local _theme_state_dir = os.getenv("XDG_STATE_HOME") or (os.getenv("HOME") .. "/.local/state")
+local _theme_state_file = _theme_state_dir .. "/theme-mode"
+
+local function _read_theme_mode()
+  local f = io.open(_theme_state_file, "r")
+  if not f then return "dark" end
+  local mode = (f:read("*l") or "dark"):gsub("%s+", "")
+  f:close()
+  return mode
+end
+
+local function _apply_theme(mode)
+  local is_light = mode == "light"
+  require("catppuccin").setup({
+    flavour = is_light and "latte" or "mocha",
+    transparent_background = not is_light,
+    float = { transparent = not is_light },
+  })
+  vim.cmd.colorscheme("catppuccin")
+  vim.opt.background = is_light and "light" or "dark"
+end
+
+_apply_theme(_read_theme_mode())
+
+local _theme_watcher = vim.uv.new_fs_event()
+if _theme_watcher then
+  _theme_watcher:start(_theme_state_dir, {}, vim.schedule_wrap(function(err, filename)
+    if not err and filename == "theme-mode" then
+      _apply_theme(_read_theme_mode())
+    end
+  end))
+end
 
 require("nvim-highlight-colors").setup({
   render = "virtual",

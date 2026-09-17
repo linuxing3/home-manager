@@ -76,6 +76,7 @@
       dwm-status
       dmenu
       trayer
+      feh
       procps
       xrdb
       xrandr
@@ -109,6 +110,9 @@
       xsetroot
       dbus
       systemd
+      feh
+      dmenu
+      trayer
       oxwm-autostart
     ];
     runtimeEnv = {

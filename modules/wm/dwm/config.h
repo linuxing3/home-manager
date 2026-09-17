@@ -76,6 +76,62 @@ cyclelayout(const Arg *arg)
 	setlayout(&((Arg) { .v = &layouts[i] }));
 }
 
+static void
+movestack(const Arg *arg)
+{
+	Client *c = NULL, *p = NULL, *pc = NULL, *i;
+
+	if (!selmon->sel || selmon->sel->isfloating ||
+	    !selmon->lt[selmon->sellt]->arrange)
+		return;
+
+	if (arg->i > 0) {
+		for (c = selmon->sel->next; c && (!ISVISIBLE(c) || c->isfloating); c = c->next);
+		if (!c)
+			for (c = selmon->clients; c && (!ISVISIBLE(c) || c->isfloating); c = c->next);
+	} else {
+		for (i = selmon->clients; i != selmon->sel; i = i->next)
+			if (ISVISIBLE(i) && !i->isfloating)
+				c = i;
+		if (!c)
+			for (; i; i = i->next)
+				if (ISVISIBLE(i) && !i->isfloating)
+					c = i;
+	}
+
+	for (i = selmon->clients; i && (!p || !pc); i = i->next) {
+		if (i->next == selmon->sel)
+			p = i;
+		if (i->next == c)
+			pc = i;
+	}
+
+	if (c && c != selmon->sel) {
+		Client *temp = selmon->sel->next == c ? selmon->sel : selmon->sel->next;
+		selmon->sel->next = c->next == selmon->sel ? c : c->next;
+		c->next = temp;
+
+		if (p && p != c)
+			p->next = c;
+		if (pc && pc != selmon->sel)
+			pc->next = selmon->sel;
+
+		if (selmon->sel == selmon->clients)
+			selmon->clients = c;
+		else if (c == selmon->clients)
+			selmon->clients = selmon->sel;
+
+		arrange(selmon);
+	}
+}
+
+static void
+togglefullscreen(const Arg *arg)
+{
+	if (selmon->sel)
+		setfullscreen(selmon->sel, !selmon->sel->isfullscreen);
+}
+
 /* key definitions */
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
@@ -95,6 +151,7 @@ static const char *hxcmd[]    = { "st", "-t", "hx", "-e", "hx", NULL };
 static const char *nnncmd[]   = { "st", "-t", "nnn", "-e", "nnn", NULL };
 static const char *scrotcmd[] = { "screenshot-to-clipboard", NULL };
 static const char *hxanycmd[] = { "hx-anywhere", NULL };
+static const char *themecmd[]   = { "theme-switch", "toggle", NULL };
 static const char *restartcmd[] = { "pkill", "-x", "dwm", NULL };
 static const char *imebtncmd[]  = { "fcitx5-configtool", NULL };
 static const char *volbtncmd[]  = { "pavucontrol", NULL };
@@ -111,7 +168,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_q,      killclient,     {0} },
 	{ MODKEY|ShiftMask,             XK_slash,  spawn,          SHCMD("st -t keybinds -e less \"$HOME/.config/dwm/keybinds.txt\"") },
 	{ MODKEY,                       XK_f,      togglefloating, {0} },
-	{ MODKEY|ShiftMask,             XK_f,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY|ShiftMask,             XK_f,      togglefullscreen, {0} },
 	{ MODKEY|ShiftMask,             XK_space,  cyclelayout,    {.i = +1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
@@ -121,8 +178,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
-	{ MODKEY|ShiftMask,             XK_j,      zoom,           {0} },
-	{ MODKEY|ShiftMask,             XK_k,      zoom,           {0} },
+	{ MODKEY|ShiftMask,             XK_j,      movestack,      {.i = +1 } },
+	{ MODKEY|ShiftMask,             XK_k,      movestack,      {.i = -1 } },
 	{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
 	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
@@ -130,6 +187,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
+	{ MODKEY,                       XK_F5,     spawn,          {.v = themecmd } },
 	{ MODKEY|ShiftMask,             XK_r,      spawn,          {.v = restartcmd } },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)

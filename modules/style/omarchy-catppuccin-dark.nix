@@ -42,7 +42,16 @@ in {
 
   programs.kitty = {
     enable = true;
-    extraConfig = "include ${kittyTheme}";
+    extraConfig = ''
+      include ${kittyTheme}
+
+      # Runtime theme file updated by theme-switch
+      include ~/.local/state/kitty-theme.conf
+
+      # Enable remote control for live theme-switching
+      allow_remote_control yes
+      listen_on unix:/tmp/kitty-sock-$PPID
+    '';
   };
 
   programs.fzf.defaultOptions = lib.mkForce [

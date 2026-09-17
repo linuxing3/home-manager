@@ -1,6 +1,7 @@
 {inputs}: final: prev: let
   packageOverlays = [
     (import ./packages/agent-browser.nix)
+    (import ./packages/cliamp.nix)
     (import ./packages/cli-proxy-api.nix)
     (import ./packages/lightpanda.nix)
     (import ./packages/dsh.nix)

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Install Doom Emacs"
+  short_description: "Doom Emacs via unstraightened + Cachix"
+  default_prompt: "Use $install-doom-emacs when installing or repairing marienz/nix-doom-emacs-unstraightened, enabling its Cachix cache, or resolving EXWM emacs package collisions."

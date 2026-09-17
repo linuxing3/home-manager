@@ -1,12 +1,14 @@
 .worktrees/
+
+# skills
 .baoyu-skills/
+
+# codex (with skills)
 .codex/**
 !.codex/skills/
 !.codex/skills/**
-.direnv/
 .superpowers/
-url-to-markdown/
-__pycache__/
+
 
 # Devenv
 .devenv*
@@ -14,7 +16,27 @@ devenv.local.nix
 devenv.local.yaml
 
 # direnv
-.direnv
+.direnv/
 
 # pre-commit
 .pre-commit-config.yaml
+
+
+# nix build result
+result/
+
+# agent share libraries
+.agents/
+
+# cursor configs
+.cursor/
+
+# rtk configs
+.rtk/
+
+# wrangler/cloudflare configs
+.wrangler/
+
+# misc
+url-to-markdown/
+__pycache__/

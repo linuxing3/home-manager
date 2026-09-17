@@ -16,7 +16,7 @@ _final: prev: {
           hash = "sha256-bwFjC6ZkZibkgXjoYVH2VuqqeXklGR9kmRl2fTitWBU=";
         };
 
-        cargoHash = lib.fakeHash;
+        cargoHash = "sha256-DNrg12MNqBcQi6yvoJObM1gtE90iGBCxeQ3RwueYCE4=";
 
         doCheck = false;
 

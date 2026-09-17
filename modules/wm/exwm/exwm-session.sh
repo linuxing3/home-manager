@@ -71,6 +71,18 @@ fi
 if command -v oxwm-autostart >/dev/null 2>&1; then
   oxwm-autostart >/dev/null 2>&1 || true
 fi
+if command -v theme-switch >/dev/null 2>&1; then
+  theme-switch auto >/dev/null 2>&1 || true
+fi
+if [[ -f ${HOME}/.fehbg-stylix ]]; then
+  sh "${HOME}/.fehbg-stylix" >/dev/null 2>&1 || true
+fi
+
+pkill -x trayer >/dev/null 2>&1 || true
+trayer --edge top --align right --widthtype request --height 22 \
+  --transparent true --alpha 0 --tint 0x010101 \
+  --SetDockType true --SetPartialStrut true --padding 4 \
+  >/dev/null 2>&1 &
 
 export EXWM_ENABLE=1
 if [[ -n "${EXWM_INIT_EL:-}" ]] && [[ -f "${EXWM_INIT_EL}" ]]; then

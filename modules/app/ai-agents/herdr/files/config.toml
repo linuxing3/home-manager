@@ -4,7 +4,7 @@ kitty_graphics = true
 
 [theme]
 name = "catppuccin"
-auto_switch = false
+auto_switch = true
 light_name = "catppuccin-latte"
 dark_name = "catppuccin"
 [session]

@@ -21,6 +21,9 @@
       xsetroot
       dbus
       systemd
+      feh
+      dmenu
+      trayer
       oxwm-autostart
     ];
     runtimeEnv = {
@@ -79,7 +82,8 @@
   };
 in {
   home.packages = [
-    emacsWithExwm
+    # Session wrappers already wrap emacsWithExwm; putting it on PATH collides
+    # with programs.doom-emacs (both ship bin/ctags).
     exwm-session
     exwm-nested
     pkgs.dmenu

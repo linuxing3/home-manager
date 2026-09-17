@@ -12,6 +12,7 @@ This repository defines a Nix flake with two layers: Home Manager (`homeConfigur
 - `modules/shared/oxwm/`: oxwm session scripts and wrappers used by both Home Manager and NixOS.
 - `overlays/packages/`: focused overrides for individual packages such as `nnn`, `st`, `rtk`, `pi-switch`, `cli-proxy-api`, and `dsh`.
 - `docs/ai-agents.md` and `docs/agent-tools.md`: agent module map and tool notes.
+- `docs/nnn-previews.md`, `docs/cliamp-quickshell.md`, `docs/ios-support.md`, and `docs/doom-emacs.md`: terminal preview, desktop tool, iOS, and Doom Emacs runbooks.
 - `flake.lock`: pinned dependency revisions; update it intentionally and review input changes.
 
 Keep reusable logic in the appropriate module rather than expanding `flake.nix` or `profiles/work/home.nix`. Home Manager modules stay under `modules/` (new ones may use `modules/home/`); NixOS modules stay under `nixos/`. Name new Nix files and directories with lowercase, descriptive, hyphenated names.

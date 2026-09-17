@@ -1,0 +1,4 @@
+interface:
+  display_name: "Install CLIamp and Quickshell"
+  short_description: "Maintain CLIamp and Quickshell packages"
+  default_prompt: "Use $install-cliamp-quickshell when installing or repairing CLIamp or Quickshell, including ARM64 binary patching, ALSA routing, optional media tools, or Qt/Nixpkgs compatibility."

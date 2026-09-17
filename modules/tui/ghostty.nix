@@ -1,10 +1,25 @@
-{ config, inputs, pkgs, lib, ... }:
+{ config, pkgs, lib, ... }:
 let
   cfg = config.my.features.home;
-  ghosttyBase = inputs.ghostty.packages.${pkgs.system}.default;
-  ghosttyWrapped = pkgs.symlinkJoin {
+  ghosttyWrapped = let
+    # Build a trimmed copy of the ghostty output that excludes share/terminfo
+    # to avoid conflicts with ncurses in the HM environment.
+    ghosttyTrimmed = pkgs.runCommand "ghostty-trimmed" {} ''
+      mkdir -p $out/bin $out/share
+      # Copy the binary so wrapProgram can modify it
+      cp ${pkgs.ghostty}/bin/ghostty $out/bin/ghostty
+      chmod +x $out/bin/ghostty
+      # Symlink non-terminfo share entries
+      for d in ${pkgs.ghostty}/share/*; do
+        name="$(basename "$d")"
+        if [ "$name" != "terminfo" ]; then
+          ln -s "$d" "$out/share/$name"
+        fi
+      done
+    '';
+  in pkgs.symlinkJoin {
     name = "ghostty-wrapped";
-    paths = [ ghosttyBase ];
+    paths = [ ghosttyTrimmed ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     meta.mainProgram = "ghostty";
     postBuild = ''
@@ -92,7 +107,7 @@ in
         "window-padding-x" = 2;
         "window-padding-y" = 0;
         "gtk-titlebar" = false;
-
+        "config-file" = "~/.local/state/ghostty-theme.conf";
       };
     };
 

@@ -37,7 +37,11 @@
 
   nixpkgs.hostPlatform = systemSettings.system;
   nixpkgs.config.allowUnfree = true;
-  nix.settings.experimental-features = ["nix-command" "flakes"];
+  nix.settings =
+    {
+      experimental-features = ["nix-command" "flakes"];
+    }
+    // (import ../nix/nix-config.nix);
   boot.supportedFilesystems = ["btrfs" "ext4" "vfat"];
 
   # Removable EFI on sda1 so UOS NVRAM on nvme0n1 stays the firmware default.
@@ -103,6 +107,9 @@
     settings.KbdInteractiveAuthentication = false;
   };
 
+  # Pair, transfer files, mount storage, and use USB tethering with iOS devices.
+  services.usbmuxd.enable = true;
+
   environment.systemPackages = with pkgs; [
     git
     vim
@@ -115,6 +122,8 @@
     btrfs-progs
     efibootmgr
     os-prober
+    libimobiledevice
+    ifuse
   ];
 
   system.stateVersion = "25.11";

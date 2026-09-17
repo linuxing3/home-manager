@@ -15,6 +15,8 @@
       "profiles/work/home.nix"
       "profiles/work/packages.nix"
       "modules/tui/nnn-plugins.nix"
+      "modules/tui/alacritty.nix"
+      "modules/app/doom-emacs"
       "modules/app/ai-agents"
       "overlays/packages/dsh.nix"
       "overlays/packages/agent-browser.nix"

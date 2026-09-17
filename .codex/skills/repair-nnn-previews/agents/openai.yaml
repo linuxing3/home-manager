@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repair nnn previews"
+  short_description: "Fix PDF and Office previews in nnn"
+  default_prompt: "Use $repair-nnn-previews when nnn cannot preview PDF, DOCX, XLSX, XLS, XLSM, or ODS files, or Home Manager reports collisions for nuke or preview-tabbed."

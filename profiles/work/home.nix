@@ -18,8 +18,10 @@
     ../../modules/app/secretspec-bitwarden
     ../../modules/tui/st-theme.nix
     ../../modules/tui/ghostty.nix
+    ../../modules/tui/alacritty.nix
     ../../modules/style/omarchy-catppuccin-dark.nix
     ../../modules/app/nvim/nvim.nix
+    ../../modules/app/doom-emacs
     ../../modules/app/hx-anywhere
     ../../modules/app/rclone
     ../../modules/app/browser/brave.nix
@@ -44,7 +46,9 @@
 
   my.features.home.nvim = true;
   my.features.home.ghostty = true;
+  my.features.home.alacritty = true;
   my.features.home.brave = true;
+  my.features.home.doomEmacs = true;
   my.ai.herdr.enable = true;
   my.ai.pi.enable = true;
   my.ai.agentlyMail.enable = true;

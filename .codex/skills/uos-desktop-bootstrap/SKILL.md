@@ -1,6 +1,6 @@
 ---
 name: uos-desktop-bootstrap
-description: Use when setting up or repairing this project’s UOS Desktop environment, especially Home Manager activation, Cachix Deploy cleanup, CLIProxyAPI user services, Cloudflare clients, sudo or APT privileges, DDE memory growth, AI browser tooling, nnn privileged editing, oxwm getty/startx autologin, Agenix, keyboard or terminal configuration, PulseAudio dummy sinks, Phytium ft-hda/ALC897 analog, keyd pthread_setschedparam, Xdefaults Nerd Fonts, devenv llm-agents.herdr, automation access, or NixOS-beside-UOS on /dev/sda. For NixOS oxwm getty 203/EXEC or a missing USB mouse, use repair-oxwm-getty-mouse. For the HP Color LaserJet Pro M252n / CUPS on sda-phytium, use configure-hp-m252n. For KeyVault packs uos-Designers / uos-system-recovery, SSH/GPG restore, or Nix store remote backup, use uos-nix-store-backup instead.
+description: Use when setting up or repairing this project’s UOS/NixOS desktop environment, especially Home Manager activation, nnn editing or previews, CLIamp, Quickshell, iPhone/iPad support, oxwm, Agenix, hardware, networking, AI tools, or NixOS-beside-UOS. Follow the related focused skills for implementation details.
 ---
 
 # UOS Desktop Bootstrap
@@ -15,7 +15,7 @@ Apply changes in this order and verify each boundary before continuing. Focused 
 | `import-atuin-env` | Atuin dotenv import and secret stripping |
 | `repair-ft-hda-analog` | No sound, PulseAudio `auto_null`, ALC897/`ft-hda` profile off |
 | `install-xdefaults-fonts` | `st`/`.Xdefaults` JetBrainsMono Nerd Font missing |
-| `repair-st-theme-auto` | `st` Gruvbox light/dark stuck; `st-theme-auto.timer` enabled but dead |
+| `repair-st-theme-auto` | System-wide Catppuccin light/dark stuck; `theme-auto.timer` enabled but dead |
 | `repair-devenv-herdr` | `herdr` missing from `use flake` / `packages.<system>.herdr` |
 | `repair-herdr-clipboard` | herdr copy logs success but X11 clipboard empty; `xclip` missing |
 | `repair-herdr-hx` | Herdr `prefix+m` does not open Helix; need `linuxing3/herdr-nvim --ref herdr-hx` |
@@ -23,6 +23,10 @@ Apply changes in this order and verify each boundary before continuing. Focused 
 | `install-nixos-beside-uos` | NixOS on sda4 beside UOS; nixos-install/GRUB; nspawn `--boot` EUNATCH |
 | `repair-oxwm-getty-mouse` | NixOS oxwm: getty tty1 autologin/startx, `/usr/bin/agetty` 203/EXEC, frozen/missing USB mouse |
 | `configure-hp-m252n` | NixOS CUPS USB queue for HP Color LaserJet Pro M252n (`03f0:3c2a`) |
+| `configure-ios-support` | NixOS iPhone/iPad pairing, `usbmuxd`, `libimobiledevice`, and `ifuse` |
+| `repair-nnn-previews` | nnn PDF/Office previews with wrapped Zathura, `doxx`, and `xleak` |
+| `install-cliamp-quickshell` | CLIamp binary/audio packaging and Quickshell release installation |
+| `install-doom-emacs` | Doom Emacs via `nix-doom-emacs-unstraightened` and its Cachix cache |
 | `uos-nix-store-backup` | KeyVault packs, SSH/GPG restore, or Nix store remote backup |
 
 Keyboard mapping is **REQUIRED SUB-SKILL:** `configure-caps-escape`. Analog audio is **REQUIRED SUB-SKILL:** `repair-ft-hda-analog`.
@@ -295,100 +299,5 @@ Inspect the generated unit and compare the new and active Home Manager
 generations before activation; the expected delta is the package, the unit,
 and its `default.target.wants` symlink.
 
-For a running manual instance, resolve the exact user-owned `cli-proxy-api`
-PID and port first, terminate only that PID with `SIGTERM`, then activate with
-`-b hm-bak`. If Home Manager says `User systemd daemon not running. Skipping
-reload.` while the user manager is actually reachable, run:
 
-```sh
-systemctl --user daemon-reload
-systemctl --user start cli-proxy-api.service
-```
-
-Require `is-enabled=enabled`, `is-active=active`, `Result=success`,
-`ExecMainStatus=0`, `NRestarts=0`, a systemd-owned main PID, and a listener on
-port `8317`. Check only post-start warning/error logs. Never print
-`config.yaml`, authentication files, or environment values. `UMask=0077`
-protects newly created files but does not repair existing permissions; inspect
-their modes separately and obtain authorization before changing them.
-
-## 17. Install shared AI skills
-
-Treat `~/.agents/skills` as the global source of truth for skills supported by
-the `skills` installer. Do not copy skill bodies or Git checkouts into this
-flake. Preserve project-local Codex skills in this repository's
-`.codex/skills/` and Codex system skills in the Codex installation that owns
-them; neither class should be replaced with a global link.
-
-Install the Baoyu suite globally for all supported agents:
-
-```sh
-/usr/bin/env PATH=/home/Designers/.nix-profile/bin:/usr/bin:/bin \
-  /home/Designers/.nix-profile/bin/npx --yes skills add \
-  jimliu/baoyu-skills -g --agent '*' -y
-```
-
-Install the CNB suite from its upstream Git source:
-
-```sh
-/usr/bin/env PATH=/home/Designers/.nix-profile/bin:/usr/bin:/bin \
-  /home/Designers/.nix-profile/bin/npx --yes skills add \
-  https://cnb.cool/cnb/skills/cnb-skill.git -g --agent '*' -y
-```
-
-Use the same global installer form for the AWS skill source published by AWS;
-first list the upstream package and review the discovered skill names, then
-install the reviewed set for all supported agents. Do not infer or pin a source
-from an existing copied directory when the lock manifest lacks provenance.
-
-Install `story-to-handdrawn-video` from its upstream repository rather than
-copying the checkout:
-
-```sh
-/usr/bin/env PATH=/home/Designers/.nix-profile/bin:/usr/bin:/bin \
-  /home/Designers/.nix-profile/bin/npx --yes skills add \
-  https://github.com/gnipbao/story-to-handdrawn-video.git \
-  -g --agent '*' -y
-```
-
-After installation, require all of the following:
-
-1. `~/.agents/.skill-lock.json` parses and contains the expected upstream
-   sources and skill names.
-2. `npx skills list -g --json` succeeds and every installed skill directory has
-   a readable `SKILL.md`.
-3. Every supported agent root resolves to the global skills without broken
-   links; use `find` to report broken links and require zero results. Do not use
-   a historical symlink count as a success condition.
-4. Project-local and Codex system skills still resolve from their owning
-   locations.
-5. Run the project or system `quick_validate.py` using a Python environment
-   that can import YAML against each changed or newly installed skill.
-
-Eve and PromptScript were previously observed not to support the global
-installer. Their absence is expected and must not be reported as a broken-link
-failure.
-
-## Acceptance checks
-
-- `agenix.service` completes successfully and the expected runtime secret exists with restrictive permissions.
-- `agent-env -- <approved-command>` succeeds; the parent shell has no secret variables afterward.
-- Atuin contains only reviewed non-secret variables.
-- `secretspec --version`, `infocmp st-256color`, and keyboard mapping checks pass.
-- The oxwm screenshot helper contains resolved `maim` and `xclip` runtime dependencies, and `Mod+S` copies a selected PNG to the X11 clipboard.
-- When getty/startx was requested, `getty@tty1` loads `getty@.service.d/autologin-startx.conf` with `--autologin Designers`, LightDM is masked, and reboot skips the username/password prompt on tty1.
-- On NixOS `sda-phytium`, getty uses the nix-store wrapper with `--autologin Designers` (not `/usr/bin/agetty`), startx runs on vt1, and `USB Optical Mouse` `05af:413a` is an xinput slave pointer on xHCI.
-- Any requested passwordless-sudo rule passes `visudo` and `sudo -n true`; otherwise no sudoers file is installed.
-- Cloudflare APT updates without an `eagle` repository error, and WARP has an ARM64 `buster` candidate.
-- Each requested Cloudflare client passes its own verification; package-only WARP installs are not reported as daemon setup.
-- Restarted DDE components own their expected D-Bus names, produce no new errors, and reduce measured private memory.
-- `AI_BROWSER` and `AGENT_BROWSER` resolve to Nix `agent-browser`, while `BROWSER` remains the graphical desktop browser.
-- The activated nnn mapping retains literal `"$nnn"`, launches the absolute Helix path through sudo, and returns to nnn after exit.
-- No stale Cachix Deploy outputs or user unit remain, while the focused Home Manager activation package still builds.
-- `cli-proxy-api.service` is enabled and active with zero restarts, owns port `8317`, uses the existing config without exposing it, and survives the manual-to-systemd handoff.
-- Alejandra and focused Home Manager evaluation pass; report full flake-check blockers separately from bootstrap failures.
-- `keyd.service` is enabled/active with no `pthread_setschedparam` error when Caps/Escape was requested.
-- PulseAudio default sink is analog `alsa_output.platform-PHYT0006_00.stereo-fallback` when audio was requested, not `auto_null`.
-- `fc-match 'JetBrainsMono Nerd Font'` returns the Nerd Font file when `.Xdefaults` names that family.
-- `st-theme-auto.timer` is active, `st-theme status` matches the local hour, and xrdb `st.background` is `#fbf1c7` by day or `#282828` after 18:00.
-- `nix develop --command command -v herdr` finds `packages.<system>.herdr`, not `inputs.llm-agents.herdr`.
+[Showing lines 1-300 of 305. Use :301 to continue]

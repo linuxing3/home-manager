@@ -1,6 +1,18 @@
 {
-  # files in current directory
-  # nixConfig = import ./nix/nix-config.nix;
+  nixConfig = {
+    extra-substituters = [
+      "https://cache.numtide.com"
+      "https://linuxing3-system-recovery.cachix.org"
+      "https://nix-community.cachix.org"
+      "https://doom-emacs-unstraightened.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      "linuxing3-system-recovery.cachix.org-1:PspTtTON4FR/Id+reL0/Bli8lvrU17yr/8OR1q9F67c="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "doom-emacs-unstraightened.cachix.org-1:O5oOlRPnmQEvVaFyuMTmthCEooHbrg54WgSLR07tmg4="
+    ];
+  };
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     home-manager = {
@@ -28,6 +40,11 @@
     deepin-kernel = {
       url = "github:deepin-community/kernel/linux-6.6.y";
       flake = false;
+    };
+    nix-doom-emacs-unstraightened = {
+      url = "github:marienz/nix-doom-emacs-unstraightened";
+      # Overlay and Home Manager module use host pkgs; skip unused nixpkgs.
+      inputs.nixpkgs.follows = "";
     };
   };
 

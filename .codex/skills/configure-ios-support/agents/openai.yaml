@@ -1,0 +1,4 @@
+interface:
+  display_name: "Configure iOS support"
+  short_description: "Pair and mount iPhones on NixOS"
+  default_prompt: "Use $configure-ios-support when enabling or repairing iPhone or iPad USB pairing, usbmuxd, libimobiledevice tools, ifuse mounts, trust prompts, or USB tethering on the NixOS host."
