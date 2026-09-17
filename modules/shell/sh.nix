@@ -21,6 +21,7 @@
     fetch = "disfetch";
     gitfetch = "onefetch";
     N = "sudo -E nnn -dH";
+    localsend = "localsend_app";
     ".." = "cd ..";
     "..." = "cd ../..";
   };
@@ -144,6 +145,9 @@ in {
 
       # Load my extra file when present
       [ -f ~/.config/zsh/extra/private.zsh ] && source ~/.config/zsh/extra/private.zsh
+
+      # Source runtime fzf theme (set by theme-switch)
+      [ -f "''${XDG_STATE_HOME:-$HOME/.local/state}/fzf-theme.sh" ] && source "''${XDG_STATE_HOME:-$HOME/.local/state}/fzf-theme.sh"
     '';
   };
 
@@ -157,6 +161,9 @@ in {
 
       # Load my extra file when present
       [ -f ~/.config/bash/extra/private.bash ] && source ~/.config/bash/extra/private.bash
+
+      # Source runtime fzf theme (set by theme-switch)
+      [ -f "''${XDG_STATE_HOME:-$HOME/.local/state}/fzf-theme.sh" ] && source "''${XDG_STATE_HOME:-$HOME/.local/state}/fzf-theme.sh"
 
     '';
   };
@@ -227,5 +234,10 @@ in {
       skim
       teehee
       watchexec
+
+      # omarchy ports
+      localsend
+      ttfx
+      omawrite
     ]);
 }

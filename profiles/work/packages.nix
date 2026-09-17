@@ -83,5 +83,15 @@ in {
     gst_all_1.gstreamer
     gst_all_1.gstreamer.out
     gst_all_1.gst-plugins-base
+
+    # Omarchy GUIs & Work Apps (#1 & #2)
+    omawrite
+    localsend
+    omacalc
+    nautilus
+    pinta
+    obsidian
+    aether
+    omacut
   ];
 }

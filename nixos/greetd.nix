@@ -1,4 +1,4 @@
-# greetd + tuigreet on tty1. Pick oxwm, xmonad, or dwm at login.
+# greetd + tuigreet on tty1. Pick oxwm, xmonad, dwm, or exwm at login.
 # Replaces getty autologin → startx. Serial getty on ttyAMA0 stays for recovery.
 # Do not define systemd.services."getty@tty1" (nixpkgs#429775).
 #
@@ -94,6 +94,35 @@
     session = dwm-session;
   };
 
+  emacsWithExwm = pkgs.emacs.pkgs.withPackages (epkgs: [
+    epkgs.exwm
+  ]);
+
+  exwm-session = pkgs.writeShellApplication {
+    name = "exwm-session";
+    runtimeInputs = with pkgs; [
+      emacsWithExwm
+      coreutils
+      procps
+      xrdb
+      xrandr
+      xsetroot
+      dbus
+      systemd
+      oxwm-autostart
+    ];
+    runtimeEnv = {
+      EXWM_INIT_EL = "${../modules/wm/exwm/exwm-init.el}";
+    };
+    text = builtins.readFile ../modules/wm/exwm/exwm-session.sh;
+  };
+
+  exwmDesktop = mkX11Desktop {
+    name = "exwm";
+    comment = "EXWM (Emacs X Window Manager, X11)";
+    session = exwm-session;
+  };
+
   sessionsRoot = config.services.displayManager.sessionData.desktops;
   xsessionWrapper = "${lib.getExe' pkgs.xinit "startx"} ${lib.getExe' pkgs.coreutils "env"}";
 
@@ -106,7 +135,7 @@
         --remember \
         --remember-session \
         --asterisks \
-        --greeting 'F3 selects oxwm / xmonad / dwm' \
+        --greeting 'F3 selects oxwm / xmonad / dwm / exwm' \
         --xsessions ${sessionsRoot}/share/xsessions \
         --xsession-wrapper ${lib.escapeShellArg xsessionWrapper}
     '';
@@ -123,6 +152,7 @@ in {
     oxwmDesktop
     xmonadDesktop
     dwmDesktop
+    exwmDesktop
   ];
 
   environment.systemPackages = [
@@ -131,5 +161,7 @@ in {
     pkgs.dwm
     xmonad-session
     dwm-session
+    emacsWithExwm
+    exwm-session
   ];
 }

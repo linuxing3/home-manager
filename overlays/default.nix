@@ -10,6 +10,11 @@
     (import ./packages/rtk.nix {inherit inputs;})
     (import ./packages/secretspec.nix {inherit inputs;})
     (import ./packages/st.nix {inherit inputs;})
+    (import ./packages/ttfx.nix)
+    (import ./packages/omawrite.nix)
+    (import ./packages/omacalc.nix)
+    (import ./packages/omacut.nix)
+    (import ./packages/aether.nix)
     (import ./packages/dwm.nix)
   ];
 in

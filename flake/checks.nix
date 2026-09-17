@@ -10,6 +10,7 @@
       "modules/shared/oxwm"
       "modules/wm/xmonad"
       "modules/wm/dwm"
+      "modules/wm/exwm"
       "overlays/packages/dwm.nix"
       "profiles/work/home.nix"
       "profiles/work/packages.nix"

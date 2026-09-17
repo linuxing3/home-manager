@@ -17,15 +17,19 @@
     ../../modules/app/credential-backup
     ../../modules/app/secretspec-bitwarden
     ../../modules/tui/st-theme.nix
+    ../../modules/tui/ghostty.nix
     ../../modules/style/omarchy-catppuccin-dark.nix
     ../../modules/app/nvim/nvim.nix
     ../../modules/app/hx-anywhere
     ../../modules/app/rclone
+    ../../modules/app/browser/brave.nix
+    ../../modules/app/mime.nix
     ../../modules/app/crabbox
     ../../modules/app/virtualization
     ../../modules/wm/oxwm/oxwm.nix
     ../../modules/wm/xmonad
     ../../modules/wm/dwm
+    ../../modules/wm/exwm
     ../../modules/hardware/ft-hda-audio.nix
     ./packages.nix
   ];
@@ -39,6 +43,8 @@
   '';
 
   my.features.home.nvim = true;
+  my.features.home.ghostty = true;
+  my.features.home.brave = true;
   my.ai.herdr.enable = true;
   my.ai.pi.enable = true;
   my.ai.agentlyMail.enable = true;
