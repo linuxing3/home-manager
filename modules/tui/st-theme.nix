@@ -247,9 +247,13 @@
           light) kitty_theme="${kittyLightTheme}" ;;
         esac
         for sock in /tmp/kitty-sock-*; do
-          [[ -S "$sock" ]] && ${pkgs.kitty}/bin/kitty @ --to "unix:$sock" set-colors "$kitty_theme" 2>/dev/null || true
+          [[ -S "$sock" ]] && ${pkgs.kitty}/bin/kitty @ --to "unix:$sock" set-colors "$kitty_theme" </dev/null 2>/dev/null || true
         done
-        ${pkgs.kitty}/bin/kitty @ set-colors --all "$kitty_theme" 2>/dev/null || true
+        # Bare kitty @ probes stdin as a kitty tty. Under startx -keeptty that
+        # is the VT and SIGTTIN stops theme-switch, so dwm never starts.
+        if [[ -n "''${KITTY_PID-}" ]]; then
+          ${pkgs.kitty}/bin/kitty @ set-colors --all "$kitty_theme" </dev/null 2>/dev/null || true
+        fi
       fi
       kitty_conf="''${XDG_STATE_HOME:-$HOME/.local/state}/kitty-theme.conf"
       case "$mode" in

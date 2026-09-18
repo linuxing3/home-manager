@@ -5,6 +5,10 @@
 # X11-only: tuigreet --sessions is Wayland. X11 sessions are wrapped with
 # `startx env <Exec>`. Exec must be the WM session script, not another startx,
 # or ~/.xinitrc (oxwm) always wins.
+#
+# startx from a VT adds `-keeptty`. The session is then a background pgrp;
+# any tty stdin read (theme-switch → kitty @) SIGTTIN-stops the script and
+# X stays black with no WM. Session scripts `exec </dev/null` first.
 {
   lib,
   pkgs,
@@ -33,6 +37,7 @@
       dbus
       systemd
       ncurses
+      kbd
       oxwm-autostart
     ];
     text = builtins.readFile ../modules/wm/xmonad/xmonad-session.sh;
@@ -84,6 +89,7 @@
       dbus
       systemd
       ncurses
+      kbd
       oxwm-autostart
     ];
     text = builtins.readFile ../modules/wm/dwm/dwm-session.sh;
@@ -97,12 +103,14 @@
 
   emacsWithExwm = pkgs.emacs.pkgs.withPackages (epkgs: [
     epkgs.exwm
+    epkgs.doom-themes
   ]);
 
   exwm-session = pkgs.writeShellApplication {
     name = "exwm-session";
     runtimeInputs = with pkgs; [
       emacsWithExwm
+      st
       coreutils
       procps
       xrdb
@@ -110,6 +118,8 @@
       xsetroot
       dbus
       systemd
+      ncurses
+      kbd
       feh
       dmenu
       trayer
@@ -128,6 +138,9 @@
   };
 
   sessionsRoot = config.services.displayManager.sessionData.desktops;
+  # Client is `env <session>`. Session scripts must drop tty stdin
+  # (`exec </dev/null`): startx adds -keeptty, kitty @ SIGTTIN-stops bash,
+  # dwm never starts (black screen, no bar/keybinds).
   xsessionWrapper = "${lib.getExe' pkgs.xinit "startx"} ${lib.getExe' pkgs.coreutils "env"}";
 
   tuigreet-greeter = pkgs.writeShellApplication {

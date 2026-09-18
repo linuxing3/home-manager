@@ -30,10 +30,11 @@
     LC_TIME = systemSettings.locale;
   };
 
-  # Kernel default at 1920x1080 is 8x16. Spleen 32x64 is 4x the pixel area of Terminus ter-v32n (16x32).
+  # Kernel default at 1920x1080 is 8x16. Glenfly arisedrmfb rejects 32x64
+  # (KDFONTOP EINVAL). spleen-16x32 is the largest spleen font that loads.
   console.earlySetup = true;
   console.packages = [pkgs.spleen];
-  console.font = "spleen-32x64.psfu";
+  console.font = "spleen-16x32.psfu";
 
   nixpkgs.hostPlatform = systemSettings.system;
   nixpkgs.config.allowUnfree = true;

@@ -1,5 +1,10 @@
 # startx / LightDM / xsessions entrypoint for oxwm on NixOS (and UOS + HM).
 
+# startx -keeptty: client is a background pgrp on the VT. A tty stdin
+# SIGTTIN-stops bash → black X, no WM.
+exec </dev/null
+trap '' TSTP TTIN TTOU
+
 # Prefer HM / NixOS tools; keep UOS /usr/bin last for dual-boot.
 export PATH="${HOME}/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/run/wrappers/bin:/run/current-system/sw/bin:/etc/profiles/per-user/${USER:-$(id -un)}/bin:/usr/bin:/bin:${PATH:-}"
 

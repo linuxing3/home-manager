@@ -1,5 +1,10 @@
 # dwm session for greetd / startx. Autostart matches oxwm (IME, tray, theme).
 
+# startx -keeptty: this client is a background pgrp on the VT. A tty stdin
+# SIGTTIN-stops bash (theme-switch → kitty @) → black X, no bar/keybinds.
+exec </dev/null
+trap '' TSTP TTIN TTOU
+
 # writeShellApplication puts the closure's dwm and helpers first. Keep them
 # ahead of Home Manager so greetd cannot accidentally launch a stale profile
 # binary, while still exposing the user's applications to dwm keybindings.
@@ -31,6 +36,10 @@ unset NIXOS_OZONE_WL
 export XDG_SESSION_TYPE=x11
 export XDG_SESSION_DESKTOP=dwm
 export XDG_CURRENT_DESKTOP=dwm
+
+# HDMI may still be on tty2 (getty/startx failed, serial/Cursor login).
+# X on vt1 is paused until this VT is foreground.
+sudo -n chvt 1 >/dev/null 2>&1 || true
 
 if command -v systemctl >/dev/null 2>&1; then
   systemctl --user unset-environment WAYLAND_DISPLAY NIXOS_OZONE_WL \

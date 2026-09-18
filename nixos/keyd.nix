@@ -88,6 +88,12 @@ in {
         leftshift = "capslock";
         rightshift = "capslock";
       };
+      # Left Ctrl is C-b, so use Caps-hold or Right Ctrl with Alt+Fn.
+      "control+alt" = {
+        f1 = "command(${lib.getExe' pkgs.kbd "chvt"} 1)";
+        f2 = "command(${lib.getExe' pkgs.kbd "chvt"} 2)";
+        f3 = "command(${lib.getExe' pkgs.kbd "chvt"} 3)";
+      };
     };
   };
 

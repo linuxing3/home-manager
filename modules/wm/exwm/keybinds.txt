@@ -1,6 +1,9 @@
 EXWM (Emacs X Window Manager) — Super is Mod4 (s-)
 
   Super+Return          terminal (st)
+  Super+T               terminal (st)
+  Super+F               fill screen
+  Super+Shift+T         reload doom theme from theme-mode
   Super+D               dmenu_run -l 10
   Super+G               brave
   Super+E               st -t hx -e hx
@@ -9,7 +12,12 @@ EXWM (Emacs X Window Manager) — Super is Mod4 (s-)
   Super+W               exwm-workspace-switch
   Super+I               toggle line-mode / char-mode
   Super+R               run shell command
-  Super+0..9            switch / create workspace
+  Super+1..9            workspace 1..9 (oxwm icons on the top bar)
+  Super+0               workspace 1
+  Click tag on bar      switch workspace
   Control+q             send next key to X window directly
+
+Top bar is oxwm-style: nerd-font tag icons + numbers on the left,
+clock on the right, trayer (IME / sound) in the system-tray slot.
 
 Pick EXWM in greetd (F3) / LightDM, or run exwm-nested / exwm-session.

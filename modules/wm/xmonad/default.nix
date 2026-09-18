@@ -25,6 +25,7 @@
       xrandr
       xsetroot
       ncurses
+      kbd
       dbus
       systemd
       oxwm-autostart

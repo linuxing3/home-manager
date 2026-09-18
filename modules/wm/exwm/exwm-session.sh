@@ -1,6 +1,13 @@
 # exwm session for greetd / startx. Autostart matches oxwm (IME, tray, theme).
 
-export PATH="${HOME}/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/run/wrappers/bin:/run/current-system/sw/bin:/etc/profiles/per-user/${USER:-$(id -un)}/bin:/usr/bin:/bin:${PATH:-}"
+# startx -keeptty: client is a background pgrp on the VT. A tty stdin
+# SIGTTIN-stops bash (theme-switch → kitty @) → black X, no WM.
+exec </dev/null
+trap '' TSTP TTIN TTOU
+
+# writeShellApplication puts emacsWithExwm/st/dmenu first. Keep them ahead of
+# Home Manager: ~/.nix-profile/bin/emacs is Doom and has no EXWM.
+export PATH="${PATH:-}:${HOME}/.nix-profile/bin:/etc/profiles/per-user/${USER:-$(id -un)}/bin:/nix/var/nix/profiles/default/bin:/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
 
 if [[ -f ${HOME}/.nix-profile/etc/profile.d/hm-session-vars.sh ]]; then
   # shellcheck disable=SC1091
@@ -62,6 +69,9 @@ if command -v xsetroot >/dev/null 2>&1; then
   xsetroot -cursor_name left_ptr || true
 fi
 
+# HDMI may still be on tty2. X on vt1 is paused until this VT is foreground.
+sudo -n chvt 1 >/dev/null 2>&1 || true
+
 if command -v st-theme >/dev/null 2>&1; then
   st-theme >/dev/null 2>&1 || true
 fi
@@ -85,10 +95,12 @@ trayer --edge top --align right --widthtype request --height 22 \
   >/dev/null 2>&1 &
 
 export EXWM_ENABLE=1
+# -q: skip Doom/user init. --fullscreen: workspace frames fill HDMI.
+# EXWM 0.34 is exwm-wm-mode; keys live in EXWM_INIT_EL.
 if [[ -n "${EXWM_INIT_EL:-}" ]] && [[ -f "${EXWM_INIT_EL}" ]]; then
-  exec emacs -l "${EXWM_INIT_EL}"
+  exec emacs -q --no-splash --fullscreen -l "${EXWM_INIT_EL}"
 elif [[ -f "${HOME}/.config/exwm/exwm-init.el" ]]; then
-  exec emacs -l "${HOME}/.config/exwm/exwm-init.el"
+  exec emacs -q --no-splash --fullscreen -l "${HOME}/.config/exwm/exwm-init.el"
 else
-  exec emacs --eval "(progn (require 'exwm) (if (fboundp 'exwm-enable) (exwm-enable) (when (fboundp 'exwm-wm-mode) (exwm-wm-mode 1))))"
+  exec emacs -q --no-splash --fullscreen --eval "(progn (require 'exwm) (if (fboundp 'exwm-wm-mode) (exwm-wm-mode 1) (exwm-enable)))"
 fi

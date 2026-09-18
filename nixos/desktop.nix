@@ -92,19 +92,49 @@ in {
   services.xserver.autorun = false;
   services.xserver.displayManager.startx.enable = true;
   services.xserver.displayManager.lightdm.enable = false;
-  # Ctrl+Alt+Fn leaving vt1 pauses X via logind; pointer/keyboard then float
-  # and oxwm looks frozen (mouse "not working" on a still-visible framebuffer).
-  services.xserver.serverFlagsSection = ''
-    Option "DontVTSwitch" "on"
-  '';
+  # Extra gettys on tty2/tty3. Caps-hold (Control) + Alt + F2/F3; F1 returns
+  # to X on tty1. Left Ctrl is tmux C-b (keyd). Do not set DontVTSwitch — X
+  # must release the VT. If HDMI still shows oxwm with a dead pointer, you
+  # are on a text VT; chvt 1.
   # evdev catchalls fight libinput (add then immediately "device removed").
   environment.etc."X11/xorg.conf.d/10-evdev.conf".text = lib.mkForce ''
     # Disabled: xf86-input-libinput owns all XI devices.
   '';
 
-  # Autologin tty1 when greetd is off. Do not define systemd.services."getty@tty1"
+  # Autologin tty1 when greetd is off. Do not define systemd.services."getty@ttyN"
   # (nixpkgs#429775, 203/EXEC). greetd.nix takes tty1 and the session list.
   services.getty.autologinUser = lib.mkIf (!config.services.greetd.enable) userSettings.username;
+
+  # Two extra login consoles. Instantiate the NixOS getty@ template via
+  # Wants= — never a concrete getty@ttyN unit (that drops the wrapper).
+  systemd.targets.getty.wants = [
+    "getty@tty2.service"
+    "getty@tty3.service"
+  ];
+  services.logind.settings.Login.NAutoVTs = 3;
+
+  # vconsole-setup applies tty1 first; DRM/X there can skip remaining VTs,
+  # and getty TTYVTDisallocate resets the font. Re-apply after extra gettys.
+  systemd.services.console-font-extra-vts = {
+    description = "Load spleen-16x32 on extra gettys";
+    after = [
+      "getty@tty2.service"
+      "getty@tty3.service"
+      "systemd-vconsole-setup.service"
+    ];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "console-font-extra-vts" ''
+        set -eu
+        font=${pkgs.spleen}/share/consolefonts/spleen-16x32.psfu
+        for t in /dev/tty2 /dev/tty3; do
+          ${lib.getExe' pkgs.kbd "setfont"} -C "$t" "$font" || true
+        done
+      '';
+    };
+  };
 
   # NixOS /etc/profile does not source /etc/profile.d; hook login shells.
   # Match this login's VT/tty only — never /sys/class/tty/tty0/active

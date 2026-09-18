@@ -8,12 +8,14 @@
 
   emacsWithExwm = pkgs.emacs.pkgs.withPackages (epkgs: [
     epkgs.exwm
+    epkgs.doom-themes
   ]);
 
   exwm-session = pkgs.writeShellApplication {
     name = "exwm-session";
     runtimeInputs = with pkgs; [
       emacsWithExwm
+      st
       coreutils
       procps
       xrdb
@@ -21,6 +23,8 @@
       xsetroot
       dbus
       systemd
+      ncurses
+      kbd
       feh
       dmenu
       trayer
