@@ -9,10 +9,9 @@
       window-resize-pixelwise t
       frame-inhibit-implied-resize t)
 
+;; fullboth covers override-redirect dmenu/trayer. Fill via geometry only.
 (setq default-frame-alist
-      '((fullscreen . fullboth)
-        (fullscreen-restore . fullboth)
-        (undecorated . t)
+      '((undecorated . t)
         (tool-bar-lines . 0)
         (menu-bar-lines . 0)
         (tab-bar-lines . 1)
@@ -26,7 +25,7 @@
 (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 (when (fboundp 'set-frame-parameter)
   (dolist (f (frame-list))
-    (set-frame-parameter f 'fullscreen 'fullboth)
+    (set-frame-parameter f 'fullscreen nil)
     (set-frame-parameter f 'tab-bar-lines 1)))
 
 (defun my/exwm-run (name command)
@@ -37,8 +36,39 @@
   (let ((st (or (executable-find "st") "st")))
     (start-process "st" nil st)))
 
+(defun my/exwm-run-dmenu ()
+  "Launch dmenu_run like oxwm Super+D.
+dmenu dies if it cannot grab the keyboard while Super is still held.
+Retry after EXWM drops the grab so the prompt actually appears."
+  (interactive)
+  (let* ((dmenu (or (executable-find "dmenu_run") "dmenu_run"))
+         (font "JetBrainsMono Nerd Font:style=Bold:size=10")
+         (args (mapconcat #'identity
+                          (list "-l" "10" "-m" "0"
+                                "-fn" (shell-quote-argument font)
+                                "-nb" "#010101" "-nf" "#cdd6f4"
+                                "-sb" "#89b4fa" "-sf" "#010101")
+                          " "))
+         (dir (expand-file-name
+               "exwm"
+               (or (getenv "XDG_STATE_HOME")
+                   (expand-file-name ".local/state" (getenv "HOME")))))
+         (log (expand-file-name "dmenu.log" dir))
+         (cmd (format
+               "for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do %s %s && break; sleep 0.08; done"
+               (shell-quote-argument dmenu)
+               args)))
+    (make-directory dir t)
+    (run-at-time
+     0.05 nil
+     (lambda ()
+       (start-process-shell-command
+        "dmenu" nil
+        (format "%s 2>>%s" cmd (shell-quote-argument log)))))))
+
 (defun my/exwm-fill-screen ()
-  "Make every EXWM workspace frame fill the current monitor."
+  "Make every EXWM workspace frame fill the current monitor.
+Avoid fullboth: that layer hides dmenu (override-redirect)."
   (interactive)
   (when (display-graphic-p)
     (let* ((attrs (car (display-monitor-attributes-list)))
@@ -49,10 +79,19 @@
            (w (nth 2 geom))
            (h (nth 3 geom)))
       (dolist (f (frame-list))
-        (set-frame-parameter f 'fullscreen 'fullboth)
+        (set-frame-parameter f 'fullscreen nil)
         (set-frame-parameter f 'tab-bar-lines 1)
         (set-frame-position f x y)
         (set-frame-size f w h t)))))
+
+(defun my/exwm-quit ()
+  "Exit Emacs (the WM) so startx ends and greetd returns.
+Matches oxwm/dwm Super+Shift+Q. No save prompts."
+  (interactive)
+  (setq confirm-kill-emacs nil
+        confirm-kill-processes nil)
+  (let (kill-emacs-query-functions)
+    (kill-emacs 0)))
 
 ;; Same nerd-font tag icons as oxwm / dwm (Super+1..9).
 (defconst my/exwm-tag-icons
@@ -234,11 +273,17 @@ EXWM starts emacs -q (no Doom). Theme must be loaded here."
           ([s-return] . my/exwm-run-st)
           (,(kbd "s-<return>") . my/exwm-run-st)
           ([?\s-t] . my/exwm-run-st)
-          ([?\s-d] . (lambda () (interactive) (my/exwm-run "dmenu" "dmenu_run -l 10")))
+          ([?\s-d] . my/exwm-run-dmenu)
+          ([s-d] . my/exwm-run-dmenu)
+          (,(kbd "s-d") . my/exwm-run-dmenu)
+          ([?\s-D] . my/exwm-run-dmenu)
           ([?\s-g] . (lambda () (interactive) (my/exwm-run "brave" "brave")))
           ([?\s-e] . (lambda () (interactive) (my/exwm-run "editor" "st -t hx -e hx")))
           ([?\s-N] . (lambda () (interactive) (my/exwm-run "nnn" "st -e nnn")))
           ([?\s-q] . (lambda () (interactive) (if (derived-mode-p 'exwm-mode) (kill-buffer (current-buffer)) (kill-buffer))))
+          ([?\s-Q] . my/exwm-quit)
+          (,(kbd "s-Q") . my/exwm-quit)
+          ([s-S-q] . my/exwm-quit)
           ([?\s-w] . exwm-workspace-switch)
           ([?\s-i] . exwm-input-toggle-keyboard)
           ([?\s-f] . my/exwm-fill-screen)
@@ -266,4 +311,10 @@ EXWM starts emacs -q (no Doom). Theme must be loaded here."
   (if (fboundp 'exwm-wm-mode)
       (exwm-wm-mode 1)
     (when (fboundp 'exwm-enable)
-      (exwm-enable))))
+      (exwm-enable)))
+  (when (fboundp 'exwm-input-set-key)
+    (exwm-input-set-key (kbd "s-d") #'my/exwm-run-dmenu)
+    (exwm-input-set-key (kbd "s-D") #'my/exwm-run-dmenu)
+    (exwm-input-set-key (kbd "s-Q") #'my/exwm-quit)))
+
+

@@ -12,4 +12,7 @@ let
 in {
   "api-keys-new.age" = attrs;
   "cloudflared-office-token.age" = attrs;
+  "mail-gmail-overlabor77-pass.age" = attrs;
+  "mail-gmail-xingwenju-pass.age" = attrs;
+  "mail-qq-pass.age" = attrs;
 }

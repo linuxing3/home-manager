@@ -131,6 +131,7 @@
 
     # mp4
     smplayer
+    ffmpeg
     ffmpegthumbnailer
     mediainfo
     exiftool
@@ -161,6 +162,9 @@
     # Lightpanda + agent browser (native CLIs)
     lightpanda
     agent-browser
+
+    # muse.ai personal agent CLI
+    muse-cli
 
     # NotebookLM unofficial CLI/API
     # notebooklm-py

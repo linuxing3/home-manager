@@ -224,7 +224,10 @@ file:///share/recovery/nix-cache
 ### 7.2 Cachix 操作要点（2026-08-13 实测）
 
 1. 缓存名以公开 HTTP/API 为准；本机历史缓存是 `linuxing3`，恢复专用缓存是
-   `linuxing3-system-recovery`。勿把笔误名（如 `nuxing3`）当成目标。
+   `linuxing3-system-recovery`，Phytium/Deepin 内核专用缓存是
+   `linuxing3-phytium-kernel`
+   （公钥 `linuxing3-phytium-kernel.cachix.org-1:/CNFISdgF74/Y+BGBy06VRB6VY5Zj4RBQGymO6nbH4s=`）。
+   勿把笔误名（如 `nuxing3`）当成目标。
 2. 客户端签名缓存同时需要写入令牌与配对签名私钥。令牌从 Bitwarden 注入子
    进程，终端不回显；用完删除 `$XDG_RUNTIME_DIR` 临时文件并清空剪贴板。
 3. `CACHIX_SIGNING_KEY` 只接受冒号后的 **Base64 私钥材料**。传入完整 Nix

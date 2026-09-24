@@ -7,7 +7,10 @@
 }: let
   cfg = config.my.features.home;
 in {
-  imports = [inputs.nix-doom-emacs-unstraightened.homeModule];
+  imports = [
+    inputs.nix-doom-emacs-unstraightened.homeModule
+    ./gmail.nix
+  ];
 
   options.my.features.home.doomEmacs =
     lib.mkEnableOption "Doom Emacs via nix-doom-emacs-unstraightened";

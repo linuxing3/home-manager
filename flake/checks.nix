@@ -21,6 +21,8 @@
       "overlays/packages/dsh.nix"
       "overlays/packages/agent-browser.nix"
       "overlays/packages/lightpanda.nix"
+      "overlays/packages/muse-cli.nix"
+      "modules/pkgs/muse-cli.nix"
       "modules/app/virtualization/default.nix"
       "modules/app/credential-backup/default.nix"
       "modules/app/crabbox/default.nix"

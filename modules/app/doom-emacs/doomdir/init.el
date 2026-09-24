@@ -32,5 +32,8 @@
        :tools
        (lsp +eglot)
 
+       :email
+       gnus
+
        :config
        (default +bindings +smartparens))

@@ -18,5 +18,6 @@
     ./orca.nix
     ./cursor-to-openai.nix
     ./dsh.nix
+    ./webcodex.nix
   ];
 }

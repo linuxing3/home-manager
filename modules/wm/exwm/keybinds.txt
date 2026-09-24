@@ -4,11 +4,12 @@ EXWM (Emacs X Window Manager) — Super is Mod4 (s-)
   Super+T               terminal (st)
   Super+F               fill screen
   Super+Shift+T         reload doom theme from theme-mode
-  Super+D               dmenu_run -l 10
+  Super+D               dmenu (run prompt, top of screen)
   Super+G               brave
   Super+E               st -t hx -e hx
   Super+Shift+N         nnn
   Super+Q               kill buffer / close X window
+  Super+Shift+Q         quit EXWM (back to greetd)
   Super+W               exwm-workspace-switch
   Super+I               toggle line-mode / char-mode
   Super+R               run shell command

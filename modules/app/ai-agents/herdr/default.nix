@@ -75,6 +75,17 @@ in {
         ${ai.activationPreamble}
         export PATH=${lib.makeBinPath ([cfg.package] ++ pluginBuildInputs)}:$PATH
         export CARGO_HOME=${lib.escapeShellArg "${config.xdg.cacheHome}/herdr-plugin-cargo"}
+        # Plugin CLI talks to the live server over this socket. After a Herdr
+        # upgrade the new client may refuse an older server (protocol_mismatch);
+        # stop that server so the new binary can take over. Stopping exits panes.
+        export HERDR_SOCKET_PATH=${lib.escapeShellArg "${config.xdg.configHome}/herdr/herdr.sock"}
+        if [[ -S "$HERDR_SOCKET_PATH" ]]; then
+          list_err=$(${cfg.package}/bin/herdr plugin list --json 2>&1 >/dev/null) || true
+          if grep -q protocol_mismatch <<<"$list_err"; then
+            echo "herdr: stopping protocol-mismatched server before plugin sync" >&2
+            run ${cfg.package}/bin/herdr server stop || true
+          fi
+        fi
         run ${herdrPluginSync}/bin/herdr-plugin-sync
       ''
     );

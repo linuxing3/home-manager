@@ -117,64 +117,82 @@ let
   };
 
   braveKeybindingsData = {
-    managed_at = "2026-09-17";
-    description = "Declarative keyboard shortcuts and keybindings for Brave Browser";
+    managed_at = "2026-09-19";
+    description = "Brave shortcuts aligned to Herdr: tab=tab, history=history, window=window, pane=split, group=workspace";
+    herdr_alignment = {
+      source = "modules/app/ai-agents/herdr/files/config.toml [keys]";
+      mapping = {
+        tab = "Brave tab";
+        history = "Brave back/forward + History page";
+        window = "Brave browser window";
+        pane = "Brave split view tile";
+        group = "Brave tab group (= Herdr workspace)";
+      };
+    };
 
     # Custom accelerator keybindings that differ from default Chromium/Brave shortcuts
     customized_accelerators = [
       {
         command_id = 34014;
         command_name = "IDC_NEW_TAB";
-        category = "Tab Management";
-        description = "Open new tab";
-        keys = [ "AppNew" "Control+Shift+KeyT" ];
+        category = "Tab (= Herdr tab)";
+        description = "Open new tab (Herdr new_tab)";
+        keys = [ "AppNew" "Alt+Shift+KeyT" ];
         default_keys = [ "AppNew" "Control+KeyT" ];
       }
       {
         command_id = 34015;
         command_name = "IDC_CLOSE_TAB";
-        category = "Tab Management";
-        description = "Close active tab";
-        keys = [ "AppClose" "Control+Shift+Backspace" ];
+        category = "Tab (= Herdr tab)";
+        description = "Close active tab (Herdr close_tab)";
+        keys = [ "AppClose" "Alt+Shift+KeyX" ];
         default_keys = [ "Control+KeyW" "Control+F4" "AppClose" ];
       }
       {
         command_id = 34016;
         command_name = "IDC_SELECT_NEXT_TAB";
-        category = "Tab Navigation";
-        description = "Select next tab (Vim-style Right: Ctrl+Shift+L or Ctrl+\\)";
-        keys = [ "Control+Backslash" "Control+Shift+KeyL" ];
+        category = "Tab (= Herdr tab)";
+        description = "Select next tab (Herdr next_tab)";
+        keys = [ "Alt+Shift+KeyL" "Control+Tab" "Control+PageDown" ];
         default_keys = [ "Control+Tab" "Control+PageDown" ];
       }
       {
         command_id = 34017;
         command_name = "IDC_SELECT_PREVIOUS_TAB";
-        category = "Tab Navigation";
-        description = "Select previous tab (Vim-style Left: Ctrl+Shift+H or Ctrl+Shift+\\)";
-        keys = [ "Control+Shift+Backslash" "Control+Shift+KeyH" ];
+        category = "Tab (= Herdr tab)";
+        description = "Select previous tab (Herdr previous_tab)";
+        keys = [ "Alt+Shift+KeyH" "Control+Shift+Tab" "Control+PageUp" ];
         default_keys = [ "Control+Shift+Tab" "Control+PageUp" ];
       }
       {
         command_id = 34028;
         command_name = "IDC_RESTORE_TAB";
-        category = "Tab Management";
-        description = "Reopen last closed tab";
-        keys = [ "Control+Shift+Enter" ];
+        category = "Tab (= Herdr tab)";
+        description = "Reopen last closed tab (classic Ctrl+Shift+T)";
+        keys = [ "Control+Shift+KeyT" ];
         default_keys = [ "Control+Shift+KeyT" ];
+      }
+      {
+        command_id = 34030;
+        command_name = "IDC_FULLSCREEN";
+        category = "Pane (= Herdr pane zoom)";
+        description = "Fullscreen / zoom (Herdr zoom)";
+        keys = [ "F11" "Alt+Shift+KeyZ" ];
+        default_keys = [ "F11" ];
       }
       {
         command_id = 34032;
         command_name = "IDC_MOVE_TAB_NEXT";
-        category = "Tab Navigation";
-        description = "Move active tab right (Vim-style: Ctrl+Alt+L or Ctrl+Shift+PageDown)";
+        category = "Tab (= Herdr tab)";
+        description = "Move active tab right";
         keys = [ "Control+Shift+PageDown" "Control+Alt+KeyL" ];
         default_keys = [ "Control+Shift+PageDown" ];
       }
       {
         command_id = 34033;
         command_name = "IDC_MOVE_TAB_PREVIOUS";
-        category = "Tab Navigation";
-        description = "Move active tab left (Vim-style: Ctrl+Alt+H or Ctrl+Shift+PageUp)";
+        category = "Tab (= Herdr tab)";
+        description = "Move active tab left";
         keys = [ "Control+Shift+PageUp" "Control+Alt+KeyH" ];
         default_keys = [ "Control+Shift+PageUp" ];
       }
@@ -195,33 +213,49 @@ let
         default_keys = [ ];
       }
       {
+        command_id = 34100;
+        command_name = "IDC_ADD_NEW_TAB_TO_GROUP";
+        category = "Group (= Herdr workspace)";
+        description = "Add new tab to active group";
+        keys = [ "Alt+Shift+KeyC" ];
+        default_keys = [ "Alt+Shift+KeyC" ];
+      }
+      {
+        command_id = 34101;
+        command_name = "IDC_CREATE_NEW_TAB_GROUP";
+        category = "Group (= Herdr workspace)";
+        description = "Create new tab group (Herdr new_workspace)";
+        keys = [ "Alt+Shift+KeyN" ];
+        default_keys = [ "Alt+Shift+KeyP" ];
+      }
+      {
         command_id = 34102;
         command_name = "IDC_FOCUS_NEXT_TAB_GROUP";
-        category = "Tab Groups";
-        description = "Focus next tab group";
-        keys = [ "Alt+Shift+Period" ];
+        category = "Group (= Herdr workspace)";
+        description = "Focus next tab group (Herdr next_workspace)";
+        keys = [ "Alt+Shift+KeyK" ];
         default_keys = [ "Alt+Shift+KeyX" ];
       }
       {
         command_id = 34103;
         command_name = "IDC_FOCUS_PREV_TAB_GROUP";
-        category = "Tab Groups";
-        description = "Focus previous tab group";
-        keys = [ "Alt+Shift+Comma" ];
+        category = "Group (= Herdr workspace)";
+        description = "Focus previous tab group (Herdr previous_workspace)";
+        keys = [ "Alt+Shift+KeyJ" ];
         default_keys = [ "Alt+Shift+KeyZ" ];
       }
       {
         command_id = 34104;
         command_name = "IDC_CLOSE_TAB_GROUP";
-        category = "Tab Groups";
-        description = "Close active tab group";
-        keys = [ "Alt+Shift+KeyX" ];
+        category = "Group (= Herdr workspace)";
+        description = "Close active tab group (Herdr close_workspace)";
+        keys = [ "Alt+Shift+KeyD" ];
         default_keys = [ "Alt+Shift+KeyW" ];
       }
       {
         command_id = 35022;
         command_name = "IDC_WINDOW_CLOSE_TABS_TO_RIGHT";
-        category = "Tab Management";
+        category = "Tab (= Herdr tab)";
         description = "Close all tabs to the right";
         keys = [ "Control+Shift+BracketRight" ];
         default_keys = [ ];
@@ -229,18 +263,42 @@ let
       {
         command_id = 35023;
         command_name = "IDC_WINDOW_CLOSE_OTHER_TABS";
-        category = "Tab Management";
+        category = "Tab (= Herdr tab)";
         description = "Close other tabs";
         keys = [ "Control+Alt+KeyO" ];
         default_keys = [ ];
       }
       {
+        command_id = 39000;
+        command_name = "IDC_FOCUS_LOCATION";
+        category = "Browser UI";
+        description = "Focus address bar (freed Alt+Shift+T for Herdr new_tab)";
+        keys = [ "Control+KeyL" "Control+KeyT" "Alt+KeyD" ];
+        default_keys = [ "Alt+Shift+KeyT" ];
+      }
+      {
+        command_id = 40010;
+        command_name = "IDC_SHOW_HISTORY";
+        category = "History (= Herdr history)";
+        description = "Show History page (kept on Ctrl+H)";
+        keys = [ "Control+KeyH" ];
+        default_keys = [ "Control+KeyH" ];
+      }
+      {
         command_id = 52500;
         command_name = "IDC_TAB_SEARCH";
-        category = "Tab Navigation";
+        category = "Tab (= Herdr tab)";
         description = "Search open tabs";
         keys = [ "Control+Shift+KeyK" ];
         default_keys = [ "Control+Shift+KeyA" ];
+      }
+      {
+        command_id = 56003;
+        command_name = "IDC_NEW_OFFTHERECORD_WINDOW_TOR";
+        category = "Window (= Herdr window)";
+        description = "New Tor window (moved off Alt+Shift+N for new_workspace)";
+        keys = [ "Alt+Shift+KeyY" ];
+        default_keys = [ "Alt+Shift+KeyN" ];
       }
       {
         command_id = 56041;
@@ -253,7 +311,7 @@ let
       {
         command_id = 56210;
         command_name = "IDC_WINDOW_CLOSE_TABS_TO_LEFT";
-        category = "Tab Management";
+        category = "Tab (= Herdr tab)";
         description = "Close all tabs to the left";
         keys = [ "Control+Shift+BracketLeft" ];
         default_keys = [ ];
@@ -261,7 +319,7 @@ let
       {
         command_id = 56212;
         command_name = "IDC_WINDOW_ADD_ALL_TABS_TO_NEW_GROUP";
-        category = "Tab Groups";
+        category = "Group (= Herdr workspace)";
         description = "Add all tabs to a new group";
         keys = [ "Alt+Shift+Digit8" ];
         default_keys = [ ];
@@ -277,7 +335,7 @@ let
       {
         command_id = 56305;
         command_name = "IDC_WINDOW_UNGROUP_ALL_TABS";
-        category = "Tab Groups";
+        category = "Group (= Herdr workspace)";
         description = "Ungroup all tabs";
         keys = [ "Alt+Shift+Digit7" ];
         default_keys = [ ];
@@ -285,48 +343,49 @@ let
       {
         command_id = 56306;
         command_name = "IDC_WINDOW_NAME_GROUP";
-        category = "Tab Groups";
-        description = "Name active tab group";
-        keys = [ "Alt+Shift+KeyM" ];
+        category = "Group (= Herdr workspace)";
+        description = "Name/rename tab group (Herdr rename_workspace)";
+        keys = [ "Alt+Shift+KeyW" ];
         default_keys = [ ];
       }
       {
         command_id = 56311;
         command_name = "IDC_WINDOW_CLOSE_GROUP";
-        category = "Tab Groups";
-        description = "Close tab group";
-        keys = [ "Alt+Shift+KeyW" ];
+        category = "Group (= Herdr workspace)";
+        description = "Close tab group (Herdr close_workspace)";
+        keys = [ "Alt+Shift+KeyD" ];
         default_keys = [ ];
       }
       {
         command_id = 56325;
         command_name = "IDC_NEW_SPLIT_VIEW";
-        category = "Split View & Tiling";
-        description = "Open new split view";
-        keys = [ "Control+Shift+Slash" ];
+        category = "Pane (= Herdr pane)";
+        description = "Open new split view (Herdr split_vertical)";
+        keys = [ "Alt+Shift+KeyV" ];
         default_keys = [ ];
       }
       {
         command_id = 56326;
         command_name = "IDC_TILE_TABS";
-        category = "Split View & Tiling";
-        description = "Tile tabs in split view";
-        keys = [ "Control+Shift+Digit5" ];
+        category = "Pane (= Herdr pane)";
+        description = "Tile tabs in split view (Herdr split_horizontal)";
+        keys = [ "Alt+Shift+Minus" ];
         default_keys = [ ];
       }
       {
         command_id = 56327;
         command_name = "IDC_BREAK_TILE";
-        category = "Split View & Tiling";
-        description = "Break tab tile / untile split view";
-        keys = [ "Control+Shift+Digit6" ];
+        category = "Pane (= Herdr pane)";
+        description = "Break tile / close split pane (Herdr close_pane)";
+        keys = [ "Alt+KeyW" ];
         default_keys = [ ];
       }
     ];
 
     # Extension commands configured in Brave
     extension_commands = {
-      "linux:Alt+Shift+H" = {
+      # Alt+Shift+U is Herdr previous_tab → Brave previous tab; move highlighter off that chord.
+      "linux:Alt+Shift+U" = {
         command_name = "toggle_highlighter";
         extension = "cnjifjpddelmedmihgijeibhnjfabmlf";
         extension_name = "Obsidian Web Clipper";
@@ -403,7 +462,7 @@ let
       }
     ];
 
-    # Full dictionary of Brave accelerators (86 entries)
+    # Full dictionary of Brave accelerators aligned to Herdr
     accelerators = {
       "33000" = [ "BrowserBack" "Alt+ArrowLeft" "AltGr+ArrowLeft" ];
       "33001" = [ "BrowserForward" "Alt+ArrowRight" "AltGr+ArrowRight" ];
@@ -413,10 +472,10 @@ let
       "34000" = [ "Control+KeyN" ];
       "34001" = [ "Control+Shift+KeyN" ];
       "34012" = [ "Control+Shift+KeyW" "Alt+F4" ];
-      "34014" = [ "AppNew" "Control+Shift+KeyT" ];
-      "34015" = [ "AppClose" "Control+Shift+Backspace" ];
-      "34016" = [ "Control+Backslash" "Control+Shift+KeyL" ];
-      "34017" = [ "Control+Shift+Backslash" "Control+Shift+KeyH" ];
+      "34014" = [ "AppNew" "Alt+Shift+KeyT" ];
+      "34015" = [ "AppClose" "Alt+Shift+KeyX" ];
+      "34016" = [ "Alt+Shift+KeyL" "Control+Tab" "Control+PageDown" ];
+      "34017" = [ "Alt+Shift+KeyH" "Control+Shift+Tab" "Control+PageUp" ];
       "34018" = [ "Control+Digit1" "Control+Numpad1" "Alt+Digit1" "Alt+Numpad1" ];
       "34019" = [ "Control+Digit2" "Control+Numpad2" "Alt+Digit2" "Alt+Numpad2" ];
       "34020" = [ "Control+Digit3" "Control+Numpad3" "Alt+Digit3" "Alt+Numpad3" ];
@@ -426,17 +485,17 @@ let
       "34024" = [ "Control+Digit7" "Control+Numpad7" "Alt+Digit7" "Alt+Numpad7" ];
       "34025" = [ "Control+Digit8" "Control+Numpad8" "Alt+Digit8" "Alt+Numpad8" ];
       "34026" = [ "Control+Digit9" "Control+Numpad9" "Alt+Digit9" "Alt+Numpad9" ];
-      "34028" = [ "Control+Shift+Enter" ];
-      "34030" = [ "F11" ];
+      "34028" = [ "Control+Shift+KeyT" ];
+      "34030" = [ "F11" "Alt+Shift+KeyZ" ];
       "34032" = [ "Control+Shift+PageDown" "Control+Alt+KeyL" ];
       "34033" = [ "Control+Shift+PageUp" "Control+Alt+KeyH" ];
       "34057" = [ "Control+Shift+KeyV" ];
       "34061" = [ ];
       "34100" = [ "Alt+Shift+KeyC" ];
-      "34101" = [ "Alt+Shift+KeyP" ];
-      "34102" = [ "Alt+Shift+Period" ];
-      "34103" = [ "Alt+Shift+Comma" ];
-      "34104" = [ "Alt+Shift+KeyX" ];
+      "34101" = [ "Alt+Shift+KeyN" ];
+      "34102" = [ "Alt+Shift+KeyK" ];
+      "34103" = [ "Alt+Shift+KeyJ" ];
+      "34104" = [ "Alt+Shift+KeyD" ];
       "35000" = [ "Control+KeyD" ];
       "35001" = [ "Control+Shift+KeyD" ];
       "35002" = [ "Control+KeyU" ];
@@ -450,11 +509,11 @@ let
       "37001" = [ "Control+KeyG" "F3" ];
       "37002" = [ "Control+Shift+KeyG" "Shift+F3" ];
       "37003" = [ "Escape" ];
-      "38001" = [ "Control+Equal" "Control+NumpadAdd" "Control+Shift+Equal" ];
+      "38001" = [ "Control+equal" "Control+NumpadAdd" "Control+Shift+equal" ];
       "38002" = [ "Control+Digit0" "Control+Numpad0" ];
       "38003" = [ "Control+Minus" "Control+NumpadSubtract" "Control+Shift+Minus" ];
-      "39000" = [ "Alt+Shift+KeyT" ];
-      "39001" = [ "Control+KeyL" "Alt+KeyD" ];
+      "39000" = [ "Control+KeyL" "Control+KeyT" "Alt+KeyD" ];
+      "39001" = [ "Control+KeyL" ];
       "39002" = [ "BrowserSearch" "Control+KeyE" "Control+KeyK" ];
       "39003" = [ "F10" "AltGr" "Alt" ];
       "39004" = [ "F6" ];
@@ -479,18 +538,18 @@ let
       "40286" = [ "Shift+Escape" ];
       "40303" = [ "Alt+Shift+KeyR" ];
       "52500" = [ "Control+Shift+KeyK" ];
-      "56003" = [ "Alt+Shift+KeyN" ];
+      "56003" = [ "Alt+Shift+KeyY" ];
       "56041" = [ ];
       "56044" = [ "Control+KeyB" ];
       "56210" = [ "Control+Shift+BracketLeft" ];
       "56212" = [ "Alt+Shift+Digit8" ];
       "56301" = [ "Control+Space" ];
       "56305" = [ "Alt+Shift+Digit7" ];
-      "56306" = [ "Alt+Shift+KeyM" ];
-      "56311" = [ "Alt+Shift+KeyW" ];
-      "56325" = [ "Control+Shift+Slash" ];
-      "56326" = [ "Control+Shift+Digit5" ];
-      "56327" = [ "Control+Shift+Digit6" ];
+      "56306" = [ "Alt+Shift+KeyW" ];
+      "56311" = [ "Alt+Shift+KeyD" ];
+      "56325" = [ "Alt+Shift+KeyV" ];
+      "56326" = [ "Alt+Shift+Minus" ];
+      "56327" = [ "Alt+KeyW" ];
     };
   };
 
@@ -507,48 +566,60 @@ let
                     BRAVE BROWSER KEYBOARD SHORTCUTS
 ================================================================================
 
-[Tab Navigation & Management (Vim-Style Navigation)]
-  Ctrl+Shift+T                  New Tab (IDC_NEW_TAB)
-  Ctrl+Shift+Backspace          Close Active Tab (IDC_CLOSE_TAB)
-  Ctrl+\  or  Ctrl+Shift+L      Next Tab (Vim Right) (IDC_SELECT_NEXT_TAB)
-  Ctrl+Shift+\  or  Ctrl+Shift+H Prev Tab (Vim Left) (IDC_SELECT_PREVIOUS_TAB)
-  Ctrl+Shift+Enter              Reopen Closed Tab (IDC_RESTORE_TAB)
-  Ctrl+Alt+L  or  Ctrl+Shift+PgDn Move Tab Right (IDC_MOVE_TAB_NEXT)
-  Ctrl+Alt+H  or  Ctrl+Shift+PgUp Move Tab Left (IDC_MOVE_TAB_PREVIOUS)
-  Ctrl+Shift+[                  Close Tabs to the Left (IDC_WINDOW_CLOSE_TABS_TO_LEFT)
-  Ctrl+Shift+]                  Close Tabs to the Right (IDC_WINDOW_CLOSE_TABS_TO_RIGHT)
-  Ctrl+Alt+O                    Close Other Tabs (IDC_WINDOW_CLOSE_OTHER_TABS)
-  Ctrl+Shift+K                  Search Tabs (IDC_TAB_SEARCH)
-  Ctrl+1 .. Ctrl+9              Switch to Tab 1-8 / Last Tab
+[Tab = Herdr tab]
+  Alt+Shift+T                   New Tab (Herdr new_tab)
+  Alt+Shift+X                   Close Active Tab (Herdr close_tab)
+  Alt+Shift+L                   Next Tab (Herdr next_tab)
+  Alt+Shift+H                   Previous Tab (Herdr previous_tab)
+  Ctrl+Shift+T                  Reopen Closed Tab
+  Ctrl+Alt+L / Ctrl+Shift+PgDn  Move Tab Right
+  Ctrl+Alt+H / Ctrl+Shift+PgUp  Move Tab Left
+  Ctrl+Shift+[                  Close Tabs to the Left
+  Ctrl+Shift+]                  Close Tabs to the Right
+  Ctrl+Alt+O                    Close Other Tabs
+  Ctrl+Shift+K                  Search Tabs
+  Alt/Ctrl+1 .. 9               Switch to Tab 1-8 / Last Tab
 
-[Split View & Tab Groups]
-  Ctrl+Space                    Brave Commander / Quick Commands (IDC_COMMANDER)
-  Ctrl+Shift+/                  New Split View (IDC_NEW_SPLIT_VIEW)
-  Ctrl+Shift+5                  Tile Tabs in Split View (IDC_TILE_TABS)
-  Ctrl+Shift+6                  Break Tile / Untile (IDC_BREAK_TILE)
+[History = Herdr history]
+  Alt+Left / Alt+Right          Back / Forward
+  Ctrl+H                        Show History page
+
+[Window = Herdr window]
+  Ctrl+N                        New Window
+  Ctrl+Shift+N                  New Incognito Window
+  Ctrl+Shift+W / Alt+F4         Close Window / Exit
+  Alt+Shift+Y                   New Tor Window
+
+[Pane = Herdr pane (Brave split view)]
+  Alt+Shift+V                   New Split View (Herdr split_vertical)
+  Alt+Shift+-                   Tile Tabs (Herdr split_horizontal)
+  Alt+W                         Break Tile / Close Split Pane (Herdr close_pane)
+  Alt+Shift+Z / F11             Fullscreen Zoom (Herdr zoom)
+
+[Group = Herdr workspace (Brave tab groups)]
+  Alt+Shift+N                   New Tab Group (Herdr new_workspace)
+  Alt+Shift+J                   Previous Tab Group (Herdr previous_workspace)
+  Alt+Shift+K                   Next Tab Group (Herdr next_workspace)
+  Alt+Shift+W                   Rename Tab Group (Herdr rename_workspace)
+  Alt+Shift+D                   Close Tab Group (Herdr close_workspace)
+  Alt+Shift+C                   Add New Tab to Group
   Alt+Shift+8                   Add All Tabs to New Group
   Alt+Shift+7                   Ungroup All Tabs
-  Alt+Shift+M                   Name Active Tab Group
-  Alt+Shift+W                   Close Active Tab Group
-  Alt+Shift+.                   Focus Next Tab Group
-  Alt+Shift+,                   Focus Previous Tab Group
-  Alt+Shift+P                   Create New Tab Group
-  Alt+Shift+C                   Add New Tab to Group
 
 [Browser & UI Controls]
-  Ctrl+B                        Toggle Brave Sidebar (IDC_TOGGLE_SIDEBAR)
+  Ctrl+B                        Toggle Brave Sidebar
+  Ctrl+Space                    Brave Commander / Quick Commands
   Ctrl+Shift+V                  Paste and Match Style (Plain Text)
-  Ctrl+L  or  Alt+D             Focus Address Bar / Omnibox
+  Ctrl+L / Ctrl+T / Alt+D       Focus Address Bar / Omnibox
   Ctrl+Shift+B                  Toggle Bookmarks Bar
-  Ctrl+Shift+I  or  F12         Developer Tools
+  Ctrl+Shift+I / F12            Developer Tools
   Ctrl+Shift+J                  Developer Tools Console
   Ctrl+Shift+C                  Inspect Element with DevTools
   Shift+Escape                  Task Manager
-  Alt+Shift+N                   New Private Window with Tor
 
 [Extension Shortcuts]
   Alt+Shift+O                   Obsidian Web Clipper: Quick Clip
-  Alt+Shift+H                   Obsidian Web Clipper: Toggle Highlighter
+  Alt+Shift+U                   Obsidian Web Clipper: Toggle Highlighter
   Ctrl+Shift+1                  ClickUp: Capture Full Page Screenshot
   Ctrl+Shift+2                  ClickUp: Capture Area Screenshot
   Ctrl+Shift+9                  Bitwarden: Generate Password

@@ -7,10 +7,14 @@ There are two independently verified remote layers from 2026-08-13:
 
 1. **OneDrive GPG archive** under `onedrive-linuxing3:Backups/Nix/Designers-PC`
 2. **Cachix** public cache `https://linuxing3-system-recovery.cachix.org`
+3. **Cachix** Phytium/Deepin kernel cache `https://linuxing3-phytium-kernel.cachix.org`
+   (pubkey `linuxing3-phytium-kernel.cachix.org-1:/CNFISdgF74/Y+BGBy06VRB6VY5Zj4RBQGymO6nbH4s=`)
 
 Prefer Cachix when network access to that cache is available. Keep the OneDrive
 archive as the offline/cloud-file fallback. See
 `docs/nix-store-remote-backup-receipt-20260813.md` for hashes and public keys.
+Kernel outs/drvs for Deepin/Phytium `linux-6.6.152` live in the phytium-kernel
+cache so rebuilds can substitute instead of compiling from source.
 
 The large `*.tar.gpg` object is encrypted to the GPG encryption subkey whose
 public key is stored on the KeyVault USB. Its matching private key is required

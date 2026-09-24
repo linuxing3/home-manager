@@ -148,6 +148,11 @@ Target: `onedrive-linuxing3:Backups/Nix/Designers-PC`.
 
 - Recovery cache: `https://linuxing3-system-recovery.cachix.org`
   public key `linuxing3-system-recovery.cachix.org-1:PspTtTON4FR/Id+reL0/Bli8lvrU17yr/8OR1q9F67c=`.
+- Phytium/Deepin kernel cache: `https://linuxing3-phytium-kernel.cachix.org`
+  public key `linuxing3-phytium-kernel.cachix.org-1:/CNFISdgF74/Y+BGBy06VRB6VY5Zj4RBQGymO6nbH4s=`.
+  Keeps `linux-6.6.152` outs/drvs/initrds so NixOS rebuilds do not compile the
+  vendor kernel from source. Wired in `flake.nix` `nixConfig` and
+  `nix/nix-config.nix`.
 - Historical cache name is `linuxing3` (not `nuxing3`).
 - `CACHIX_SIGNING_KEY` and management-API `publicSigningKey` are **Base64 after
   the colon only**, not full Nix `name:Base64`.

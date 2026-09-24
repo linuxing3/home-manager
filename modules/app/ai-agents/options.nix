@@ -16,8 +16,8 @@ in {
       };
       package = lib.mkOption {
         type = lib.types.package;
-        default = llmAgents.herdr;
-        description = "Herdr package from llm-agents.nix.";
+        default = pkgs.herdr;
+        description = "Herdr package. Default is overlays/packages/herdr.nix (GitHub static release), not llm-agents source+zig build.";
       };
       plugins = lib.mkOption {
         type = lib.types.listOf (
@@ -46,8 +46,8 @@ in {
       };
       package = lib.mkOption {
         type = lib.types.package;
-        default = llmAgents.pi;
-        description = "Pi package from llm-agents.nix.";
+        default = pkgs.pi;
+        description = "Pi package. Default is overlays/packages/pi.nix (GitHub release + patchelf), not llm-agents npm/bun source compile.";
       };
     };
 
@@ -55,12 +55,12 @@ in {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        description = "Install oh-my-pi (omp) from github:can1357/oh-my-pi via its Home Manager module.";
+        description = "Install oh-my-pi (omp) via its Home Manager module; package defaults to the GitHub release binary overlay.";
       };
       package = lib.mkOption {
         type = lib.types.package;
-        default = inputs.omp.packages.${pkgs.stdenv.hostPlatform.system}.default;
-        description = "OMP package from the oh-my-pi flake.";
+        default = pkgs.omp;
+        description = "OMP package. Default is overlays/packages/omp.nix (GitHub release + patchelf), not the slow flake source build.";
       };
     };
 
@@ -72,8 +72,8 @@ in {
       };
       package = lib.mkOption {
         type = lib.types.package;
-        default = llmAgents.collie;
-        description = "Collie package from llm-agents.nix.";
+        default = pkgs.collie;
+        description = "Collie package. Default is overlays/packages/collie.nix (GitHub release + patchelf), not llm-agents bun2nix source build.";
       };
     };
 
@@ -113,6 +113,19 @@ in {
         type = lib.types.package;
         default = pkgs.dsh;
         description = "DeepSeek Harness package.";
+      };
+    };
+
+    webcodex = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Install WebCodex CLI (Server + Runner) from GitHub release binaries.";
+      };
+      package = lib.mkOption {
+        type = lib.types.package;
+        default = pkgs.webcodex;
+        description = "WebCodex package (patched GitHub release).";
       };
     };
 

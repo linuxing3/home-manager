@@ -95,12 +95,12 @@ trayer --edge top --align right --widthtype request --height 22 \
   >/dev/null 2>&1 &
 
 export EXWM_ENABLE=1
-# -q: skip Doom/user init. --fullscreen: workspace frames fill HDMI.
-# EXWM 0.34 is exwm-wm-mode; keys live in EXWM_INIT_EL.
+# -q: skip Doom/user init. No --fullscreen: fullboth covers dmenu.
+# Geometry fill is my/exwm-fill-screen. Keys live in EXWM_INIT_EL.
 if [[ -n "${EXWM_INIT_EL:-}" ]] && [[ -f "${EXWM_INIT_EL}" ]]; then
-  exec emacs -q --no-splash --fullscreen -l "${EXWM_INIT_EL}"
+  exec emacs -q --no-splash -l "${EXWM_INIT_EL}"
 elif [[ -f "${HOME}/.config/exwm/exwm-init.el" ]]; then
-  exec emacs -q --no-splash --fullscreen -l "${HOME}/.config/exwm/exwm-init.el"
+  exec emacs -q --no-splash -l "${HOME}/.config/exwm/exwm-init.el"
 else
-  exec emacs -q --no-splash --fullscreen --eval "(progn (require 'exwm) (if (fboundp 'exwm-wm-mode) (exwm-wm-mode 1) (exwm-enable)))"
+  exec emacs -q --no-splash --eval "(progn (require 'exwm) (if (fboundp 'exwm-wm-mode) (exwm-wm-mode 1) (exwm-enable)))"
 fi

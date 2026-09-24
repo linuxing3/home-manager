@@ -7,7 +7,7 @@ All agent configuration for the `work` profile is imported from `modules/app/ai-
 | `mcp.nix` / `mcp-lib.nix` | Shared Drive (Cursor/Kiro: official HTTP MCP; Codex/Codeium: stdio wrapper), Canva, AWS, Veo, Higgsfield, Notion |
 | `rtk.nix` | RTK, fff-mcp, PATH |
 | `pi.nix` | llm-agents Pi, UOS loader shim, pi-switch, and the DeepSeek V4 provider combo |
-| `omp.nix` | oh-my-pi (`omp`) from `github:can1357/oh-my-pi` via its Home Manager module |
+| `omp.nix` | oh-my-pi (`omp`) HM module; package from `overlays/packages/omp.nix` release binary |
 | `codex/` | Static Codex files, config merge, RTK/fff activation |
 | `cursor/` | Cursor shim, Cursor Agent package, hooks, MCP, CLI defaults |
 | `cursor-to-openai.nix` | Loopback Cursor-to-OpenAI unit and Cloudflare tunnel unit |
@@ -24,10 +24,10 @@ Operational skills live in `.codex/skills/`: `agent-tools`, `repair-cursor-to-op
 
 Plugin and service defaults live in `modules/app/ai-agents/options.nix`:
 
-- `my.ai.herdr.enable` / `package` / `plugins` / `installPlugins` — llm-agents Herdr
-- `my.ai.pi.enable` / `package` — llm-agents Pi plus UOS loader shim, pi-switch, and a DeepSeek V4 profile (`deepseek-v4-flash` / `deepseek-v4-pro` / vision). Default Pi model stays openai-codex; put `DEEPSEEK_API_KEY` in `~/.config/pi-switch/env` or SecretSpec.
-- `my.ai.omp.enable` / `package` — oh-my-pi (`omp`) from `github:can1357/oh-my-pi`. Config is `~/.omp/agent/config.yml` (`programs.omp.settings`). Do not `nix profile add github:can1357/oh-my-pi`.
-- `my.ai.collie.enable` / `package` — llm-agents Collie CLI and Herdr bridge unit on loopback 8788 (`collie.efwmcstyle.ccwu.cc`; 8787 is Cursor MCP OAuth)
+- `my.ai.herdr.enable` / `package` / `plugins` / `installPlugins` — Herdr from `overlays/packages/herdr.nix` (GitHub static release); plugins still from module
+- `my.ai.pi.enable` / `package` — Pi from `overlays/packages/pi.nix` (GitHub release + patchelf) plus UOS loader shim, pi-switch, and a DeepSeek V4 profile (`deepseek-v4-flash` / `deepseek-v4-pro` / vision). Default Pi model stays openai-codex; put `DEEPSEEK_API_KEY` in `~/.config/pi-switch/env` or SecretSpec.
+- `my.ai.omp.enable` / `package` — oh-my-pi (`omp`). Package is the GitHub release binary via `overlays/packages/omp.nix` (patchelf + DT_VERDEF fix); flake input stays only for the Home Manager module. Config is `~/.omp/agent/config.yml` (`programs.omp.settings`) with wizard pinned off. Do not `nix profile add github:can1357/oh-my-pi`.
+- `my.ai.collie.enable` / `package` — Collie from `overlays/packages/collie.nix` (GitHub release + patchelf) and Herdr bridge unit on loopback 8788 (`collie.efwmcstyle.ccwu.cc`; 8787 is Cursor MCP OAuth)
 - `my.ai.orca.enable` / `package` — llm-agents Orca ADE, `orca serve` on loopback 6768, Cloudflare Tunnel `orca-remote` at `orca.efwmcstyle.ccwu.cc` with pairing URL `https://orca.efwmcstyle.ccwu.cc` (wss)
 - `my.ai.cursorAgent.enable` / `package` — llm-agents `cursor-agent`
 - Herdr, Pi, OMP, Collie, Orca, and Cursor Agent are Home Manager packages. Do not `nix profile add` them from `github:numtide/llm-agents.nix` or `github:can1357/oh-my-pi`; activation removes those profile names so they cannot collide with `home-manager-path`.
