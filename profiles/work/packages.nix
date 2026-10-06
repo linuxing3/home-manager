@@ -24,6 +24,67 @@
       exec ${gnirehtetCompatWrapper}/bin/gnirehtet run "$@"
     '';
   };
+  gnirehtetShare = pkgs.writeShellApplication {
+    name = "gnirehtet-share";
+    runtimeInputs = with pkgs; [android-tools tinyproxy microsocks coreutils psmisc];
+    text = ''
+      adb start-server >/dev/null
+      adb devices -l
+      fuser -k 18080/tcp 1080/tcp 31416/tcp >/dev/null 2>&1 || true
+      sleep 0.3
+      runtime="''${XDG_RUNTIME_DIR:-/tmp}"
+      conf="$runtime/gnirehtet-share-tinyproxy.conf"
+      printf '%s\n' \
+        'Port 18080' \
+        'Listen 127.0.0.1' \
+        'Timeout 600' \
+        'MaxClients 32' \
+        'LogLevel Info' \
+        'Allow 127.0.0.1' \
+        'ConnectPort 443' \
+        'ConnectPort 563' >"$conf"
+      tinyproxy -d -c "$conf" &
+      http_pid=$!
+      microsocks -i 127.0.0.1 -p 1080 &
+      socks_pid=$!
+      cleanup() {
+        kill "$http_pid" "$socks_pid" 2>/dev/null || true
+        wait "$http_pid" "$socks_pid" 2>/dev/null || true
+        adb reverse --remove tcp:18080 >/dev/null 2>&1 || true
+        adb reverse --remove tcp:1080 >/dev/null 2>&1 || true
+      }
+      trap cleanup EXIT INT TERM
+      adb reverse tcp:18080 tcp:18080
+      adb reverse tcp:1080 tcp:1080
+      printf '%s\n' \
+        'Vivo: gnirehtet USB reverse tether' \
+        'iPhone on hotspot feifei:' \
+        '  HTTP  10.21.163.227:18080  (Wi-Fi Manual proxy)' \
+        '  SOCKS 10.21.163.227:1080   (Surge; Wi-Fi proxy Off)' \
+        'Turn on Android 个人热点 if wlan2 is down. Ctrl-C stops share.'
+      ${gnirehtetCompatWrapper}/bin/gnirehtet run "$@"
+    '';
+  };
+  gnirehtetShareVpnuk = pkgs.writeShellApplication {
+    name = "gnirehtet-share-vpnuk";
+    runtimeInputs = with pkgs; [networkmanager iproute2 coreutils gnugrep gawk];
+    text = ''
+      nmcli connection up vpnuk-uk-dedicated
+      wgdev=$(nmcli -t -f NAME,TYPE,DEVICE connection show --active \
+        | awk -F: '$1=="vpnuk-uk-dedicated" && $2=="wireguard" {print $3; exit}')
+      if [ -z "$wgdev" ]; then
+        echo 'vpnuk-uk-dedicated is not an active WireGuard connection' >&2
+        exit 1
+      fi
+      route=$(ip route get 1.1.1.1)
+      printf '%s\n' "$route"
+      if ! printf '%s\n' "$route" | grep -qF " dev $wgdev"; then
+        echo "public route does not use $wgdev" >&2
+        exit 1
+      fi
+      exec ${gnirehtetShare}/bin/gnirehtet-share "$@"
+    '';
+  };
   crabboxPackage = pkgs.buildGoModule {
     pname = "crabbox";
     version = "0.22.1-e73b02f";
@@ -63,10 +124,18 @@ in {
     gnirehtet
     (lib.hiPrio gnirehtetCompatWrapper)
     gnirehtetConnect
+    gnirehtetShare
+    gnirehtetShareVpnuk
     cloudflared
     cloudflare-warp
     tailscale
     wrangler
+    cf-cli
+    sing-box
+    mihomo
+    homedge-sync
+    homedge-clash
+    homedge-singbox
     bun
     chromium
     python3

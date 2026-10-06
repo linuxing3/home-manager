@@ -1,0 +1,17 @@
+{
+  "$schema": "https://www.unpkg.com/wrangler@4.93.0/config-schema.json",
+  "name": "efwmc-social",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-29",
+  "account_id": "dc6e3e767a93266774857d962dd60a4f",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    {
+      "pattern": "social.efwmcapp.com",
+      "custom_domain": true
+    }
+  ]
+}

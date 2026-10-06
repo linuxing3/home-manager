@@ -24,6 +24,7 @@ Apply changes in this order and verify each boundary before continuing. Focused 
 | `repair-oxwm-getty-mouse` | NixOS oxwm: getty tty1 autologin/startx, `/usr/bin/agetty` 203/EXEC, frozen/missing USB mouse |
 | `configure-hp-m252n` | NixOS CUPS USB queue for HP Color LaserJet Pro M252n (`03f0:3c2a`) |
 | `configure-ios-support` | NixOS iPhone/iPad pairing, `usbmuxd`, `libimobiledevice`, and `ifuse` |
+| `activate-gnirehtet-vpnuk` | VPNUK `Device_1`, Android `gnirehtet-connect`, iPhone HTTP/SOCKS on hotspot `feifei` |
 | `repair-nnn-previews` | nnn PDF/Office previews with wrapped Zathura, `doxx`, and `xleak` |
 | `install-cliamp-quickshell` | CLIamp binary/audio packaging and Quickshell release installation |
 | `install-doom-emacs` | Doom Emacs via `nix-doom-emacs-unstraightened` and its Cachix cache |

@@ -5,11 +5,11 @@ _final: prev: {
       stdenv,
       fetchurl,
     }: let
-      version = "0.9.1";
+      version = "0.9.3";
       sources = {
         aarch64-linux = {
           url = "https://github.com/herdrdev/herdr/releases/download/v${version}/herdr-linux-aarch64";
-          hash = "sha256-9Mz03nRfLLmjmpg+m6NwPa1Q7CpY3qgwJs6rchu9jZ4=";
+          hash = "sha256-TeeqPiVniBLpKWDeZPfCqqG8ofD4CjxeVZg34jHh9cA=";
         };
         x86_64-linux = {
           url = "https://github.com/herdrdev/herdr/releases/download/v${version}/herdr-linux-x86_64";

@@ -23,6 +23,7 @@
     (nixosDir + /home-snapshot.nix)
     (nixosDir + /keyvault-boot.nix)
     (nixosDir + /udev.nix)
+    (nixosDir + /wireguard-isvoro.nix)
   ];
 in {
   flake = {

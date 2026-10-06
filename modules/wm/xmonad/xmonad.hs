@@ -192,6 +192,7 @@ myKeys =
   [ ((myModMask, xK_Return), spawn myTerminal)
   , ((myModMask, xK_d), spawn "dmenu_run -l 10")
   , ((myModMask, xK_g), spawn "brave")
+  , ((myModMask .|. shiftMask, xK_g), spawn "brave-geo")
   , ((myModMask, xK_e), spawn "st -t hx -e hx")
   , ((controlMask .|. mod1Mask, xK_v), spawn "hx-anywhere")
   , ((myModMask, xK_s), spawn "screenshot-to-clipboard")

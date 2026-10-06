@@ -14,6 +14,27 @@ python3Packages.buildPythonApplication rec {
     hash = "sha256-QPL0vUCFvIe+xsz//ksz07o3QAp7p2mMqL4Q8hAuizA=";
   };
 
+  # agent-browser 0.25 lists tabs by `index` only; upstream expects `id`/`tabId`
+  # and otherwise reports "no muse.ai tab open".
+  postPatch = ''
+    substituteInPlace src/muse_cli/cli.py \
+      --replace-fail 'and (t.get("id") or t.get("tabId"))]' \
+                     'and _tab_ref(t) is not None]' \
+      --replace-fail 'tab_id = (muse_tabs[0].get("id") or muse_tabs[0].get("tabId")' \
+                     'tab_id = (_tab_ref(muse_tabs[0])' \
+      --replace-fail 'def _browser_cookies():' \
+                     'def _tab_ref(t):
+        for key in ("id", "tabId", "targetId"):
+            if t.get(key):
+                return str(t[key])
+        if isinstance(t.get("index"), int):
+            return str(t["index"])
+        return None
+
+
+    def _browser_cookies():'
+  '';
+
   build-system = [python3Packages.hatchling];
 
   dependencies = with python3Packages; [

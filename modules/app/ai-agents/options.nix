@@ -42,7 +42,7 @@ in {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        description = "Install Pi from llm-agents.nix, the UOS loader shim, and pi-switch.";
+        description = "Install Pi from llm-agents.nix and the UOS loader shim.";
       };
       package = lib.mkOption {
         type = lib.types.package;

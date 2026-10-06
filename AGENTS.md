@@ -10,9 +10,9 @@ This repository defines a Nix flake with two layers: Home Manager (`homeConfigur
 - `profiles/work/`: the active Home Manager module for the `work` profile. It imports `packages.nix` and `modules/app/ai-agents`.
 - `modules/app/ai-agents/`: one submodule per AI agent (Codex, Cursor, Pi, oh-my-pi, Herdr, and related MCP/tools).
 - `modules/shared/oxwm/`: oxwm session scripts and wrappers used by both Home Manager and NixOS.
-- `overlays/packages/`: focused overrides for individual packages such as `nnn`, `st`, `rtk`, `pi-switch`, `cli-proxy-api`, and `dsh`.
+- `overlays/packages/`: focused overrides for individual packages such as `nnn`, `st`, `rtk`, `cli-proxy-api`, and `dsh`.
 - `docs/ai-agents.md` and `docs/agent-tools.md`: agent module map and tool notes.
-- `docs/nnn-previews.md`, `docs/cliamp-quickshell.md`, `docs/ios-support.md`, and `docs/doom-emacs.md`: terminal preview, desktop tool, iOS, and Doom Emacs runbooks.
+- `docs/nnn-previews.md`, `docs/cliamp-quickshell.md`, `docs/ios-support.md`, `docs/doom-emacs.md`, and `docs/gnirehtet-vpnuk.md`: terminal preview, desktop tool, iOS, Doom Emacs, and Android/iPhone reverse-tether runbooks.
 - `flake.lock`: pinned dependency revisions; update it intentionally and review input changes.
 
 Keep reusable logic in the appropriate module rather than expanding `flake.nix` or `profiles/work/home.nix`. Home Manager modules stay under `modules/` (new ones may use `modules/home/`); NixOS modules stay under `nixos/`. Name new Nix files and directories with lowercase, descriptive, hyphenated names.
@@ -47,6 +47,15 @@ No commit history is available in this checkout. Use concise, imperative subject
 ## Security & Configuration Tips
 
 Do not commit plaintext secrets. Use Agenix-managed encrypted files for sensitive values. Treat password hashes, SSH keys, hostnames, and user settings in `nix/` as sensitive configuration and avoid unrelated edits.
+
+## Cloudflare CLI
+
+When interacting with Cloudflare, use the `cf` CLI unless the project has a
+Wrangler configuration file and no `cloudflare.config.ts`. Host pin is
+`cf@1.0.0-beta.12` via `overlays/packages/cf-cli.nix`. Load
+`.codex/skills/use-cf-cli/SKILL.md`. Do not run `cf dev`, `cf build`, or
+`cf deploy` in an unmigrated Wrangler project. Wrangler on PATH is overlay
+`4.147.0`.
 
 ## AI Browser Automation
 

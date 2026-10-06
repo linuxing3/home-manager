@@ -236,6 +236,7 @@ oxwm.key.bind({ modkey }, "D", oxwm.spawn({ "sh", "-c", "dmenu_run -l 10" }))
  -- nohup /run/current-system/sw/bin/brave --remote-debugging-port=9222 --remote-allow-origins='http://localhost:9222' -profile-directory=Default >/tmp/brave-youtube-studio.log 2>&1 
 
 oxwm.key.bind({ modkey }, "G", oxwm.spawn({ "sh", "-c", "nohup /run/current-system/sw/bin/brave --remote-debugging-port=9222 --remote-allow-origins='http://localhost:9222' -profile-directory=Default >/tmp/brave-youtube-studio.log 2>&1" }))
+oxwm.key.bind({ modkey, "Shift" }, "G", oxwm.spawn({ "brave-geo" }))
 
 oxwm.key.bind({ modkey }, "E", oxwm.spawn({ "sh", "-c", "st -t hx -e hx" }))
 
