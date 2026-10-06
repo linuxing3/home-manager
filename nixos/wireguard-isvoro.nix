@@ -1,9 +1,9 @@
 # Isvoro HKT A1 WireGuard full-tunnel; PreUp pins endpoint via LAN gateway.
-{ pkgs, ... }: {
+{pkgs, ...}: {
   networking.wireguard.enable = true;
-  networking.firewall.trustedInterfaces = [ "wg0" ];
+  networking.firewall.trustedInterfaces = ["wg0"];
   networking.wireguard.interfaces.wg0 = {
-    ips = [ "10.66.66.2/24" ];
+    ips = ["10.66.66.2/24"];
     privateKeyFile = "/home/Designers/.config/wireguard/isvoro-client.key";
     # Avoid blackholing UDP to the NAT endpoint when AllowedIPs = 0/0
     preSetup = ''
@@ -15,12 +15,14 @@
     postShutdown = ''
       ip route del 103.138.72.79/32 || true
     '';
-    peers = [{
-      publicKey = "AMdDWzvPiksyFFVLAGNoNZ9TSmCBGwQL1QFJDp925FM=";
-      endpoint = "103.138.72.79:10010";
-      allowedIPs = [ "0.0.0.0/0" ];
-      persistentKeepalive = 25;
-    }];
+    peers = [
+      {
+        publicKey = "AMdDWzvPiksyFFVLAGNoNZ9TSmCBGwQL1QFJDp925FM=";
+        endpoint = "103.138.72.79:10010";
+        allowedIPs = ["0.0.0.0/0"];
+        persistentKeepalive = 25;
+      }
+    ];
   };
-  environment.systemPackages = with pkgs; [ wireguard-tools ];
+  environment.systemPackages = with pkgs; [wireguard-tools];
 }
