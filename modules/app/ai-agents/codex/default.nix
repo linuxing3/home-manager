@@ -7,6 +7,11 @@
   ai = import ../lib.nix {inherit config lib pkgs;};
   mcp = import ../mcp-lib.nix {inherit config lib pkgs;};
   fffBin = "${ai.profileBin}/fff-mcp";
+  codexAgents = pkgs.writeText "codex-AGENTS.md" ''
+    ${builtins.readFile ./files/AGENTS.md}
+
+    ${builtins.readFile ../files/notion-bootstrap.md}
+  '';
   codexDefaults = pkgs.writeText "codex-defaults.json" (builtins.toJSON {
     model = "gpt-5.6-sol";
     model_provider = "cliproxyapi";
@@ -22,13 +27,14 @@
     };
     features = {
       hooks = true;
-      memories = true;
+      memories = false;
     };
     tui.vim_mode_default = true;
     mcp_servers = {
       fff.command = "${ai.homeDir}/.nix-profile/bin/fff-mcp";
       gdrive = mcp.gdrive;
       canva = mcp.canva;
+      notion = mcp.notion;
       obscura = {
         command = "obscura";
         args = ["mcp"];
@@ -37,7 +43,7 @@
   });
 in {
   home.file = {
-    ".codex/AGENTS.md".source = files/AGENTS.md;
+    ".codex/AGENTS.md".source = codexAgents;
     ".codex/hooks.json".source = files/hooks.json;
     ".codex/herdr-agent-state.sh" = {
       source = files/herdr-agent-state.sh;

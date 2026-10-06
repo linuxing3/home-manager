@@ -42,6 +42,14 @@
       exit 127
     '';
   };
+  cursorNotionRule = pkgs.writeText "cursor-notion-agent-memory.mdc" ''
+    ---
+    description: Shared Notion memory bootstrap for local agents
+    alwaysApply: true
+    ---
+
+    ${builtins.readFile ../files/notion-bootstrap.md}
+  '';
   cursorDefaults = pkgs.writeText "cursor-defaults.json" (builtins.toJSON {
     permissions.allow = [
       "Shell(ls)"
@@ -92,6 +100,7 @@ in {
 
   home.file = {
     ".cursor/hooks.json".source = files/hooks.json;
+    ".cursor/rules/notion-agent-memory.mdc".source = cursorNotionRule;
     ".cursor/herdr-agent-state.sh" = {
       source = files/herdr-agent-state.sh;
       executable = true;

@@ -37,6 +37,11 @@
       exec "$package_pi" "$@"
     '';
   };
+  globalAgents = pkgs.writeText "ai-agent-AGENTS.md" ''
+    ${builtins.readFile ./files/environment-rules.md}
+
+    ${builtins.readFile ./files/notion-bootstrap.md}
+  '';
   piDefaults = pkgs.writeText "pi-defaults.json" (builtins.toJSON {
     theme = "dark";
     defaultProvider = "openai-codex";
@@ -53,6 +58,7 @@ in {
         ${ai.activationPreamble}
         ${ai.mergeJsonFile "${ai.homeDir}/.pi/agent/settings.json" piDefaults}
       '';
+      file.".pi/agent/AGENTS.md".source = globalAgents;
     };
   };
 }
