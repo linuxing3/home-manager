@@ -15,6 +15,8 @@ Read/search Notion before work involving planning, operations, publishing, crede
 
 Startup ritual: check `PM Tasks` for rows with `Bot` = `共享`, a title starting with your local-agent prefix (`[本机·Pi]`, `[本机·OMP]`, `[本机·Codex]`, `[本机·Cursor]`, `[本机·Grok]`), and `Status` = `Not started`; also resume your own `In progress` rows. Claim a row by setting `Status` to `In progress`. Finish with `Done` plus a one-line `Note` with evidence links, or `Blocked` plus a Sync Log `Blocker` row. Before starting, dedupe: search PM Tasks, Sync Log (last 14 days), and Context for existing work. `Missions` is a read-only archive since 2026-10-07; do not take work from it.
 
+Degraded-query fallback: if the Notion Query Data Source quota is limited or exhausted, do not stop. Use `notion-search` scoped to the PM Tasks collection (your `[本机·X]` prefix or task keywords) or open the PM Tasks view, then `fetch` each candidate row to verify `Bot`, `Status`, and the five handoff fields before claiming it.
+
 Write policy: `铁律`, `WORK PLAN` body, and the collaboration convention page are read-only. In `PM Tasks`, only update the Status/Note of the row you claimed. In `Sync Log`, only append new rows: `From=共享`, `To=孔明`, `Type=Update/Blocker/Ask/Handoff/Decision`, and `Entry` must start with one of `[本机·Pi]`, `[本机·OMP]`, `[本机·Codex]`, `[本机·Cursor]`, `[本机·Grok]`. Keep `Summary` to at most 3 sentences and include relevant paths, commits, or links.
 
 Routing (铁律 §2/§3, 2026-10-07): heavy work, voice-over, editing, and publishing go to Pi / Cursor Pi; OMP handles browser automation when named or routed by the omp-jev rule.
