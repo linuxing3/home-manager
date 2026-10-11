@@ -85,6 +85,63 @@
       exec ${gnirehtetShare}/bin/gnirehtet-share "$@"
     '';
   };
+  # Isvoro HKT wg0 (HK home full-tunnel). Source of truth also ~/bin/isvoro-wg-*.sh.
+  # Private key read at runtime from ~/.config/wireguard/isvoro-client.key — never bake into store.
+  isvoroWgUp = pkgs.writeShellApplication {
+    name = "isvoro-wg-up";
+    runtimeInputs = with pkgs; [wireguard-tools iproute2 gawk coreutils curl];
+    text = ''
+      set -euo pipefail
+      KEY=/home/Designers/.config/wireguard/isvoro-client.key
+      EP_IP=103.138.72.79
+      IFACE=$(ip -o -4 route show default | awk '{print $5; exit}')
+      GW=$(ip -o -4 route show default | awk '{print $3; exit}')
+      if [[ -z "''${IFACE:-}" || -z "''${GW:-}" ]]; then
+        echo "No default route; abort." >&2
+        exit 1
+      fi
+      if [[ ! -f "$KEY" ]]; then
+        echo "Missing private key file: $KEY" >&2
+        exit 1
+      fi
+      priv=$(tr -d '\n' < "$KEY")
+      sudo mkdir -p /etc/wireguard
+      umask 077
+      conf=$(mktemp)
+      cat >"$conf" <<CFG
+[Interface]
+Address = 10.66.66.2/24
+PrivateKey = ''${priv}
+PreUp = ip route replace ''${EP_IP}/32 via ''${GW} dev ''${IFACE}
+PostDown = ip route del ''${EP_IP}/32 via ''${GW} dev ''${IFACE} || true
+
+[Peer]
+PublicKey = AMdDWzvPiksyFFVLAGNoNZ9TSmCBGwQL1QFJDp925FM=
+Endpoint = ''${EP_IP}:10010
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25
+CFG
+      sudo install -m 600 "$conf" /etc/wireguard/wg0.conf
+      rm -f "$conf"
+      sudo wg-quick down wg0 2>/dev/null || true
+      sudo wg-quick up wg0
+      echo "--- wg ---"
+      sudo wg show
+      echo "--- exit ---"
+      curl -s --noproxy '*' --max-time 12 https://ifconfig.me; echo
+      curl -s --noproxy '*' --max-time 12 https://ipinfo.io/json; echo
+    '';
+  };
+  isvoroWgDown = pkgs.writeShellApplication {
+    name = "isvoro-wg-down";
+    runtimeInputs = with pkgs; [wireguard-tools coreutils curl];
+    text = ''
+      set -euo pipefail
+      sudo wg-quick down wg0 || true
+      echo "wg0 down. Try: curl -I https://1.1.1.1"
+    '';
+  };
+
   crabboxPackage = pkgs.buildGoModule {
     pname = "crabbox";
     version = "0.22.1-e73b02f";
@@ -126,6 +183,8 @@ in {
     gnirehtetConnect
     gnirehtetShare
     gnirehtetShareVpnuk
+    isvoroWgUp
+    isvoroWgDown
     cloudflared
     cloudflare-warp
     tailscale
