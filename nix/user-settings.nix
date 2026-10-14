@@ -17,7 +17,7 @@
   wm = "deepin"; # Selected window manager or desktop environment; must select one in both ./user/wm/ and ./system/wm/
   # window manager type translator; force X11 across modules
   wmType = "x11";
-  browser = "chromium-browser"; # Default browser; must select one from ./user/app/browser/
+  browser = "brave"; # Default browser; must select one from ./user/app/browser/
   spawnBrowser =
     if ((browser == "qutebrowser") && (wm == "hyprland"))
     then "qutebrowser-hyprprofile"

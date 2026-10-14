@@ -35,19 +35,15 @@ if "brave" not in prefs or not isinstance(prefs["brave"], dict):
 if "extensions" not in prefs or not isinstance(prefs["extensions"], dict):
     prefs["extensions"] = {}
 
-# Merge accelerators
+# Replace accelerators with the declarative snapshot
 managed_accelerators = kb_data.get("accelerators", {})
 if managed_accelerators:
-    if "accelerators" not in prefs["brave"] or not isinstance(prefs["brave"]["accelerators"], dict):
-        prefs["brave"]["accelerators"] = {}
-    prefs["brave"]["accelerators"].update(managed_accelerators)
+    prefs["brave"]["accelerators"] = managed_accelerators
 
-# Merge extension commands
+# Replace extension commands with the declarative snapshot
 managed_commands = kb_data.get("extension_commands", {})
 if managed_commands:
-    if "commands" not in prefs["extensions"] or not isinstance(prefs["extensions"]["commands"], dict):
-        prefs["extensions"]["commands"] = {}
-    prefs["extensions"]["commands"].update(managed_commands)
+    prefs["extensions"]["commands"] = managed_commands
 
 # Atomically replace preferences file preserving permissions
 mode = stat.S_IMODE(os.stat(prefs_path).st_mode)
