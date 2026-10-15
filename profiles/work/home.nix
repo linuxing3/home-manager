@@ -28,6 +28,7 @@
     ../../modules/app/mime.nix
     ../../modules/app/crabbox
     ../../modules/app/virtualization
+    ../../modules/gui/dunst-omarchy.nix
     ../../modules/wm/oxwm/oxwm.nix
     ../../modules/wm/xmonad
     ../../modules/wm/dwm
