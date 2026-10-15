@@ -160,6 +160,40 @@ CFG
       "-X github.com/openclaw/crabbox/internal/cli.version=0.22.1-e73b02f"
     ];
   };
+  # Vivo watchdog: when the phone is on USB keep gnirehtet-share up & healthy,
+  # stop it on unplug. Manual "vivo off": touch ~/.local/state/vivo-off.
+  vivoWatchdog = pkgs.writeShellApplication {
+    name = "vivo-watchdog";
+    runtimeInputs = with pkgs; [android-tools coreutils systemd];
+    text = ''
+      state="$HOME/.local/state"
+      LOG="$state/vivo-watchdog.log"
+      mkdir -p "$state"
+      [ -e "$state/vivo-off" ] && exit 0
+      if [ "$(adb get-state 2>/dev/null || true)" != "device" ]; then
+        if systemctl --user is-active -q gnirehtet-share; then
+          sleep 5
+          if [ "$(adb get-state 2>/dev/null || true)" != "device" ]; then
+            echo "$(date '+%F %T') USB unplugged, stopping share" >> "$LOG"
+            systemctl --user stop gnirehtet-share
+          fi
+        fi
+        exit 0
+      fi
+      if ! systemctl --user is-active -q gnirehtet-share; then
+        echo "$(date '+%F %T') USB connected, starting share" >> "$LOG"
+        systemctl --user start gnirehtet-share
+        exit 0
+      fi
+      probe() { adb shell 'curl -s -m 8 -o /dev/null -w "%{http_code}" https://www.google.com' 2>/dev/null || true; }
+      [ "$(probe)" = "200" ] && exit 0
+      sleep 5
+      code=$(probe)
+      [ "$code" = "200" ] && exit 0
+      echo "$(date '+%F %T') tunnel down (code=$code), restarting" >> "$LOG"
+      systemctl --user restart gnirehtet-share
+    '';
+  };
 in {
   home.packages = with pkgs; [
     yazi
@@ -223,4 +257,37 @@ in {
     aether
     omacut
   ];
+  # gnirehtet-share has no WantedBy on purpose: vivo-watchdog starts it when
+  # the Vivo is on USB and stops it on unplug.
+  systemd.user.services.gnirehtet-share = {
+    Unit = {
+      Description = "Supervise home-config gnirehtet-share (Vivo USB reverse tether + iPhone HTTP :18080 / SOCKS :1080)";
+      After = ["network-online.target"];
+    };
+    Service = {
+      ExecStart = "${gnirehtetShare}/bin/gnirehtet-share";
+      ExecStopPost = "-${pkgs.android-tools}/bin/adb shell am force-stop com.genymobile.gnirehtet";
+      Restart = "always";
+      RestartSec = 5;
+      KillMode = "control-group";
+      LogRateLimitIntervalSec = 30;
+      LogRateLimitBurst = 200;
+    };
+  };
+  systemd.user.services.vivo-watchdog = {
+    Unit.Description = "Vivo USB share watchdog";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${vivoWatchdog}/bin/vivo-watchdog";
+    };
+  };
+  systemd.user.timers.vivo-watchdog = {
+    Unit.Description = "Run Vivo watchdog every 30s";
+    Timer = {
+      OnBootSec = "2min";
+      OnUnitActiveSec = "30s";
+      AccuracySec = "10s";
+    };
+    Install.WantedBy = ["timers.target"];
+  };
 }
