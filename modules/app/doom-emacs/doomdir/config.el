@@ -8,9 +8,10 @@
       doom-variable-pitch-font (font-spec :family "Inter" :size 16)
       doom-big-font (font-spec :family "JetBrainsMono Nerd Font" :size 22))
 
-;; Mail via Gnus (IMAP) + smtpmail (SMTP). Credentials: ~/.authinfo from
-;; Agenix secrets mail-gmail-*-pass.age (Google App Passwords) and
-;; mail-qq-pass.age (QQ authorization code, not the QQ login password).
+;; Mail via Gnus (IMAP) + smtpmail (SMTP). Credentials come from the
+;; `agenix-mail' auth-source backend (agenix-auth.el), which reads Agenix
+;; secrets mail-gmail-*-pass.age (Google App Passwords) and mail-qq-pass.age
+;; (QQ authorization code, not the QQ login password) at login time.
 ;; Primary nnimap groups are bare names (INBOX, [Gmail]/...); secondary
 ;; groups are nnimap+gmail-xingwenju:INBOX, nnimap+qq:INBOX, etc.
 (setq gnus-select-method
@@ -62,7 +63,8 @@
                     "xingwenju@gmail.com"
                     "linuxing3@qq.com")))
 
-(setq auth-sources '("~/.authinfo" "~/.authinfo.gpg" "~/.netrc")
+(load! "agenix-auth")
+(setq auth-sources '(agenix-mail "~/.authinfo.gpg" "~/.netrc")
       auth-source-save-behavior nil)
 
 (setq gnus-posting-styles
