@@ -37,7 +37,7 @@ On this `aarch64-linux` host the cache has no Emacs closure, so Doom still compi
 | --- | --- |
 | Doom `:email gnus` | `modules/app/doom-emacs/doomdir/init.el` |
 | IMAP/SMTP + posting styles | `modules/app/doom-emacs/doomdir/config.el` |
-| Passwords → `~/.authinfo` | `modules/app/doom-emacs/gmail.nix` + `gmail-authinfo.service` |
+| Passwords (read from Agenix at login, no `~/.authinfo`) | `modules/app/doom-emacs/doomdir/agenix-auth.el` (`agenix-mail` auth-source backend) |
 
 Use Google App Passwords / QQ **授权码** (not login passwords). Encrypt / refresh a secret from `security/secrets`.
 
@@ -56,9 +56,11 @@ git add mail-qq-pass.age secrets.nix
 After Home Manager activates:
 
 ```sh
-systemctl --user restart agenix.service gmail-authinfo.service
-# ~/.authinfo should list Gmail + QQ IMAP/SMTP machines (passwords redacted locally)
+systemctl --user restart agenix.service
+ls "$XDG_RUNTIME_DIR"/agenix/mail-*-pass.age   # Gnus/smtpmail read these at login
 ```
+
+Nothing is written to `~/.authinfo`; activation deletes a leftover file from the old `gmail-authinfo.service` if it holds only those generated mail lines. After rotating a password with `agenix -e`, restart `agenix.service` and run `M-x auth-source-forget-all-cached` in a running Emacs.
 
 In Doom: `M-x gnus`. Compose from the matching group so posting styles pick From/SMTP user (`m`, then `C-c C-c`). `overlabor77` uses English `[Gmail]/*` folders; `xingwenju` uses bare folders (`INBOX`, `Sent`, `Trash`, …); QQ groups are `nnimap+qq:INBOX`, `nnimap+qq:Sent Messages`, etc. Chinese-label zombies are pruned on `gnus-started-hook`.
 
