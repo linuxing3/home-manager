@@ -23,6 +23,7 @@
       default = hmSwitch;
       home-manager-switch = hmSwitch;
       bootstrap = hmSwitch;
+      inherit (pkgs) net-panel;
     };
     apps = {
       default = {

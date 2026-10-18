@@ -27,6 +27,9 @@
       "modules/app/credential-backup/default.nix"
       "modules/app/crabbox/default.nix"
       "modules/app/qq-mail-notion"
+      "modules/app/net-panel"
+      "modules/pkgs/net-panel.nix"
+      "overlays/packages/net-panel.nix"
     ];
     qualityPathArgs = builtins.concatStringsSep " " qualityPaths;
   in {
