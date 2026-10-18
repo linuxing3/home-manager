@@ -57,7 +57,11 @@
   my.ai.collie.enable = true;
   my.ai.orca.enable = true;
   my.ai.cursorAgent.enable = true;
-  my.ai.cliProxyApi.enable = true;
+  # CLIProxyAPI binary is unpatched for NixOS (status 127 crash-loop) and codex
+  # now routes through jev-router instead; keep it off.
+  my.ai.cliProxyApi.enable = false;
+  my.ai.magpieGateway.enable = true;
+  my.ai.jevRouter.enable = true;
 
   home.stateVersion = "25.11";
 

@@ -15,6 +15,8 @@
     ./cc-switch.nix
     ./herdr
     ./cliproxyapi.nix
+    ./magpie-gateway.nix
+    ./jev-router
     ./collie.nix
     ./orca.nix
     ./cursor-to-openai.nix

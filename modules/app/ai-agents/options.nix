@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   inputs,
@@ -139,6 +140,67 @@ in {
         type = lib.types.package;
         default = pkgs.cli-proxy-api;
         description = "CLIProxyAPI package.";
+      };
+    };
+
+    magpieGateway = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Run the user-installed magpie binary headless so its OpenAI/Responses gateway stays up on gatewayPort.";
+      };
+      binary = lib.mkOption {
+        type = lib.types.str;
+        default = "${config.home.homeDirectory}/.local/bin/magpie";
+        description = "Path to the magpie binary (user-managed, not a Nix package).";
+      };
+      gatewayPort = lib.mkOption {
+        type = lib.types.port;
+        default = 3425;
+        description = "Fixed port where magpie serves its keyless loopback OpenAI/Responses gateway.";
+      };
+      uiPort = lib.mkOption {
+        type = lib.types.port;
+        default = 3999;
+        description = "Port for magpie's browser UI, kept distinct from gatewayPort so both can bind headless.";
+      };
+    };
+
+    jevRouter = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Run jev-router, an OpenAI/Responses failover gateway that prefers magpie and falls back to cursor-to-openai.";
+      };
+      port = lib.mkOption {
+        type = lib.types.port;
+        default = 3426;
+        description = "Loopback port OMP and codex-cli point at.";
+      };
+      magpiePort = lib.mkOption {
+        type = lib.types.port;
+        default = 3425;
+        description = "Primary upstream: magpie's gateway port.";
+      };
+      cursorPort = lib.mkOption {
+        type = lib.types.port;
+        default = 3010;
+        description = "Fallback upstream: cursor-to-openai port.";
+      };
+      cursorFallbackModel = lib.mkOption {
+        type = lib.types.str;
+        default = "claude-4.5-sonnet";
+        description = "Model name sent to cursor-to-openai on fallback (magpie model ids are rewritten to this).";
+      };
+      connectTimeout = lib.mkOption {
+        type = lib.types.int;
+        default = 5;
+        description = "Per-upstream TCP connect timeout in seconds before failing over.";
+      };
+      readTimeout = lib.mkOption {
+        type = lib.types.int;
+        default = 300;
+        description = "Per-upstream read timeout in seconds for a streamed response.";
       };
     };
   };

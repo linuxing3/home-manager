@@ -6,6 +6,7 @@
   ...
 }: let
   cfg = config.my.ai.omp;
+  ai = import ./lib.nix {inherit config lib pkgs;};
   mcp = import ./mcp-lib.nix {inherit config lib pkgs;};
   globalAgents = pkgs.writeText "ai-agent-AGENTS.md" ''
     ${builtins.readFile ./files/environment-rules.md}
@@ -50,10 +51,27 @@ in {
         symbolPreset = "unicode";
         composer.shape = "band";
         theme.dark = "titanium";
-        modelRoles.default = "cursor/default";
+        # Route the default role through magpie, which OMP reaches via jev-router
+        # (magpie primary, cursor-to-openai fallback). If magpie dies, jev-router
+        # fails over so OMP keeps working.
+        modelRoles.default = "magpie/codex/gpt-6-sol";
         defaultThinkingLevel = "auto";
         providers.webSearchOrder = [];
       };
     };
+
+    # OMP's models.yml is user-seeded (magpie writes it). Keep its model catalog
+    # but point the magpie provider at jev-router so every magpie/* request gets
+    # the failover path instead of talking to magpie's gateway directly.
+    home.activation.pointOmpMagpieAtJevRouter = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      ${ai.activationPreamble}
+      models=${lib.escapeShellArg "${ai.homeDir}/.omp/agent/models.yml"}
+      if [[ -f "$models" ]]; then
+        preserve_once "$models"
+        ${pkgs.yq}/bin/yq --yaml-output --in-place \
+          '(.providers.magpie.baseUrl) = "http://127.0.0.1:${toString config.my.ai.jevRouter.port}/v1"' \
+          "$models"
+      fi
+    '';
   };
 }

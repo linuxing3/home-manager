@@ -13,17 +13,19 @@
     ${builtins.readFile ../files/notion-bootstrap.md}
   '';
   codexDefaults = pkgs.writeText "codex-defaults.json" (builtins.toJSON {
-    model = "gpt-5.6-sol";
-    model_provider = "cliproxyapi";
+    model = "codex/gpt-5.6-sol";
+    model_provider = "jev";
     approval_policy = "never";
     sandbox_mode = "danger-full-access";
     model_reasoning_effort = "high";
     plan_mode_reasoning_effort = "high";
-    model_providers.cliproxyapi = {
-      name = "cliproxyapi";
-      base_url = "http://127.0.0.1:8317/v1";
+    # jev-router (:3426) prefers magpie and falls back to cursor-to-openai; it is
+    # a keyless loopback proxy, so codex needs no OpenAI auth here.
+    model_providers.jev = {
+      name = "jev";
+      base_url = "http://127.0.0.1:3426/v1";
       wire_api = "responses";
-      requires_openai_auth = true;
+      requires_openai_auth = false;
     };
     features = {
       hooks = true;
