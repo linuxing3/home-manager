@@ -54,6 +54,7 @@
   my.features.home.doomEmacs = true;
   my.features.home.qqMailNotion.enable = true;
   my.features.home.netPanel.enable = true;
+  my.features.home.netPanel.service = true;
   my.ai.herdr.enable = true;
   my.ai.pi.enable = true;
   my.ai.agentlyMail.enable = true;
