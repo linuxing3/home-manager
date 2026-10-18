@@ -78,19 +78,6 @@
       attributePRsToAgent = true;
     };
   });
-  cursorTunnelDefaults = pkgs.writeText "cursor-tunnel-defaults.json" (builtins.toJSON {
-    ingress = [
-      {
-        hostname = "cursor.efwmcsyle.ccwu.cc";
-        service = "http://127.0.0.1:3010";
-      }
-      {
-        hostname = "cursor-origin.efwmcsyle.ccwu.cc";
-        service = "http://127.0.0.1:3010";
-      }
-      {service = "http_status:404";}
-    ];
-  });
 in {
   home.packages =
     [cursorShim]
@@ -118,6 +105,5 @@ in {
   home.activation.mergeCursorConfig = lib.hm.dag.entryAfter ["writeBoundary"] ''
     ${ai.activationPreamble}
     ${ai.mergeJsonFile "${ai.homeDir}/.cursor/cli-config.json" cursorDefaults}
-    ${ai.mergeYamlFile "${ai.homeDir}/.cloudflared/cursor-openai.yml" cursorTunnelDefaults ". * $defaults[0]"}
   '';
 }

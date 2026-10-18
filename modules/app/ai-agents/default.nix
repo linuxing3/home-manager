@@ -20,7 +20,6 @@
     ./jev-router
     ./collie.nix
     ./orca.nix
-    ./cursor-to-openai.nix
     ./dsh.nix
     ./webcodex.nix
   ];
