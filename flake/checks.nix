@@ -26,6 +26,7 @@
       "modules/app/virtualization/default.nix"
       "modules/app/credential-backup/default.nix"
       "modules/app/crabbox/default.nix"
+      "modules/app/qq-mail-notion"
     ];
     qualityPathArgs = builtins.concatStringsSep " " qualityPaths;
   in {
