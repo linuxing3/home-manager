@@ -164,7 +164,7 @@ CFG
   # stop it on unplug. Manual "vivo off": touch ~/.local/state/vivo-off.
   vivoWatchdog = pkgs.writeShellApplication {
     name = "vivo-watchdog";
-    runtimeInputs = with pkgs; [android-tools coreutils systemd];
+    runtimeInputs = with pkgs; [android-tools coreutils systemd gnused gawk libnotify];
     text = ''
       state="$HOME/.local/state"
       LOG="$state/vivo-watchdog.log"
@@ -184,6 +184,15 @@ CFG
         echo "$(date '+%F %T') USB connected, starting share" >> "$LOG"
         systemctl --user start gnirehtet-share
         exit 0
+      fi
+      # Report Vivo hotspot IP (AP iface: wlan* /24 that is not the client wifi)
+      client=$(adb shell 'ip route show default' 2>/dev/null | sed -n 's/^default.* dev \(wlan[0-9]*\).*/\1/p' | head -n1 || true)
+      hip=$(adb shell 'ip -4 -o addr show' 2>/dev/null | tr -d '\r' | awk -v c="$client" '$2 ~ /^(wlan|ap|swlan)/ && $2 != c && $4 ~ /\/24$/ {split($4,a,"/"); print a[1]; exit}' || true)
+      if [ -n "$hip" ] && [ "$hip" != "$(cat "$state/vivo-hotspot-ip" 2>/dev/null || true)" ]; then
+        echo "$hip" > "$state/vivo-hotspot-ip"
+        msg="HOTSPOT IP $hip (iPhone proxy http $hip:18080 / socks $hip:1080)"
+        echo "$(date '+%F %T') $msg" >> "$LOG"
+        notify-send "Vivo hotspot" "$msg" 2>/dev/null || true
       fi
       probe() { adb shell 'curl -s -m 8 -o /dev/null -w "%{http_code}" https://www.google.com' 2>/dev/null || true; }
       [ "$(probe)" = "200" ] && exit 0

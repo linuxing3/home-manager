@@ -6,6 +6,7 @@
     ./rtk.nix
     ./pi.nix
     ./omp.nix
+    ./omp-hook.nix
     ./grok.nix
     ./nix-profile-cleanup.nix
     ./codex

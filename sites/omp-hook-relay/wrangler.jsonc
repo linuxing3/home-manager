@@ -1,0 +1,20 @@
+{
+  // Secrets (wrangler secret put): NOTION_HOOK_SECRET, OMP_LOCAL_KEY,
+  // optional CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET.
+  "$schema": "https://www.unpkg.com/wrangler@4.93.0/config-schema.json",
+  "name": "omp-hook-relay",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-08",
+  "account_id": "dc6e3e767a93266774857d962dd60a4f",
+  "workers_dev": false,
+  "routes": [{ "pattern": "omp-notion-hook.efwmcapp.com", "custom_domain": true }],
+  "vars": {
+    "UPSTREAM_URL": "https://omp-hook.efwmcapp.com/hook",
+    "TITLE_PREFIX": "[本机·OMP]"
+  },
+  "kv_namespaces": [{ "binding": "OMP_HOOK_STATE", "id": "72606e9893394dcc9e251891e741a4e8" }],
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false }
+  }
+}
