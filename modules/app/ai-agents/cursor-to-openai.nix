@@ -5,6 +5,7 @@
   ...
 }: let
   ai = import ./lib.nix {inherit config lib pkgs;};
+  cfg = config.my.ai.cursorToOpenai;
   cursorToOpenaiEnvFile = "${ai.configHome}/cursor-to-openai.env";
   cursorToOpenaiEnvTemplate = pkgs.writeText "cursor-to-openai.env" ''
     PORT=3010
@@ -26,60 +27,62 @@
     };
   '';
 in {
-  xdg.configFile = {
-    "systemd/user/default.target.wants/cloudflared-cursor-openai.service".force = true;
-    "systemd/user/default.target.wants/cursor-to-openai.service".force = true;
-  };
-
-  systemd.user.services = {
-    cloudflared-cursor-openai = {
-      Unit = {
-        Description = "Cloudflare Tunnel for Cursor-to-OpenAI";
-        After = ["network-online.target"];
-        Wants = ["network-online.target"];
-        ConditionPathExists = "${ai.homeDir}/.cloudflared/cursor-openai.yml";
-      };
-      Service =
-        ai.serviceHardening
-        // {
-          Type = "simple";
-          ExecStart = "${pkgs.cloudflared}/bin/cloudflared --no-autoupdate tunnel --config ${ai.homeDir}/.cloudflared/cursor-openai.yml run cursor-openai";
-          Restart = "on-failure";
-          RestartSec = 5;
-        };
-      Install.WantedBy = ["default.target"];
+  config = lib.mkIf cfg.enable {
+    xdg.configFile = {
+      "systemd/user/default.target.wants/cloudflared-cursor-openai.service".force = true;
+      "systemd/user/default.target.wants/cursor-to-openai.service".force = true;
     };
 
-    cursor-to-openai = {
-      Unit = {
-        Description = "Cursor To OpenAI on loopback port 3010";
-        After = ["network.target"];
-        ConditionPathExists = "/share/data/sources/cursor-to-openai/package.json";
-      };
-      Service =
-        ai.serviceHardening
-        // {
-          Type = "simple";
-          WorkingDirectory = "/share/data/sources/cursor-to-openai";
-          EnvironmentFile = "-${cursorToOpenaiEnvFile}";
-          Environment = [
-            "PORT=3010"
-            "PATH=${ai.profileBin}:/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
-          ];
-          ExecStart = "${ai.profileBin}/node --require ${nodeLoopbackListen} src/app.js";
-          Restart = "on-failure";
-          RestartSec = 5;
+    systemd.user.services = {
+      cloudflared-cursor-openai = {
+        Unit = {
+          Description = "Cloudflare Tunnel for Cursor-to-OpenAI";
+          After = ["network-online.target"];
+          Wants = ["network-online.target"];
+          ConditionPathExists = "${ai.homeDir}/.cloudflared/cursor-openai.yml";
         };
-      Install.WantedBy = ["default.target"];
-    };
-  };
+        Service =
+          ai.serviceHardening
+          // {
+            Type = "simple";
+            ExecStart = "${pkgs.cloudflared}/bin/cloudflared --no-autoupdate tunnel --config ${ai.homeDir}/.cloudflared/cursor-openai.yml run cursor-openai";
+            Restart = "on-failure";
+            RestartSec = 5;
+          };
+        Install.WantedBy = ["default.target"];
+      };
 
-  home.activation.seedCursorToOpenaiEnv = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    ${ai.activationPreamble}
-    ${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg ai.configHome}
-    env_file=${lib.escapeShellArg cursorToOpenaiEnvFile}
-    if [[ ! -f "$env_file" ]]; then
-      ${pkgs.coreutils}/bin/install -m 600 ${cursorToOpenaiEnvTemplate} "$env_file"
-    fi
-  '';
+      cursor-to-openai = {
+        Unit = {
+          Description = "Cursor To OpenAI on loopback port 3010";
+          After = ["network.target"];
+          ConditionPathExists = "/share/data/sources/cursor-to-openai/package.json";
+        };
+        Service =
+          ai.serviceHardening
+          // {
+            Type = "simple";
+            WorkingDirectory = "/share/data/sources/cursor-to-openai";
+            EnvironmentFile = "-${cursorToOpenaiEnvFile}";
+            Environment = [
+              "PORT=3010"
+              "PATH=${ai.profileBin}:/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
+            ];
+            ExecStart = "${ai.profileBin}/node --require ${nodeLoopbackListen} src/app.js";
+            Restart = "on-failure";
+            RestartSec = 5;
+          };
+        Install.WantedBy = ["default.target"];
+      };
+    };
+
+    home.activation.seedCursorToOpenaiEnv = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      ${ai.activationPreamble}
+      ${pkgs.coreutils}/bin/mkdir -p ${lib.escapeShellArg ai.configHome}
+      env_file=${lib.escapeShellArg cursorToOpenaiEnvFile}
+      if [[ ! -f "$env_file" ]]; then
+        ${pkgs.coreutils}/bin/install -m 600 ${cursorToOpenaiEnvTemplate} "$env_file"
+      fi
+    '';
+  };
 }

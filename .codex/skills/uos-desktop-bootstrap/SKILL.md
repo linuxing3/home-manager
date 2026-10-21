@@ -22,6 +22,7 @@ Apply changes in this order and verify each boundary before continuing. Focused 
 | `repair-cloudflared-office` | `cloudflared-office.service` token/ExecStart/agenix on systemd 241 |
 | `install-nixos-beside-uos` | NixOS on sda4 beside UOS; nixos-install/GRUB; nspawn `--boot` EUNATCH |
 | `repair-oxwm-getty-mouse` | NixOS oxwm: getty tty1 autologin/startx, `/usr/bin/agetty` 203/EXEC, frozen/missing USB mouse |
+| `configure-fcitx5-rime` | oxwm fcitx5/Rime, duplicate `fcitx5-daemon`, or luna_pinyin fuzzy pinyin |
 | `configure-hp-m252n` | NixOS CUPS USB queue for HP Color LaserJet Pro M252n (`03f0:3c2a`) |
 | `configure-ios-support` | NixOS iPhone/iPad pairing, `usbmuxd`, `libimobiledevice`, and `ifuse` |
 | `activate-gnirehtet-vpnuk` | VPNUK `Device_1`, Android `gnirehtet-connect`, iPhone HTTP/SOCKS on hotspot `feifei` |

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UOS 20 并存安装 NixOS</title>
+<style>
+:root {
+  --bg: #1d2021;
+  --fg: #ebdbb2;
+  --muted: #a89984;
+  --red: #fb4934;
+  --green: #b8bb26;
+  --yellow: #fabd2f;
+  --blue: #83a598;
+  --aqua: #8ec07c;
+  --card: #282828;
+  --line: #3c3836;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 17px/1.55 "Source Han Sans SC", "Noto Sans CJK SC", sans-serif;
+}
+main { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .4rem; }
+h2 { margin: 2.4rem 0 .6rem; font-size: 1.35rem; border-bottom: 1px solid var(--line); padding-bottom: .3rem; }
+h3 { margin: 1.4rem 0 .4rem; font-size: 1.05rem; color: var(--aqua); }
+p, li { color: var(--fg); }
+.lede { color: var(--muted); margin-top: 0; }
+nav { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin: 1.2rem 0 1.6rem; }
+nav a { color: var(--blue); }
+.card, .danger, .ok {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: .9rem 1rem;
+  margin: 1rem 0;
+}
+.danger { border-color: var(--red); }
+.ok { border-color: var(--green); }
+.danger strong, h2 .no { color: var(--red); }
+code, pre { font-family: "JetBrainsMono Nerd Font", ui-monospace, monospace; font-size: .9em; }
+code { color: var(--yellow); }
+pre {
+  background: #32302f;
+  border-radius: 8px;
+  padding: .9rem 1rem;
+  overflow-x: auto;
+  line-height: 1.45;
+}
+table { width: 100%; border-collapse: collapse; margin: .8rem 0 1.2rem; font-size: .95rem; }
+th, td { border-bottom: 1px solid var(--line); text-align: left; padding: .4rem .45rem; vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+ol.steps > li { margin: .7rem 0; }
+footer { margin-top: 3rem; color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>在统信 UOS 20 上并存安装 NixOS</h1>
+<p class="lede">面向已有安全可信计算机（飞腾 Phytium D2000 + Glenfly Arise1020，统信 UOS 20 / 内核 4.19）的完整部署。NixOS 装在独立分区和子卷上，UOS 系统分区、用户数据和共享盘保持不动。固件默认仍启动 UOS。</p>
+
+<nav>
+  <a href="#goal">目标</a>
+  <a href="#never">禁止</a>
+  <a href="#disk">磁盘</a>
+  <a href="#prep">准备</a>
+  <a href="#install">安装</a>
+  <a href="#boot">启动</a>
+  <a href="#kernel">内核</a>
+  <a href="#uos419">UOS 4.19</a>
+  <a href="#after">装完</a>
+  <a href="#live">本机现状</a>
+</nav>
+
+<div class="danger">
+  <strong>先读这一段。</strong> 本流程不会重装 UOS，也不会格式化存放数据的分区。唯一会清空的是专用 EFI 和 <code>/boot</code>（仅当它们还是空盘或错误文件系统时）。在任何 <code>mkfs</code> 之前，先把那两块分区上还需要的文件拷走。仓库脚本对数据盘有型号校验，并拒绝操作 NVMe 上的 UOS 盘。
+</div>
+
+<h2 id="goal">目标</h2>
+<ul>
+  <li>UOS 继续从 NVMe 启动，NixOS 作为第二系统，从机械盘的可移动 EFI 进入。</li>
+  <li>NixOS 根、软件库、家目录、交换文件各自使用 btrfs 子卷，不覆盖 UOS 的根和数据分区。</li>
+  <li>共享数据盘只挂载为 <code>/share</code>，安装过程不格式化它。</li>
+  <li>配置来自本仓库 flake，而不是安装介质上的临时频道。</li>
+</ul>
+
+<h2 id="never">禁止操作</h2>
+<div class="danger">
+<ul>
+  <li>不要对数据盘执行 <code>mkfs</code>，不要对 UOS 所在的 NVMe 做任何格式化或分区。</li>
+  <li>不要运行 Disko 的 <code>destroy</code> 或 <code>format</code>。<code>nixos/disko-config.nix</code> 只是磁盘布局说明，<code>enableConfig</code> 保持关闭。</li>
+  <li>不要在 UOS 上用 <code>systemd-nspawn --boot</code> 冒充启动测试。统信 4.19 不能把 NixOS 的 systemd 261 当作 PID 1（<code>EUNATCH</code> / Protocol driver not attached）。真正的验收是从机械盘 EFI 启动。</li>
+  <li>若 NixOS 已经迁到 NVMe 的第 6 分区，不要在该系统上执行 <code>nixos-rebuild switch --flake …#sda-phytium</code>。那会写出指向旧机械盘根的 GRUB 代，而新的 Nix 存储只在 NVMe 上。本机第 22 代就是这样进了 initrd 急救，并因 root 被锁而无法进控制台。</li>
+  <li>不要对 banana 做 <code>luksFormat</code>。它保持明文。NixOS 启动口令来自 KeyVault U 盘，UOS 不依赖这只 U 盘。</li>
+</ul>
+</div>
+
+<h2 id="disk">磁盘角色</h2>
+<p>机械盘由仓库脚本按磁盘 ID 和型号令牌识别（WD10EARZ）。GPT 上没有 PARTLABEL，挂载一律用 UUID。下表是并存安装时的角色，不是要你重新分区。</p>
+<table>
+  <thead><tr><th>分区</th><th>角色</th><th>文件系统</th><th>能否格式化</th></tr></thead>
+  <tbody>
+    <tr><td>sda1</td><td>NixOS 可移动 EFI</td><td>vfat</td><td>仅当为空或文件系统不对</td></tr>
+    <tr><td>sda2</td><td>NixOS <code>/boot</code></td><td>ext4，标签 boot</td><td>仅当为空或仍是旧标签</td></tr>
+    <tr><td>sda3</td><td>watermelon，挂到 <code>/share</code></td><td>ext4</td><td>否</td></tr>
+    <tr><td>sda4</td><td>banana，NixOS 子卷</td><td>btrfs</td><td>否，只新建子卷</td></tr>
+  </tbody>
+</table>
+<p>banana 上的子卷：</p>
+<table>
+  <thead><tr><th>子卷</th><th>挂载点</th></tr></thead>
+  <tbody>
+    <tr><td><code>@nixos</code></td><td><code>/</code>（默认子卷）</td></tr>
+    <tr><td><code>@nix</code></td><td><code>/nix</code></td></tr>
+    <tr><td><code>@home</code></td><td><code>/home</code></td></tr>
+    <tr><td><code>@swap</code></td><td><code>/swap</code>（16G swapfile；UOS 4.19 不能 swapon，NixOS 可以）</td></tr>
+  </tbody>
+</table>
+<p>NVMe 上的 UOS（EFI、Boot、Root、受保护分区和交换分区）不进入本安装的格式化路径。安装树挂在 <code>/mnt</code>，UOS 自己的根保持原样。</p>
+
+<h2 id="prep">安装前</h2>
+<ol class="steps">
+  <li>在真实终端里操作，需要 sudo。确认用户数据、watermelon 和 UOS 家目录都有独立备份。本流程不删除它们，但 EFI/<code>/boot</code> 的一次性格式化不可逆。</li>
+  <li>仓库在 <code>/home/Designers/home-config</code>。辅助脚本是 <code>nixos/install-nixos-beside-uos.sh</code>。先看状态，不要直接进菜单里的格式化项：
+    <pre>sudo nixos/install-nixos-beside-uos.sh status</pre>
+    输出必须指向机械数据盘，并写明 UOS 仍在 NVMe、脚本不会碰它。型号不对就停。</li>
+  <li>在 UOS 上准备安装工具（只装工具，不装系统）：
+    <pre>nix profile install nixpkgs#nixos-install-tools</pre>
+  </li>
+  <li>构建要写入磁盘的系统闭包。UOS 4.19 上必须关掉沙箱，否则 initrd 里的 <code>udevadm verify</code> 会因 <code>EUNATCH</code> 失败（仓库用 <code>nixos/udev.nix</code> 跳过这项校验）：
+    <pre>nix build '.#nixosConfigurations.sda.config.system.build.toplevel' \
+  --out-link /tmp/nixos-sda \
+  --option sandbox false --option filter-syscalls false</pre>
+    需要飞腾声卡和 Glenfly DRM 时，改用下一节的 <code>sda-phytium</code> 闭包，仍用同一个安装脚本写入。</li>
+</ol>
+
+<h2 id="install">安装</h2>
+<p>脚本动作：<code>status</code>、<code>subvolumes</code>、<code>mount</code>、<code>swap</code>、<code>format-boot</code>、<code>install</code>、<code>bootloader</code>、<code>nspawn</code>、<code>unmount</code>。交互菜单是同一套命令。</p>
+<ol class="steps">
+  <li>只在 banana 上创建尚不存在的子卷，并把默认子卷设为 <code>@nixos</code>。已有子卷会跳过。这一步不执行 <code>mkfs</code>。
+    <pre>sudo nixos/install-nixos-beside-uos.sh subvolumes</pre>
+  </li>
+  <li>把安装树挂到 <code>/mnt</code>：<code>@nixos</code>、<code>@nix</code>、<code>@home</code>、<code>@swap</code>，watermelon 挂到 <code>/mnt/share</code>，再挂 <code>/mnt/boot</code> 和 <code>/mnt/boot/efi</code>。
+    <pre>sudo nixos/install-nixos-beside-uos.sh mount</pre>
+    若 sda2 仍标着旧标签或不是 ext4，脚本会拒绝把它当作 <code>/boot</code>。只有这时才考虑 <code>format-boot</code>，确认短语是 <code>FORMAT EFI BOOT</code>。它只格式化 sda1 和 sda2。</li>
+  <li>交换文件可选。UOS 内核对 btrfs swapfile 的 <code>swapon</code> 会失败，这不阻止安装；NixOS 6.18 / Deepin 6.6 能用。
+    <pre>sudo nixos/install-nixos-beside-uos.sh swap</pre>
+  </li>
+  <li>安装。若 <code>/tmp/nixos-sda</code> 存在，脚本用 <code>--system</code> 复制已构建闭包；否则用 flake <code>#sda</code>。两者不会同时传给 <code>nixos-install</code>。确认短语是 <code>INSTALL</code>。这一步复制闭包和引导配置，不重新分区。
+    <pre>sudo nixos/install-nixos-beside-uos.sh install</pre>
+    安装带 <code>--no-root-passwd</code>。root 口令哈希和 initrd 急救入口写在 <code>nixos/configuration.nix</code> 里，避免再出现「root account is locked」。</li>
+  <li>GRUB 由 <code>nixos/nixos-enter-uos.sh</code> 安装，不使用上游 <code>nixos-enter --mount-proc</code>（UOS 的 <code>binfmt_misc</code> 会让 <code>unshare</code> 返回 EBUSY）。引导程序是可移动 EFI（<code>efiInstallAsRemovable</code>，<code>canTouchEfiVariables = false</code>），所以不会改写 UOS 的 NVRAM。只重装 GRUB 时：
+    <pre>sudo nixos/install-nixos-beside-uos.sh bootloader</pre>
+  </li>
+  <li>卸下安装树后再重启：
+    <pre>sudo nixos/install-nixos-beside-uos.sh unmount</pre>
+  </li>
+</ol>
+
+<h2 id="boot">怎么进 NixOS，又不丢 UOS</h2>
+<div class="ok">
+  固件默认项保持 UOS 的 NVMe。要进 NixOS，在启动菜单里选手动 EFI：机械盘上的 <code>BOOTAA64.EFI</code>。U 盘 KeyVault 只在走 NixOS 时需要；拔掉它，UOS 仍能启动。
+</div>
+<p>NixOS 启动时在控制台输入 KeyVault 的 LUKS 口令。解锁后的 U 盘以只读方式挂到 <code>/keyvault</code>，并检查其中有恢复目录。banana 本身不加密。</p>
+<p>GRUB 使用文本交接（<code>gfxpayloadEfi = text</code>）。这台 Glenfly 没有 initrd 里的 KMS，若保留图形帧，HDMI 上看不到内核和口令提示。</p>
+
+<h2 id="kernel">内核怎么选</h2>
+<table>
+  <thead><tr><th>Flake</th><th>内核</th><th>模拟声卡</th><th>Glenfly</th></tr></thead>
+  <tbody>
+    <tr><td><code>#sda</code></td><td>主线 6.18</td><td>无</td><td>仅 modesetting</td></tr>
+    <tr><td><code>#sda-phytium</code></td><td>Deepin linux-6.6.y</td><td><code>snd-hda-phytium</code></td><td>内核内 <code>arise</code> DRM</td></tr>
+  </tbody>
+</table>
+<p>UOS 自带的 <code>arise_pro</code> 和 <code>ft-hda</code> 绑在 <code>4.19.0-arm64-desktop</code> 上，不能加载进 NixOS。优先 Deepin 6.6.y，不要用已停止维护的 UOS K5.10。首次拉取内核输入：</p>
+<pre>nix flake lock --update-input deepin-kernel</pre>
+<p>X 仍走 modesetting。完整 Glenfly OpenGL 还需要 DRM 模块以外的用户态驱动，主线 <code>#sda</code> 不包含它。</p>
+
+<h2 id="uos419">在 UOS 4.19 上安装时的已知失败</h2>
+<table>
+  <thead><tr><th>现象</th><th>原因</th><th>做法</th></tr></thead>
+  <tbody>
+    <tr><td><code>unshare: mount /proc failed</code>，设备或资源忙</td><td><code>nixos-enter --mount-proc</code> 与 <code>/proc</code> 下的 binfmt 冲突</td><td>只用 <code>nixos-enter-uos.sh</code> / 脚本的 <code>bootloader</code></td></tr>
+    <tr><td><code>exec: chroot: not found</code></td><td>替换 PATH 之后才去找宿主的 chroot</td><td>保留 <code>/usr/sbin/chroot</code>，再把 NixOS 的 <code>sw/bin</code> 加到前面</td></tr>
+    <tr><td>进入后 <code>mount: command not found</code></td><td>chroot 之后仍是宿主 PATH</td><td>在 <code>-c</code> 里把 PATH 设到系统 profile</td></tr>
+    <tr><td>nspawn <code>--boot</code>：Protocol driver not attached</td><td>systemd 261 不能在 4.19 上当 PID 1</td><td>不要 <code>--boot</code>。脚本的 <code>nspawn</code> 只是查看文件的 shell</td></tr>
+    <tr><td>构建时 <code>udevadm verify</code> 失败</td><td>同一内核缺口</td><td><code>--option sandbox false</code>，并使用仓库的 udev 模块</td></tr>
+  </tbody>
+</table>
+
+<h2 id="after">装完之后</h2>
+<p>第一次从 NixOS 启动并确认是预期根分区之后，日常重建用当时的活动配置。若根已经在 NVMe 第 6 分区：</p>
+<pre>sudo nixos-rebuild switch --flake /home/Designers/home-config#nvme-p6-phytium</pre>
+<p>用户环境仍单独激活：</p>
+<pre>home-manager switch --flake .#Designers</pre>
+<ul>
+  <li>每次启动和重启都会把 <code>@home</code> 做成只读快照 <code>@snapshots/home-YYYYMMDD-HHMMSS</code>，保留 12 份。恢复时从 <code>/btrfs-root</code> 把该快照送回 <code>@home</code>。</li>
+  <li>tty1 自动登录、startx、oxwm、USB 鼠标：鼠标插 xHCI（USB3 或 KeyVault 集线器）。不要加载 <code>uhci_hcd</code>，Zhaoxin UHCI 在 6.6 上会卡住。不要写 <code>systemd.services."getty@tty1"</code>，那会把 NixOS 的 getty 包装换成不存在的 <code>/usr/bin/agetty</code>。</li>
+  <li>USB 惠普 M252n 走 EHCI 和 CUPS，同样不要为了找打印机去加载 <code>uhci_hcd</code>。</li>
+  <li>Caps Lock 点按为 Escape，由 NixOS 的 keyd 模块提供。</li>
+</ul>
+
+<h2 id="live">这台机器现在的布局</h2>
+<p>2026-08-24 之后，正在运行的 NixOS 根是 NVMe 第 6 分区（flake <code>#nvme-p6-phytium</code>），子卷为 <code>@nixos</code>、<code>@nix</code>、<code>@home</code>、<code>@tmp</code>。交换分区是 UOS 的 NVMe 第 3 分区，不是 swapfile。UOS 仍在 NVMe 第 1–5 分区。机械盘第 4 分区是旧副本。<code>/boot</code> 和 <code>/share</code> 仍在机械盘上。</p>
+<p>因此：新机器按上面的 sda 流程做并存；这台已经迁到 NVMe 的机器，只重建 <code>#nvme-p6-phytium</code>，不要再 switch <code>#sda-phytium</code>。</p>
+
+<footer>
+  依据本仓库 <code>.codex/skills/install-nixos-beside-uos</code>、<code>nixos/install-nixos-beside-uos.sh</code>、<code>nixos/README.md</code> 与硬件模块整理。不含口令、密钥或磁盘加密材料。
+</footer>
+</main>
+</body>
+</html>

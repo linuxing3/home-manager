@@ -63,31 +63,32 @@ svg#arch{width:100%;height:auto;display:block}
 <main>
   <section class="card wide">
     <h2>联网架构 <span class="badge dim" id="archmode">…</span></h2>
-    <svg id="arch" viewBox="0 0 1000 400" role="img" aria-label="network architecture">
-      <path id="p-ip-vivo" class="link" d="M140 112 C140 170 140 200 140 250"/>
-      <path id="p-vivo-host" class="link" d="M230 300 C300 300 320 230 390 230"/>
-      <path id="p-ip-host" class="link" d="M230 80 C320 80 330 190 390 200"/>
-      <path id="p-host-lan" class="link" d="M610 190 C660 190 660 90 720 90"/>
-      <path id="p-host-wg" class="link hk" d="M610 250 C660 250 660 310 720 310"/>
-      <path id="p-wg-lan" class="link tunnel" d="M800 280 C800 200 800 180 800 122"/>
-      <path id="p-lan-net" class="link" d="M880 90 C920 90 930 150 930 175"/>
-      <path id="p-wg-net" class="link hk" d="M880 310 C920 310 930 250 930 225"/>
+    <svg id="arch" viewBox="0 0 1260 400" role="img" aria-label="network architecture">
+      <path id="p-ip-vivo" class="link" d="M145 112 C145 160 145 200 145 246"/>
+      <path id="p-vivo-host" class="link" d="M320 302 C400 302 430 240 500 240"/>
+      <path id="p-ip-host" class="link" d="M250 74 C360 74 420 150 500 190"/>
+      <path id="p-host-lan" class="link" d="M750 180 C785 180 785 72 820 72"/>
+      <path id="p-host-wg" class="link hk" d="M750 250 C785 250 785 308 820 308"/>
+      <path id="p-wg-lan" class="link tunnel" d="M940 268 C940 200 940 170 940 112"/>
+      <path id="p-lan-net" class="link" d="M1060 72 C1082 72 1090 130 1100 168"/>
+      <path id="p-wg-net" class="link hk" d="M1060 308 C1082 308 1090 250 1100 208"/>
       <circle r="5" class="pkt" id="k-vivo"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#p-vivo-host"/></animateMotion></circle>
       <circle r="5" class="pkt" id="k-ip"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#p-ip-vivo"/></animateMotion></circle>
       <circle r="5" class="pkt" id="k-lan"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#p-host-lan"/></animateMotion></circle>
       <circle r="5" class="pkt hk" id="k-wg"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#p-host-wg"/></animateMotion></circle>
       <circle r="5" class="pkt hk" id="k-wgnet"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#p-wg-net"/></animateMotion></circle>
       <circle r="5" class="pkt" id="k-lannet"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#p-lan-net"/></animateMotion></circle>
-      <text class="lbl" x="150" y="185" id="t-wifi">Wi-Fi 热点</text>
-      <text class="lbl" x="262" y="322">USB · adb</text>
-      <text class="lbl" x="250" y="112" id="t-iproxy">HTTP/SOCKS 代理 (adb reverse)</text>
-      <text class="lbl" x="812" y="205">UDP 封装</text>
-      <g class="node" id="n-iphone"><rect x="50" y="40" width="180" height="72"/><text x="66" y="68">iPhone</text><text class="sub" x="66" y="90" id="s-iphone">热点客户端</text></g>
-      <g class="node" id="n-vivo"><rect x="50" y="250" width="180" height="100"/><text x="66" y="276">VIVO</text><text class="sub" x="66" y="298" id="s-vivo1">adb: -</text><text class="sub" x="66" y="318" id="s-vivo2">tun0: -</text><text class="sub" x="66" y="338" id="s-vivo3">热点: -</text></g>
-      <g class="node" id="n-host"><rect x="390" y="140" width="220" height="150"/><text x="406" y="166">NixOS 主机</text><text class="sub" x="406" y="190" id="s-host1">gnirehtet relay</text><text class="sub" x="406" y="210" id="s-host2">SOCKS5</text><text class="sub" x="406" y="230" id="s-host3">HTTP</text><text class="sub" x="406" y="254" id="s-host4">LAN</text><text class="sub" x="406" y="274" id="s-host5">panel 127.0.0.1</text></g>
-      <g class="node" id="n-lan"><rect x="720" y="50" width="160" height="72"/><text x="736" y="78">LAN 网关</text><text class="sub" x="736" y="100" id="s-lan">-</text></g>
-      <g class="node hk" id="n-wg"><rect x="720" y="280" width="160" height="72"/><text x="736" y="306" id="s-wg0">wg0 · HK</text><text class="sub" x="736" y="328" id="s-wg">-</text></g>
-      <g class="node" id="n-net"><rect x="890" y="175" width="100" height="50"/><text x="903" y="205" id="s-net">Internet</text></g>
+      <text class="lbl" x="158" y="178" id="t-wifi">Wi-Fi 热点</text>
+      <text class="lbl" x="338" y="286">USB · adb</text>
+      <text class="lbl" x="264" y="50" id="t-iproxy">HTTP/SOCKS 代理</text>
+      <text class="lbl" x="264" y="66" id="t-iproxy2"></text>
+      <text class="lbl" x="952" y="198">UDP 封装</text>
+      <g class="node" id="n-iphone"><rect x="40" y="36" width="210" height="76"/><text x="56" y="64">iPhone</text><text class="sub" x="56" y="88" id="s-iphone">热点客户端</text></g>
+      <g class="node" id="n-vivo"><rect x="40" y="246" width="280" height="112"/><text x="56" y="272">VIVO</text><text class="sub" x="56" y="294" id="s-vivo1">adb: -</text><text class="sub" x="56" y="314" id="s-vivo2">tun0: -</text><text class="sub" x="56" y="334" id="s-vivo3">热点: -</text></g>
+      <g class="node" id="n-host"><rect x="500" y="124" width="250" height="164"/><text x="516" y="150">NixOS 主机</text><text class="sub" x="516" y="174" id="s-host1">gnirehtet relay</text><text class="sub" x="516" y="194" id="s-host2">SOCKS5</text><text class="sub" x="516" y="214" id="s-host3">HTTP</text><text class="sub" x="516" y="238" id="s-host4">LAN</text><text class="sub" x="516" y="258" id="s-host5">panel 127.0.0.1</text></g>
+      <g class="node" id="n-lan"><rect x="820" y="32" width="240" height="80"/><text x="836" y="60">LAN 网关</text><text class="sub" x="836" y="84" id="s-lan">-</text></g>
+      <g class="node hk" id="n-wg"><rect x="820" y="268" width="240" height="80"/><text x="836" y="296" id="s-wg0">wg0 · HK</text><text class="sub" x="836" y="320" id="s-wg">-</text></g>
+      <g class="node" id="n-net"><rect x="1100" y="160" width="140" height="56"/><text x="1116" y="193" id="s-net">Internet</text></g>
     </svg>
     <div class="note">绿色流动线 = 当前真实走向（读取 <code>ip route get 1.1.1.1</code>、adb、systemd 状态）；紫色 = HK WireGuard 全隧道；橙色 = wg0 的 UDP 封装包经 LAN 网关出去（端点 /32 被 pin 到 LAN）；灰色虚线 = 未启用。</div>
   </section>
@@ -241,7 +242,8 @@ function render(s){
   txt('s-wg0', `${cfg.wireguard.iface} · HK ${w.up?'●':'○'}`);
   txt('s-wg', cfg.wireguard.endpoint);
   txt('s-net', viaWG ? 'Internet HK' : 'Internet BR');
-  txt('t-iproxy', proxies ? `HTTP :${cfg.proxy.http.port} / SOCKS :${cfg.proxy.socks.port}` + (rev ? ' (adb reverse)' : ' (未 reverse)') : '代理未启动');
+  txt('t-iproxy', proxies ? `HTTP :${cfg.proxy.http.port} / SOCKS :${cfg.proxy.socks.port}` : '代理未启动');
+  txt('t-iproxy2', proxies ? (rev ? 'adb reverse' : '未 reverse') : '');
 }
 
 async function refresh(){ try { render(await api('/api/status')); } catch(e){ $('#routeget').textContent = '状态读取失败: ' + e.message; } }

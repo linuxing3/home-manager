@@ -14,16 +14,15 @@
   '';
   codexDefaults = pkgs.writeText "codex-defaults.json" (builtins.toJSON {
     model = "codex/gpt-5.6-sol";
-    model_provider = "jev";
+    model_provider = "magpie";
     approval_policy = "never";
     sandbox_mode = "danger-full-access";
     model_reasoning_effort = "high";
     plan_mode_reasoning_effort = "high";
-    # jev-router (:3426) prefers magpie and falls back to cursor-to-openai; it is
-    # a keyless loopback proxy, so codex needs no OpenAI auth here.
-    model_providers.jev = {
-      name = "jev";
-      base_url = "http://127.0.0.1:3426/v1";
+    # Magpie serves the Responses API on its keyless loopback gateway.
+    model_providers.magpie = {
+      name = "magpie";
+      base_url = "http://127.0.0.1:${toString config.my.ai.magpieGateway.gatewayPort}/v1";
       wire_api = "responses";
       requires_openai_auth = false;
     };
@@ -56,6 +55,9 @@ in {
   home.activation.mergeCodexConfig = lib.hm.dag.entryAfter ["writeBoundary"] ''
     ${ai.activationPreamble}
     ${ai.mergeTomlFile "${ai.homeDir}/.codex/config.toml" codexDefaults}
+    ${pkgs.yq}/bin/tomlq --toml-output --in-place \
+      'del(.model_providers.cliproxyapi, .model_providers.jev)' \
+      ${lib.escapeShellArg "${ai.homeDir}/.codex/config.toml"}
   '';
 
   home.activation.configureCodexTools = lib.hm.dag.entryAfter ["installPackages" "linkGeneration"] ''

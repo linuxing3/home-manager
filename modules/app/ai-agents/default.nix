@@ -11,7 +11,7 @@
     ./nix-profile-cleanup.nix
     ./codex
     ./cursor
-    ./kiro.nix
+    ./cursor-to-openai.nix
     ./codeium.nix
     ./cc-switch.nix
     ./herdr

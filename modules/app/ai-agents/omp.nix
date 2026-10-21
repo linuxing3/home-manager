@@ -34,6 +34,8 @@ in {
     home.file = {
       ".omp/agent/AGENTS.md".source = globalAgents;
       ".omp/agent/mcp.json".text = ompMcpConfig;
+      ".omp/agent/extensions/model-failover.ts".source = ./files/model-failover.ts;
+      ".omp/agent/model-failover.yml".source = ./files/model-failover.yml;
     };
 
     programs.omp = {
@@ -51,9 +53,9 @@ in {
         symbolPreset = "unicode";
         composer.shape = "band";
         theme.dark = "titanium";
-        # Route the default role through magpie, which OMP reaches via jev-router
-        # (magpie primary, cursor-to-openai fallback). If magpie dies, jev-router
-        # fails over so OMP keeps working.
+        # Route the default role through magpie via jev-router. Quota exhaustion
+        # is an in-process switch (extensions/model-failover.ts) shared by Orca
+        # and Herdr. jev-router does not pick a model and has no second upstream.
         modelRoles.default = "magpie/codex/gpt-6-sol";
         defaultThinkingLevel = "auto";
         providers.webSearchOrder = [];
@@ -61,8 +63,8 @@ in {
     };
 
     # OMP's models.yml is user-seeded (magpie writes it). Keep its model catalog
-    # but point the magpie provider at jev-router so every magpie/* request gets
-    # the failover path instead of talking to magpie's gateway directly.
+    # but point the magpie provider at jev-router so quota errors reach this
+    # process instead of being handled inside another provider.
     home.activation.pointOmpMagpieAtJevRouter = lib.hm.dag.entryAfter ["writeBoundary"] ''
       ${ai.activationPreamble}
       models=${lib.escapeShellArg "${ai.homeDir}/.omp/agent/models.yml"}

@@ -1,0 +1,8 @@
+# Ordered degradation when the live OMP model reports usage exhaustion.
+# Each OMP process (Orca tab or Herdr pane) switches only itself.
+# modelRoles.default is unchanged. Entries in model-cooldowns.json are skipped.
+cooldownHours: 6
+order:
+  - magpie/grok/grok-4.7
+  - magpie/grok/grok-4.6
+  - magpie/deepseek/deepseek-v4-pro
