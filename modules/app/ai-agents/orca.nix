@@ -6,7 +6,11 @@
 }: let
   ai = import ./lib.nix {inherit config lib pkgs;};
   cfg = config.my.ai.orca;
-  orcaPublicHost = "orca.efwmcstyle.ccwu.cc";
+  orcaPublicHost = "orca-service.efwmcapp.com";
+  orcaPairHost = "orca-pair.efwmcapp.com";
+  # The desktop runtime persists its mobile WebSocket port in
+  # ~/.config/orca/mobile-ws-fallback-port.json.
+  orcaPairPort = 42419;
   orcaPublicOrigin = "https://${orcaPublicHost}";
   orcaPort = 6768;
   tunnelName = "orca-remote";
@@ -20,6 +24,15 @@
       {
         hostname = orcaPublicHost;
         service = "http://127.0.0.1:${toString orcaPort}";
+        originRequest = {
+          connectTimeout = "30s";
+          keepAliveTimeout = "90s";
+          disableChunkedEncoding = true;
+        };
+      }
+      {
+        hostname = orcaPairHost;
+        service = "http://127.0.0.1:${toString orcaPairPort}";
         originRequest = {
           connectTimeout = "30s";
           keepAliveTimeout = "90s";
@@ -141,10 +154,6 @@ in {
     home.file.".bin/python3".source = "${computerUsePythonBin}/bin/python3";
     home.file.".bin/orca-ide".source = "${orcaIdeCli}/bin/orca-ide";
 
-    xdg.configFile = {
-      "systemd/user/default.target.wants/orca.service".force = true;
-      "systemd/user/default.target.wants/cloudflared-orca.service".force = true;
-    };
 
     home.activation.mergeOrcaTunnelConfig = lib.hm.dag.entryAfter ["writeBoundary"] ''
       ${ai.activationPreamble}
@@ -195,20 +204,19 @@ in {
           RestrictSUIDSGID = true;
           UMask = "0077";
         };
-        Install.WantedBy = ["default.target"];
+        # Autostart off (2026-10-19): desktop Orca holds the profile; serve exits 3.
+        Install.WantedBy = [];
       };
 
       cloudflared-orca = {
         Unit = {
-          Description = "Cloudflare Tunnel for Orca (${orcaPublicHost})";
-          After = [
-            "network-online.target"
-            "orca.service"
-          ];
-          Wants = [
-            "network-online.target"
-            "orca.service"
-          ];
+          Description = "Cloudflare Tunnel for Orca (${orcaPublicHost}, ${orcaPairHost})";
+          # Do not After= or Wants= orca.service. The desktop app owns port
+          # 42419, and headless serve stays off so it does not fight that
+          # profile. Ordering the tunnel after orca while both are in
+          # default.target also makes systemd drop the tunnel at login.
+          After = ["network-online.target"];
+          Wants = ["network-online.target"];
           ConditionPathExists = configFile;
         };
         Service =

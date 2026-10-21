@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>system-panel · NixOS 用户服务</title>
+<style>
+:root{
+  --bg:#f3efe6;--card:#fffdf8;--ink:#1c1915;--dim:#6d655c;--line:#e3d9c8;
+  --run:#17693f;--runbg:#e4f6ea;--fail:#a61b14;--failbg:#fde8e6;
+  --idle:#6a6258;--idlebg:#f1ebe2;--wait:#8a5a00;--waitbg:#fff4d6;--acc:#1d4e89
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Source Han Sans SC","Noto Sans CJK SC",sans-serif}
+header{display:flex;align-items:baseline;gap:16px;padding:16px 22px;background:#fffdf8;border-bottom:1px solid var(--line)}
+header h1{font-size:20px;margin:0;letter-spacing:-.02em}
+header .route{color:var(--dim);flex:1}
+main{padding:18px 22px 32px}
+.board{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px 4px;margin-bottom:18px}
+.board h2{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:10px}
+.badge{font-size:12px;padding:1px 8px;border-radius:99px;background:var(--idlebg);color:var(--dim)}
+#cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.lane{grid-column:1/-1;margin:8px 0 0;font-size:13px;color:var(--dim);letter-spacing:.04em}
+.tile{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--idle);border-radius:10px;padding:12px 12px 10px;display:flex;flex-direction:column;gap:8px;min-height:132px}
+.tile.run{border-left-color:var(--run);background:linear-gradient(180deg,#f5fff8,#fffdf8)}
+.tile.fail{border-left-color:var(--fail);background:linear-gradient(180deg,#fff6f5,#fffdf8)}
+.tile.wait{border-left-color:var(--wait);background:linear-gradient(180deg,#fffaf0,#fffdf8)}
+.tile .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.tile b{font-size:14px;word-break:break-all}
+.tile .desc{color:var(--dim);font-size:12.5px;min-height:2.6em}
+.pill{flex:none;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px}
+.tile.run .pill{color:var(--run);background:var(--runbg)}
+.tile.fail .pill{color:var(--fail);background:var(--failbg)}
+.tile.wait .pill{color:var(--wait);background:var(--waitbg)}
+.tile.idle .pill{color:var(--idle);background:var(--idlebg)}
+.meta{color:var(--dim);font-size:12px}
+.btns{display:flex;gap:6px;margin-top:auto}
+button{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font:inherit;cursor:pointer}
+button:hover{border-color:var(--acc);color:var(--acc)}
+button.go{border-color:#b7dfc6;color:var(--run)}
+button.stop{border-color:#f3c1bd;color:var(--fail)}
+button:disabled{opacity:.5;cursor:wait}
+svg#arch{width:100%;height:auto;display:block}
+.node rect{fill:#fffdf8;stroke:#d9cdb8;stroke-width:1.5}
+.node.active rect{stroke:var(--run);fill:#f3fbf6}
+.node text{fill:var(--ink);font-size:13px;font-family:sans-serif}
+.node text.sub{fill:var(--dim);font-size:11px}
+.link{fill:none;stroke:#d9cdb8;stroke-width:3;stroke-dasharray:2 7}
+.link.up{stroke:var(--run);stroke-dasharray:14 10;animation:flow 1.1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+#toast{position:fixed;right:18px;bottom:18px;max-width:520px;background:#fffdf8;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:none;white-space:pre-wrap;box-shadow:0 8px 24px #0001}
+</style>
+</head>
+<body>
+<header>
+  <h1>system-panel</h1>
+  <span class="route">127.0.0.1:7879 · 用户服务，不读取密钥内容</span>
+</header>
+<main>
+  <section class="board">
+    <h2>服务拓扑 <span class="badge" id="count">…</span></h2>
+    <svg id="arch" viewBox="0 0 920 200"></svg>
+  </section>
+  <div id="cards"></div>
+</main>
+<div id="toast"></div>
+<script>
+const H = {"X-System-Panel":"1"};
+const lanes = [
+  {id:"session", x:40, title:"greetd"},
+  {id:"secrets", x:250, title:"密钥"},
+  {id:"agents", x:460, title:"Orca"},
+  {id:"tunnels", x:670, title:"隧道"}
+];
+let busy = false;
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",6000)}
+function active(u){return u.active==="active"||u.active==="activating"}
+async function act(name, op){
+  if(busy) return;
+  busy = true;
+  try{
+    const r = await fetch("/api/unit/"+encodeURIComponent(name)+"/"+op,{method:"POST",headers:H});
+    const j = await r.json();
+    toast((j.ok?"完成：":"失败：")+(j.msg||r.status));
+  }catch(e){toast(String(e))}
+  busy = false;
+  refresh();
+}
+function draw(groups){
+  const by = Object.fromEntries(groups.map(g=>[g.id,g]));
+  const svg = document.getElementById("arch");
+  const ns = "http://www.w3.org/2000/svg";
+  svg.replaceChildren();
+  const sessionOn = (by.session?.units||[]).some(active);
+  function el(tag, attrs, text){
+    const n = document.createElementNS(ns, tag);
+    for(const [k,v] of Object.entries(attrs)) n.setAttribute(k,v);
+    if(text!=null) n.textContent = text;
+    return n;
+  }
+  for(const lane of lanes){
+    if(lane.id==="session") continue;
+    const on = sessionOn && (by[lane.id]?.units||[]).some(active);
+    const path = el("path", {class:"link"+(on?" up":""), d:`M150 140 C 190 140, ${lane.x-20} 70, ${lane.x} 70`});
+    svg.appendChild(path);
+  }
+  for(const lane of lanes){
+    const units = by[lane.id]?.units||[];
+    const on = units.some(active);
+    const g = el("g", {class:"node"+(on?" active":"")});
+    g.appendChild(el("rect", {x:lane.x, y:lane.id==="session"?110:28, width:160, height:64, rx:10}));
+    g.appendChild(el("text", {x:lane.x+12, y:lane.id==="session"?138:52}, lane.title));
+    const running = units.filter(active).length;
+    g.appendChild(el("text", {class:"sub", x:lane.x+12, y:lane.id==="session"?158:74}, running+"/"+units.length+" 运行"));
+    svg.appendChild(g);
+  }
+}
+function stateOf(u){
+  if(u.active==="failed"||u.sub==="failed") return {cls:"fail", label:"失败"};
+  if(u.active==="activating"||u.active==="deactivating") return {cls:"wait", label:"切换中"};
+  if(u.active==="active"&&(u.sub==="running"||u.sub==="exited")) return {cls:"run", label:u.sub==="exited"?"已完成":"运行"};
+  return {cls:"idle", label:"停止"};
+}
+function cards(groups){
+  const root = document.getElementById("cards");
+  root.replaceChildren();
+  let n = 0;
+  for(const g of groups){
+    if(!g.units.length) continue;
+    const lane = document.createElement("h3");
+    lane.className = "lane";
+    lane.textContent = g.label;
+    root.appendChild(lane);
+    for(const u of g.units){
+      n++;
+      const st = stateOf(u);
+      const tile = document.createElement("article");
+      tile.className = "tile "+st.cls;
+      tile.innerHTML = `<div class="top"><b>${u.name}</b><span class="pill">${st.label}</span></div><div class="desc">${u.description||""}</div><div class="meta">${u.enabled} · ${u.scope}</div>`;
+      const btns = document.createElement("div");
+      btns.className = "btns";
+      if(u.switchable){
+        for(const [op,label,cls] of [["start","启动","go"],["stop","停止","stop"],["restart","重启",""]]){
+          if(u.name==="system-panel.service" && op==="stop") continue;
+          const b = document.createElement("button");
+          b.className = cls; b.textContent = label;
+          b.onclick = ()=>act(u.name, op);
+          btns.appendChild(b);
+        }
+      }
+      tile.appendChild(btns);
+      root.appendChild(tile);
+    }
+  }
+  document.getElementById("count").textContent = n+" 个单元";
+}
+async function refresh(){
+  try{
+    const r = await fetch("/api/status");
+    const j = await r.json();
+    draw(j.groups||[]);
+    cards(j.groups||[]);
+  }catch(e){toast(String(e))}
+}
+refresh();
+setInterval(refresh, 4000);
+</script>
+</body>
+</html>

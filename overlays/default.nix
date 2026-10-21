@@ -10,6 +10,7 @@
     (import ./packages/lightpanda.nix)
     (import ./packages/muse-cli.nix)
     (import ./packages/net-panel.nix)
+    (import ./packages/system-panel.nix)
     (import ./packages/dsh.nix)
     (import ./packages/fff-mcp.nix {inherit inputs;})
     (import ./packages/nnn.nix {inherit inputs;})

@@ -82,7 +82,7 @@ in {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        description = "Install Orca from llm-agents.nix and run `orca serve` behind orca.efwmcstyle.ccwu.cc.";
+        description = "Install Orca from llm-agents.nix and run `orca serve` behind orca-service.efwmcapp.com.";
       };
       package = lib.mkOption {
         type = lib.types.package;
@@ -143,6 +143,14 @@ in {
       };
     };
 
+    cursorToOpenai = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Run cursor-to-openai and its Cloudflare tunnel. Off: jev-router does not use this proxy.";
+      };
+    };
+
     magpieGateway = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -170,7 +178,7 @@ in {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        description = "Run jev-router, an OpenAI/Responses failover gateway that prefers magpie and falls back to cursor-to-openai.";
+        description = "Run jev-router, a loopback OpenAI/Responses gateway in front of magpie. HTTP errors are returned to the client.";
       };
       port = lib.mkOption {
         type = lib.types.port;
@@ -180,22 +188,12 @@ in {
       magpiePort = lib.mkOption {
         type = lib.types.port;
         default = 3425;
-        description = "Primary upstream: magpie's gateway port.";
-      };
-      cursorPort = lib.mkOption {
-        type = lib.types.port;
-        default = 3010;
-        description = "Fallback upstream: cursor-to-openai port.";
-      };
-      cursorFallbackModel = lib.mkOption {
-        type = lib.types.str;
-        default = "claude-4.5-sonnet";
-        description = "Model name sent to cursor-to-openai on fallback (magpie model ids are rewritten to this).";
+        description = "Upstream: magpie's gateway port.";
       };
       connectTimeout = lib.mkOption {
         type = lib.types.int;
         default = 5;
-        description = "Per-upstream TCP connect timeout in seconds before failing over.";
+        description = "TCP connect timeout in seconds. A timeout means magpie is unreachable, not that the model should change.";
       };
       readTimeout = lib.mkOption {
         type = lib.types.int;

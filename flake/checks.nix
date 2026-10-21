@@ -30,6 +30,9 @@
       "modules/app/net-panel"
       "modules/pkgs/net-panel.nix"
       "overlays/packages/net-panel.nix"
+      "modules/app/system-panel"
+      "modules/pkgs/system-panel.nix"
+      "overlays/packages/system-panel.nix"
     ];
     qualityPathArgs = builtins.concatStringsSep " " qualityPaths;
   in {

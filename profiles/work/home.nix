@@ -30,6 +30,7 @@
     ../../modules/app/virtualization
     ../../modules/app/qq-mail-notion
     ../../modules/app/net-panel
+    ../../modules/app/system-panel
     ../../modules/gui/dunst-omarchy.nix
     ../../modules/wm/oxwm/oxwm.nix
     ../../modules/wm/xmonad
@@ -52,9 +53,11 @@
   my.features.home.alacritty = true;
   my.features.home.brave = true;
   my.features.home.doomEmacs = true;
-  my.features.home.qqMailNotion.enable = true;
+  my.features.home.qqMailNotion.enable = false;
   my.features.home.netPanel.enable = true;
   my.features.home.netPanel.service = true;
+  my.features.home.systemPanel.enable = true;
+  my.features.home.systemPanel.service = true;
   my.ai.herdr.enable = true;
   my.ai.pi.enable = true;
   my.ai.agentlyMail.enable = true;
@@ -65,6 +68,8 @@
   # CLIProxyAPI binary is unpatched for NixOS (status 127 crash-loop) and codex
   # now routes through jev-router instead; keep it off.
   my.ai.cliProxyApi.enable = false;
+  # cursor-to-openai is not on the OMP path. jev-router talks only to magpie.
+  my.ai.cursorToOpenai.enable = false;
   my.ai.magpieGateway.enable = true;
   my.ai.jevRouter.enable = true;
 

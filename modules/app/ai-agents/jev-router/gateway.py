@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""jev-router: a tiny OpenAI/Responses-compatible failover gateway.
+"""jev-router: a loopback OpenAI/Responses proxy in front of magpie.
 
-OMP and codex-cli point at this loopback endpoint. It forwards each request to
-an ordered list of upstreams (magpie first, cursor-to-openai next). It fails
-over to the next upstream on connection errors, timeouts, or retry statuses
-(429/5xx), applying per-upstream auth and an optional model rewrite. Secrets are
-read from the environment at request time and are never logged.
+OMP points at this endpoint. The only upstream is magpie. HTTP statuses,
+including 429 and 5xx, are returned unchanged so OMP can tell a usage limit
+from a transient failure. A connection error or timeout is reported as an
+upstream failure. Model ids are not rewritten.
 
 Config (JSON) is taken from $JEV_ROUTER_CONFIG. See default.nix for the schema.
 """
