@@ -87,6 +87,17 @@ def hook_key():  # agenix first, legacy file as fallback
     return E("OMP_HOOK_KEY") or agenix_value("OMP_HOOK_KEY") or file_value(KEY_FILE)
 
 
+def agent_launch_env():
+    """Env for orca agent launch / OMP child: Notion token without grep or agenix files in the agent."""
+    env = os.environ.copy()
+    token = notion_token()
+    if token:
+        env["NOTION_API_KEY"] = token
+    env.setdefault("OMP_HOOK_DATABASE_ID", DATABASE_ID)
+    env.setdefault("OMP_HOOK_AGENIX_FILE", str(AGENIX))
+    return env
+
+
 def notion_token():
     return E("NOTION_API_KEY") or agenix_value("NOTION_API_KEY") or file_value(NOTION_FILE)
 
@@ -176,6 +187,7 @@ def claim(page_id):
 
 
 def build_prompt(page_id, title, run_id):
+    page_id = norm_id(page_id)
     url = f"https://www.notion.so/{page_id}"
     boot = file_value(BOOTSTRAP)
     return f"""{boot}
@@ -184,9 +196,20 @@ def build_prompt(page_id, title, run_id):
 你是 {SEAT}。omp-hook 已替你认领 PM Tasks 单（Status=In progress, Run ID={run_id}），不要再认领别的单。
 任务单：{title}
 链接：{url}
+本单 page_id（API）：{page_id}
+PM Tasks database_id（API）：{DATABASE_ID}
+
+Notion 读写（必读，禁止在 $HOME 或全盘 grep/find 找 notion 命令或 MCP 配置）：
+1. 优先用已接入的 Notion MCP（例如 notion-search、fetch、更新页面/数据库属性）。不要猜测 CLI 名称，也不要扫描磁盘。
+2. 若无 MCP：用 NOTION_API_KEY + Notion REST（2022-06-28）。在 agenix-env 或 agent-env 子进程里执行，不要把 token 打进命令行参数或聊天：
+   - 读/改本单：GET 或 PATCH https://api.notion.com/v1/pages/{page_id}
+   - 查 PM Tasks：POST https://api.notion.com/v1/databases/{DATABASE_ID}/query
+   - Header：Authorization: Bearer $NOTION_API_KEY，Notion-Version: 2022-06-28
+   - 密钥来源：环境变量 NOTION_API_KEY，或 $XDG_RUNTIME_DIR/agenix/api-keys-new.age 里的 NOTION_API_KEY= 行（只读取变量，禁止 cat/echo 输出值）。
+3. Sync Log 仍按 bootstrap 里的 collection 追加新行；不要用 grep 找 Sync Log id。
 
 执行规则：
-1. 先用 Notion 读这张单的全文和五项交接字段，按单子做事。
+1. 先用 Notion（MCP 或 REST）读这张单的全文和五项交接字段，按单子做事。
 2. 遇到以下任何一项，立即停下，不要执行：删除任何东西、花钱/付费/开通收费服务、给第三方发消息或对外发布、读取/输出/移动密钥或凭证、修改 NixOS / home-config / 服务器配置。此时把单子 Status 设为 Blocked，Note 写一句原因，并在 Sync Log 追加一行 Type=Blocker。
 3. 完成后：在 Sync Log 追加一行（From=共享，To=孔明，Type=Update，Entry 以 [本机·OMP] 开头，Summary ≤3 句，附路径/链接），然后把这张单 Status 设为 Review，Note 写一行证据链接。
 4. 不要把密钥、cookie、签名 URL 写进 Notion、git 或聊天。
@@ -206,7 +229,8 @@ def launch(page_id, title, run_id):
         return {"backend": "herdr", "pane": idle[0]["pane_id"]}
     out = subprocess.run([ORCA, "agent", "launch", "--agent", "omp", "--worktree", f"path:{JOBS_DIR}",
                           "--prompt", prompt, "--json"], stdin=subprocess.DEVNULL,
-                         capture_output=True, text=True, timeout=120, cwd=JOBS_DIR)
+                         capture_output=True, text=True, timeout=120, cwd=JOBS_DIR,
+                         env=agent_launch_env())
     try:
         res = json.loads(out.stdout)
     except json.JSONDecodeError:
