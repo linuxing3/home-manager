@@ -44,6 +44,11 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
     GTK_IM_MODULE QT_IM_MODULE QT4_IM_MODULE XMODIFIERS SDL_IM_MODULE INPUT_METHOD \
     >/dev/null 2>&1 || true
 fi
+# startx never activates graphical-session.target (RefuseManualStart=yes),
+# so fcitx5-daemon (WantedBy=graphical-session.target) must be kicked directly.
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl --user --no-block start fcitx5-daemon.service >/dev/null 2>&1 || true
+fi
 
 # st-256color terminfo from Nix ncurses when host terminfo lacks it.
 if [[ -z ${TERMINFO_DIRS:-} ]]; then
