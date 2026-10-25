@@ -6,7 +6,8 @@
 }: let
   ai = import ./lib.nix {inherit config lib pkgs;};
   # Notion PM Tasks automation -> omp-hook-relay Worker (sites/omp-hook-relay)
-  # -> cloudflared tunnel -> this listener -> `herdr agent prompt` to the OMP pane.
+  # -> cloudflared tunnel -> this listener -> claims the row in Notion (v0.3.5 lock)
+  # -> `orca agent launch --agent omp` in ~/agent-data/omp-jobs (or Herdr pane).
   port = 8791;
   publicHost = "omp-hook.efwmcapp.com";
   tunnelId = "68c903cf-748b-41b0-a5c2-b3bd0af10afa";
@@ -27,30 +28,34 @@
     ];
   });
 
-  environment = [
-    "OMP_HOOK_PORT=${toString port}"
-    "OMP_HOOK_KEY_FILE=${keyFile}"
-    "HERDR_BIN=${config.my.ai.herdr.package}/bin/herdr"
-    "HERDR_SOCKET_PATH=${ai.configHome}/herdr/herdr.sock"
-  ];
+  # Backend: "orca" (default, needs the Orca desktop runtime) or "herdr".
+  backend = "orca";
+  jobsDir = "${ai.homeDir}/agent-data/omp-jobs";
+
+  # Secrets: OMP_HOOK_KEY and NOTION_API_KEY are read from the agenix env file
+  # ${secretName}; the legacy files under ~/.config/omp-hook are only a fallback.
+  environment =
+    [
+      "OMP_HOOK_PORT=${toString port}"
+      "OMP_HOOK_BACKEND=${backend}"
+      "OMP_HOOK_KEY_FILE=${keyFile}"
+      "OMP_HOOK_NOTION_FILE=${ai.configHome}/omp-hook/notion-secret"
+      "OMP_HOOK_AGENIX_FILE=%t/agenix/${secretName}"
+      "OMP_HOOK_JOBS_DIR=${jobsDir}"
+      "OMP_HOOK_LOG=${ai.homeDir}/agent-data/logs/omp-hook.log"
+      "OMP_HOOK_BOOTSTRAP=${./files/notion-bootstrap.md}"
+      "ORCA_BIN=${lib.getExe' config.my.ai.orca.package "orca"}"
+    ]
+    ++ lib.optionals config.my.ai.herdr.enable [
+      "HERDR_BIN=${config.my.ai.herdr.package}/bin/herdr"
+      "HERDR_SOCKET_PATH=${ai.configHome}/herdr/herdr.sock"
+    ];
 
   ompHook = pkgs.writeShellApplication {
     name = "omp-hook";
     text = ''exec ${pkgs.python3}/bin/python3 ${./omp-hook.py} "$@"'';
   };
 
-  ompHookScan = pkgs.writeShellApplication {
-    name = "omp-hook-scan";
-    runtimeInputs = [pkgs.coreutils pkgs.gnugrep];
-    text = ''
-      keys_env="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/agenix/${secretName}"
-      if [[ -r "$keys_env" ]]; then
-        NOTION_API_KEY="$(grep -E '^NOTION_API_KEY=' "$keys_env" | head -n1 | cut -d= -f2- || true)"
-        export NOTION_API_KEY
-      fi
-      exec ${lib.getExe ompHook} scan
-    '';
-  };
 
   hardening =
     ai.serviceHardening
@@ -61,7 +66,7 @@
       UMask = "0077";
     };
 in {
-  config = lib.mkIf (config.my.ai.omp.enable && config.my.ai.herdr.enable) {
+  config = lib.mkIf (config.my.ai.omp.enable && (config.my.ai.orca.enable || config.my.ai.herdr.enable)) {
     home.packages = [ompHook];
 
     xdg.configFile = {
@@ -73,8 +78,10 @@ in {
     systemd.user.services = {
       omp-hook = {
         Unit = {
-          Description = "OMP hook listener (Notion PM Tasks -> Herdr OMP pane)";
-          ConditionPathExists = keyFile;
+          Description = "OMP hook listener (Notion PM Tasks -> OMP via ${backend})";
+          # Starts once either the agenix key or the legacy key file exists.
+          After = ["agenix.service"];
+          Wants = ["agenix.service"];
         };
         Service =
           hardening
@@ -98,7 +105,7 @@ in {
           hardening
           // {
             Type = "oneshot";
-            ExecStart = lib.getExe ompHookScan;
+            ExecStart = "${lib.getExe ompHook} scan";
             Environment = environment;
           };
       };
@@ -129,7 +136,7 @@ in {
     };
 
     systemd.user.timers.omp-hook-scan = {
-      Unit.Description = "Scan PM Tasks for unclaimed [本机·OMP] tickets every 10 minutes";
+      Unit.Description = "Scan PM Tasks for claimable [本机·OMP] tickets every 10 minutes";
       Timer = {
         OnBootSec = "3min";
         OnUnitActiveSec = "10min";
